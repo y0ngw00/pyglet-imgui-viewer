@@ -60,62 +60,7 @@ class UI:
         self.render_ui_window()
 
         imgui.end_frame()
-        
-    def draw_formation_interface(self, x, y):
-        if imgui.begin("Drawing Interface", True, imgui.WINDOW_NO_MOVE):
-            draw_list = imgui.get_window_draw_list()
-            canvas_pos = imgui.get_cursor_screen_pos()  # Get the position of the canvas window
-
-            layout_padding = [10,10]
-            x_origin = canvas_pos.x+layout_padding[0]
-            y_origin = canvas_pos.y+layout_padding[1]
-            
-            self.x_box = x_origin
-            self.y_box = y_origin
-            
-            draw_list.add_rect(x_origin, y_origin, x_origin+self.xsize_box, y_origin+self.ysize_box, imgui.get_color_u32_rgba(1,0,0,1), rounding=5, thickness=3)
-            # Draw a line
-            # draw_list.add_line((10, 10), (100, 100), imgui.get_color_u32((255, 255, 0, 255)), 1)
-
-            # Draw a dot
-            for circle in self.circles:
-                # if circle.get_is_clicked:
-                #     circle.x = x - canvas_pos.x
-                #     circle.y = y - canvas_pos.y
-                color =  imgui.get_color_u32_rgba(1,1,1,1)
-                if circle.get_is_clicked:
-                    color = imgui.get_color_u32_rgba(1,1,0,1)
-                
-                draw_list.add_circle(x_origin+circle.x, y_origin+circle.y, circle.radius,color, thickness=3)
-
-            imgui.end()
-        return
-    
-    def draw_keyframe_interface(self):
-        if imgui.begin("Keyframe editor", True):
-            draw_list = imgui.get_window_draw_list()
-            canvas_pos = imgui.get_cursor_screen_pos()  # Get the position of the canvas window
-
-            changed, self.window.frame = imgui.slider_float("Frame", self.window.frame, 0.0, self.window.max_frame)
-            slider_pos = (canvas_pos.x + 10, canvas_pos.y + 40)
-
-            for idx, circle in enumerate(self.circles):
-                imgui.text("Dancer '{}'".format(idx))
-                canvas_pos = imgui.get_cursor_pos()
-                canvas_screen_pos = imgui.get_cursor_screen_pos()
-                draw_list.add_rect(canvas_screen_pos.x, canvas_screen_pos.y, canvas_screen_pos.x+300, canvas_screen_pos.y+20, imgui.get_color_u32_rgba(1,1,1,1), rounding=5, thickness=3)
-                for keyframe in circle.keyframe_anim.keyframes:
-                    x = canvas_screen_pos.x +  self.xsize_box * keyframe.frame / self.window.max_frame
-                    draw_list.add_line(x, canvas_screen_pos.y, x, canvas_screen_pos.y+20, imgui.get_color_u32_rgba(1, 0, 0, 1))
-                imgui.set_cursor_pos((10, canvas_pos.y+40))
-
-
-            imgui.end()
-            
-            if changed:
-                self.update_ui(is_animate = changed)
-        return
-
+ 
     def render_main_menu(self):
         file_ext = ""
         file_descriptions = ""
@@ -185,10 +130,6 @@ class UI:
     def render_ui_window(self):   
         x,y = imgui.get_mouse_pos()
         
-        self.draw_formation_interface(x,y)
-        
-        self.draw_keyframe_interface()
-
         imgui.begin("Test Window")
         imgui.text("This is the test window.")
         changed, self.window.frame = imgui.input_int("Animation frame", self.window.frame)
