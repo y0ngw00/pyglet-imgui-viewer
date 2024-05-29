@@ -16,7 +16,6 @@ import shader
 from camera import Camera
 
 
-
 class RenderWindow(pyglet.window.Window):
     '''
     inherits pyglet.window.Window which is the default render window of Pyglet
@@ -24,7 +23,7 @@ class RenderWindow(pyglet.window.Window):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # glClearColor(219.0/255.0,236.0/255.0,244.0/255.0,1.0)
-        glClearColor(0.7,0.7,0.7,1.0)
+        glClearColor(0.85,0.85,0.85,1.0)
 
         self.batch = pyglet.graphics.Batch()
         '''
@@ -35,13 +34,7 @@ class RenderWindow(pyglet.window.Window):
             target=Vec3(0, 0.8, 1.0)
         )
 
-        self.__view_mat = None
-        '''
-        Projection parameters
-        '''
-        self.z_near = 0.1
-        self.z_far = 10000
-        self.__fov = 60
+        self.view_mat = None
         self.proj_mat = None
         self.shapes=[]
 
@@ -124,6 +117,7 @@ class RenderWindow(pyglet.window.Window):
             
         self.GUI.update_ui(is_animate = self.animate)
 
+
     def add_shape(self, obj) -> None:
         shape = CustomGroup(obj, len(self.shapes))
 
@@ -151,8 +145,9 @@ class RenderWindow(pyglet.window.Window):
 
     def on_resize(self, width, height):
         glViewport(0, 0, *self.get_framebuffer_size())
-        self.proj_mat = Mat4.perspective_projection(
-            aspect = width/height, z_near=self.z_near, z_far=self.z_far, fov = self.__fov)
+        self.proj_mat =  self.camera.perspective_projection(
+            aspect=width / height
+        )
         return pyglet.event.EVENT_HANDLED
          
     def run(self):
@@ -165,46 +160,3 @@ class RenderWindow(pyglet.window.Window):
     def is_ui_active(self):
         return self.GUI.is_ui_active()
 
-    # @property
-    # def get_fov(self):
-    #     return self.__fov
-    
-    # @get_fov.setter
-    # def set_fov(self, fov):
-    #     self.__fov = fov
-    
-    # @property
-    # def get_cam_target(self):
-    #     return self.__cam_target
-    
-    # @get_cam_target.setter
-    # def set_cam_target(self, v):
-    #     self.__cam_target = v
-        
-    # @property
-    # def get_cam_eye(self):
-    #     return self.__cam_eye
-    
-    # @get_cam_eye.setter
-    # def set_cam_eye(self, v):
-    #     self.__cam_eye = v
-
-    # @property
-    # def get_cam_vup(self):
-    #     return self.__cam_vup
-    
-    # @get_cam_vup.setter
-    # def set_cam_vup(self, v):
-    #     self.__cam_vup = v
-
-    # def get_camera_coordinate(self):
-    #     n = (self.__cam_target - self.__cam_eye).normalize()
-    #     u = (self.__cam_vup.cross(n)).normalize()
-    #     v = (n.cross(u)).normalize()
-
-    #     m = np.vstack((u,v,n)).transpose()
-    #     return m
-    
-    # @property
-    # def get_view_mat(self):
-    #     return self.__view_mat

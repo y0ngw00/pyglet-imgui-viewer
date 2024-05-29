@@ -7,7 +7,7 @@ from pygltflib import GLTF2, Node, Skin, Accessor, BufferView, BufferFormat
 
 from utils import BVH
 from object import Character,Joint,Link,Object,MeshType
-import mathutil
+import legacy.mathutil as mathutil
 
 def load_gltf(filename):
     gltf = GLTF2().load(filename)

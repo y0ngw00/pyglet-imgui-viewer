@@ -4,7 +4,7 @@ import pyglet
 from primitives import CustomMesh,Cube,Sphere, GridPlane, Cylinder
 
 from utils import Quaternions
-import mathutil
+import legacy.mathutil as mathutil
 from enum import Enum
 class MeshType(Enum):
     Custom = 0
