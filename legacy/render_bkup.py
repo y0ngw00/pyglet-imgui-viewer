@@ -8,11 +8,11 @@ from pyglet.gl import GL_TRIANGLES
 from pyglet.math import *
 from pyglet.gl import *
 
-from primitives import CustomGroup
+from renderables.primitives import CustomGroup
 from scene import Scene
-from control import Control
-from interface import UI
-import shader
+from render_settings.control import Control
+from renderables.interface import UI
+import render_settings.shader as shader
 
 
 
