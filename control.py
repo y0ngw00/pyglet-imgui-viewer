@@ -5,9 +5,7 @@ from pyglet import window, app, shapes
 from pyglet.window import mouse,key
 from pyglet.math import Mat4, Vec3, Vec4, Quaternion
 
-import mathutil
 
-    
 class Control:
     """
     Control class controls keyboard & mouse inputs.
@@ -22,6 +20,7 @@ class Control:
         window.on_mouse_scroll = self.on_mouse_scroll
         self.window = window
         self.trackball_size = ((self.window.width ** 2 + self.window.height**2)**0.5) / 2.0
+        self.mouse_sensitivity = 0.005
         self.setup()
 
     def setup(self):
@@ -70,45 +69,19 @@ class Control:
 
             w = self.window.width
             h = self.window.height
-            curr = mathutil.get_trackball_point(self.trackball_size, float(x + dx - w / 2.0), float(y - dy - h / 2.0))
-            last = mathutil.get_trackball_point(self.trackball_size, float(x - w / 2.0), float(y - h / 2.0))
 
-            axis = np.cross(curr, last)
-            axis = axis / (np.linalg.norm(axis) + 1e-6)
-            axis = self.window.get_camera_coordinate().dot(axis)
-
-            last = last / (np.linalg.norm(last) + 1e-6)
-            curr = curr / (np.linalg.norm(curr) + 1e-6)
-
-            # sinT = np.linalg.norm(np.cross(curr, last)) / (np.linalg.norm(curr) * np.linalg.norm(last))
-            cos_theta = curr.dot(last)
-            sin_theta = np.linalg.norm(np.cross(curr, last))
-            theta = math.atan2(sin_theta, cos_theta)
-
-            quat = mathutil.angleaxis_to_quat(theta, axis)
-            m = Mat4(mathutil.quat_to_mat(quat))
-
-            n = self.window.get_cam_target - self.window.get_cam_eye
-            n = mathutil.glet_multiply(m, n)
-            self.window.set_cam_vup = mathutil.glet_multiply(m, self.window.get_cam_vup)
-            self.window.set_cam_eye = self.window.get_cam_target - n
+            self.window.camera.rotate(w, h, self.trackball_size, x, y, dx, dy)
 
         elif button == 2:  # translation
             if self.window.is_ui_active() is True:
                 return
+            
+            self.window.camera.translate(dx, dy)
 
-            v = np.array([0.0, 0.0, 0.0])
-            v[0] += dx * 0.01
-            v[1] -= dy * 0.01
-            v = self.window.get_camera_coordinate().dot(v)
-
-            dt = Vec3(v[0], v[1], v[2])
-            self.window.set_cam_target += dt
-            self.window.set_cam_eye += dt
 
     def on_mouse_scroll(self, x, y, scroll_x, scroll_y):
         # fov = self.window.get_fov
         # self.window.set_fov = fov - scroll_y
-        dt = (self.window.get_cam_target - self.window.get_cam_eye)* (1-scroll_y * 0.1)
-        self.window.set_cam_eye = self.window.get_cam_target - dt
+
+        self.window.camera.zoom(scroll_y)
         

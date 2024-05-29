@@ -13,6 +13,7 @@ from scene import Scene
 from control import Control
 from interface import UI
 import shader
+from camera import Camera
 
 
 
@@ -29,9 +30,11 @@ class RenderWindow(pyglet.window.Window):
         '''
         View (camera) parameters
         '''
-        self.__cam_eye = Vec3(0,5,10)
-        self.__cam_target = Vec3(0,0.8,1.0)
-        self.__cam_vup = Vec3(0,1,0)
+        self.camera = Camera(
+            eye=Vec3(0, 5, 10),
+            target=Vec3(0, 0.8, 1.0)
+        )
+
         self.__view_mat = None
         '''
         Projection parameters
@@ -55,9 +58,9 @@ class RenderWindow(pyglet.window.Window):
         light_view = Mat4.look_at(self.light_pos, self.light_target, self.light_up)
         self.light_space_matrix = light_projection @ light_view
 
-
         self.setup()
-        # Keyboard/Mouse control. Not implemented yet.
+
+        # Keyboard/Mouse control. 
         self.controller = Control(self)
 
         # Scene environment
@@ -69,6 +72,7 @@ class RenderWindow(pyglet.window.Window):
         self.frame = 0
         self.max_frame = 100
         self.animate = False
+
 
     def reset(self) -> None:
         self.frame = 0
@@ -86,18 +90,11 @@ class RenderWindow(pyglet.window.Window):
         self.GUI.render()
 
     def update(self,dt) -> None:
-        # 1. Create a view matrix
-        self.__view_mat = Mat4.look_at(
-            self.__cam_eye, target=self.__cam_target, up=self.__cam_vup)
-        
-        # 2. Create a projection matrix 
-        self.proj_mat = Mat4.perspective_projection(
-            aspect = self.width/self.height, 
-            z_near=self.z_near, 
-            z_far=self.z_far, 
-            fov = self.__fov)
-
-        view_proj = self.proj_mat @ self.__view_mat
+        self.view_mat = self.camera.look_at()
+        self.proj_mat = self.camera.perspective_projection(
+            aspect=self.width / self.height
+        )
+        view_proj = self.proj_mat @ self.view_mat
 
         if self.animate is True:
             self.frame += 1
@@ -168,47 +165,46 @@ class RenderWindow(pyglet.window.Window):
     def is_ui_active(self):
         return self.GUI.is_ui_active()
 
-
-    @property
-    def get_fov(self):
-        return self.__fov
+    # @property
+    # def get_fov(self):
+    #     return self.__fov
     
-    @get_fov.setter
-    def set_fov(self, fov):
-        self.__fov = fov
+    # @get_fov.setter
+    # def set_fov(self, fov):
+    #     self.__fov = fov
     
-    @property
-    def get_cam_target(self):
-        return self.__cam_target
+    # @property
+    # def get_cam_target(self):
+    #     return self.__cam_target
     
-    @get_cam_target.setter
-    def set_cam_target(self, v):
-        self.__cam_target = v
+    # @get_cam_target.setter
+    # def set_cam_target(self, v):
+    #     self.__cam_target = v
         
-    @property
-    def get_cam_eye(self):
-        return self.__cam_eye
+    # @property
+    # def get_cam_eye(self):
+    #     return self.__cam_eye
     
-    @get_cam_eye.setter
-    def set_cam_eye(self, v):
-        self.__cam_eye = v
+    # @get_cam_eye.setter
+    # def set_cam_eye(self, v):
+    #     self.__cam_eye = v
 
-    @property
-    def get_cam_vup(self):
-        return self.__cam_vup
+    # @property
+    # def get_cam_vup(self):
+    #     return self.__cam_vup
     
-    @get_cam_vup.setter
-    def set_cam_vup(self, v):
-        self.__cam_vup = v
+    # @get_cam_vup.setter
+    # def set_cam_vup(self, v):
+    #     self.__cam_vup = v
 
-    def get_camera_coordinate(self):
-        n = (self.__cam_target - self.__cam_eye).normalize()
-        u = (self.__cam_vup.cross(n)).normalize()
-        v = (n.cross(u)).normalize()
+    # def get_camera_coordinate(self):
+    #     n = (self.__cam_target - self.__cam_eye).normalize()
+    #     u = (self.__cam_vup.cross(n)).normalize()
+    #     v = (n.cross(u)).normalize()
 
-        m = np.vstack((u,v,n)).transpose()
-        return m
+    #     m = np.vstack((u,v,n)).transpose()
+    #     return m
     
-    @property
-    def get_view_mat(self):
-        return self.__view_mat
+    # @property
+    # def get_view_mat(self):
+    #     return self.__view_mat
