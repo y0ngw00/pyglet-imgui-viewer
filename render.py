@@ -8,12 +8,12 @@ from pyglet.gl import GL_TRIANGLES
 from pyglet.math import *
 from pyglet.gl import *
 
-from primitives import CustomGroup
+from renderables.primitives import CustomGroup
 from scene import Scene
-from control import Control
-from interface import UI
-import shader
-from camera import Camera
+from render_settings.control import Control
+from renderables.interface import UI
+import render_settings.shader as shader
+from render_settings.camera import Camera
 
 
 class RenderWindow(pyglet.window.Window):
@@ -23,7 +23,7 @@ class RenderWindow(pyglet.window.Window):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # glClearColor(219.0/255.0,236.0/255.0,244.0/255.0,1.0)
-        glClearColor(0.85,0.85,0.85,1.0)
+        glClearColor(1.0,1.0,1.0,1.0)
 
         self.batch = pyglet.graphics.Batch()
         '''
@@ -41,7 +41,7 @@ class RenderWindow(pyglet.window.Window):
         # Set up the fog parameters
         self.fog_start = 50.0
         self.fog_end = 80.0
-        self.fog_color = (0.7, 0.7, 0.7, 1.0)
+        self.fog_color = (0.85, 0.85, 0.85, 1.0)
 
         # Light parameters
         self.light_pos = Vec3(0,10000,10000)
@@ -99,17 +99,9 @@ class RenderWindow(pyglet.window.Window):
             Update position/orientation in the scene. In the current setting, 
             shapes created later rotate faster while positions are not changed.
             '''
-            # if self.animate:
-            #     rotate_angle = dt
-            #     rotate_axis = Vec3(0,0,1)
-            #     rotate_mat = Mat4.from_rotation(angle = rotate_angle, vector = rotate_axis)
-            # shape.object.transform.
-
-                # # Example) You can control the vertices of shape.
-                # shape.indexed_vertices_list.vertices[0] += 0.5 * dt
             shape.shader_program['view_proj'] = view_proj
             shape.shader_program["lightPos"] = self.light_pos
-            # shape.shader_program["viewPos"] = self.get_cam_eye
+            # shape.shader_program["viewPos"] = self.camera.eye
             # shape.shader_program["lightSpaceMatrix"] = self.light_space_matrix
             shape.shader_program["fogStart"] = self.fog_start
             shape.shader_program["fogEnd"] = self.fog_end
@@ -151,7 +143,7 @@ class RenderWindow(pyglet.window.Window):
         return pyglet.event.EVENT_HANDLED
          
     def run(self):
-        pyglet.clock.schedule_interval(self.update, 1/60)
+        pyglet.clock.schedule_interval(self.update, 1/30)
         pyglet.app.run()
 
     def quit(self):
