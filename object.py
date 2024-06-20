@@ -1,11 +1,16 @@
 import numpy as np
 from pyglet.math import Mat4, Vec3, Vec4
 import pyglet
+from enum import Enum
+
+import mathutil
 from primitives import CustomMesh,Cube,Sphere, GridPlane, Cylinder
 
-from utils import Quaternions
-import mathutil
-from enum import Enum
+import sys
+import os
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from utils.Quaternions import Quaternions
+
 class MeshType(Enum):
     Custom = 0
     Sphere = 1
@@ -75,7 +80,7 @@ class Object:
             child.update_world_transform()
 
 class Character(Object):
-    def __init__(self, name, meshes = None, joints = None, scale_link = 1.0):
+    def __init__(self, name, meshes = None, joints = None, scale = [1.0,1.0,1.0], scale_link = 1.0):
         super().__init__(mesh_type=MeshType.Sphere,mesh_info={"stack":30, "slice":30, "scale":0.1})
         self.name = name
         self.joints = joints
@@ -96,9 +101,13 @@ class Character(Object):
                     self.root.set_parent(self)
                     break
             self.links = self.create_link(scale_link)
+            
+        self.set_scale(scale)          
+        if self.root is not None:
+            self.root.set_scale(scale)
 
         self.update_world_transform()
-
+        
     def set_position(self, pos):
         self.transform[3,0:3] = pos
         return
@@ -128,7 +137,8 @@ class Character(Object):
 
     def set_scale(self, scale = [1.0,1.0,1.0]):
         self.scale *= scale
-        
+        super().set_scale(self.scale)
+                
         if self.root is not None:
             self.root.set_scale(scale)
 
@@ -163,6 +173,7 @@ class Joint(Object):
     def animate(self, frame):        
         m = np.eye(4, dtype=np.float32)
         m[0:3, 0:3] = Quaternions(self.rotations[frame]).transforms()[0]
+        m = m.T # Because I use row-major matrix....sorry
         if self.is_root is True:
             m[3, 0:3] = self.positions[frame]
         else:
@@ -176,7 +187,7 @@ class Link(Object):
         self.set_parent(parent)
         self.init_transform(parent, child, scale)      
 
-    def init_transform(self, parent, child ,scale):
+    def init_transform(self, parent, child, scale):
         p = parent
         c = child
 
