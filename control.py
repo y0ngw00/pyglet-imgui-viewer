@@ -98,8 +98,8 @@ class Control:
                 return
 
             v = np.array([0.0, 0.0, 0.0])
-            v[0] += dx * 0.01
-            v[1] -= dy * 0.01
+            v[0] += dx * 0.1
+            v[1] -= dy * 0.1
             v = self.window.get_camera_coordinate().dot(v)
 
             dt = Vec3(v[0], v[1], v[2])
