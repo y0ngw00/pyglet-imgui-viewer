@@ -244,7 +244,7 @@ class UI:
                 
 
 class DancerCircle:
-    def __init__(self, character, xsize_box, ysize_box, position_scale = 10, radius = 10):
+    def __init__(self, character, xsize_box, ysize_box, position_scale = 1, radius = 10):
         self.target = character
         self.radius = radius
         self.position_scale = position_scale
@@ -262,6 +262,9 @@ class DancerCircle:
     @get_is_clicked.setter
     def set_is_clicked(self, clicked):
         self.__clicked = clicked
+        
+    def get_character_pos(self):
+        return self.target.get_position()
 
     def add_keyframe(self, keyframe):
         self.keyframe_anim.add_keyframe(keyframe)

@@ -6,6 +6,10 @@ import math
 from pyglet.gl import *
 from ctypes import byref
 
+import sys
+import os
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
 from utils import Animation
 import shader
 
@@ -297,13 +301,13 @@ class GridPlane(Mesh):
             for j in range(num_z):
                 zl = -num_z//2 + float(j) + 0.5
                 zr = -num_z//2 + float(j) - 0.5
-                self.vertices += [xl,-0.5,zl]
-                self.vertices += [xr,-0.5,zl]
-                self.vertices += [xr,-0.5,zr]
+                self.vertices += [xl,0.0,zl]
+                self.vertices += [xr,0.0,zl]
+                self.vertices += [xr,0.0,zr]
 
-                self.vertices += [xl,-0.5,zl]
-                self.vertices += [xr,-0.5,zr]
-                self.vertices += [xl,-0.5,zr]
+                self.vertices += [xl,0.0,zl]
+                self.vertices += [xr,0.0,zr]
+                self.vertices += [xl,0.0,zr]
 
                 self.normals += [0.0,1.0,0.0]
                 self.normals += [0.0,1.0,0.0]

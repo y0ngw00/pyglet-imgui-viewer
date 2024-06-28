@@ -16,7 +16,7 @@ def load_gltf(filename):
 
     joints = load_gltf_joint(filename, gltf)
    
-    character = Character(name, meshes = meshes)
+    character = Character(name, meshes = meshes, scale=[5,5,5])
     print("Success to load GLTF!")
 
     return character
@@ -148,7 +148,7 @@ def load_gltf_joint(folder_path, gltf):
     # return (Animation(quat_rotations, positions, orients, offsets, parents), names, frametime)
     return joints, inverse_bind_matrices
 
-def load_bvh(filepath):
+def load_bvh(filepath, scale = [1.0,1.0,1.0]):
     if not os.path.exists(filepath):
         return None
     
@@ -157,7 +157,7 @@ def load_bvh(filepath):
     if ext == "bvh":
         data = BVH.load(filepath)
         joints = create_joint(data[0], data[1],scale_joint = 5.0)
-        character = Character(name, joints = joints, scale_link = 5.0)
+        character = Character(name, joints = joints,scale=scale, scale_link = 5.0)
         print("BVH load success.")
 
         data={}
