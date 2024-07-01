@@ -32,13 +32,21 @@ class CustomGroup(pyglet.graphics.Group):
         self.object = object
         self.indexed_vertices_list = None
         self.shader_program.use()
+        
+        # Default material properties
+        self.K_ambient = Vec3(0.1, 0.1, 0.1)
+        self.K_diffuse = Vec3(1.0, 1.0, 1.0)
+        self.K_specular = Vec3(0.1, 0.1, 0.1)
 
     def set_state(self):
         self.shader_program.use()
         self.shader_program['model'] = Mat4(self.object.transform_gbl.flatten())
+        
+        self.shader_program['k_a'] = self.K_ambient
+        self.shader_program['k_d'] = self.K_diffuse
+        self.shader_program['k_s'] = self.K_specular
 
         if self.object.texture is not None:
-
             self.shader_program['useTexture'] = GL_TRUE
             glActiveTexture(GL_TEXTURE0)
             glBindTexture(GL_TEXTURE_2D, self.object.texture.id)

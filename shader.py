@@ -29,6 +29,7 @@ void main()
     gl_Position = view_proj * world; // local->world->vp
     fragColor = colors;
 
+    fragPos = vec3(world);
     fragNormal = transpose(inverse(mat3(model))) * normals;
 
     texCoords = uvs;
@@ -51,6 +52,11 @@ out vec4 outColor;
 
 uniform vec3 lightPos;
 uniform vec3 viewPos;
+
+uniform vec3 k_a;
+uniform vec3 k_d;
+uniform vec3 k_s;
+
 uniform bool useTexture;
 uniform sampler2D sampTexture;
 uniform vec4 fogColor; // Fog color
@@ -72,20 +78,20 @@ void main()
     vec3 color = vec3(mixedColor);
 
     // ambient
-    vec3 ambient = 0.1 * color;
+    vec3 ambient = k_a * color;
 
     // diffuse
     vec3 lightDir = normalize(lightPos - fragPos);
     vec3 normal = normalize(fragNormal);
 
     float diff = max(dot(lightDir, normal), 1.0);
-    vec3 diffuse = diff * color;
+    vec3 diffuse = k_d * diff * color;
 
     // specular
     vec3 viewDir = normalize(viewPos - fragPos);
     vec3 reflectDir = reflect(-lightDir, normal);
     float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32.0);
-    vec3 specular = vec3(0.5) * spec;
+    vec3 specular = k_s * spec;
     
     vec3 result = ambient + diffuse + specular;        
     outColor = vec4(result, 1.0);
