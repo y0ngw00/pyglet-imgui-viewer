@@ -1,6 +1,7 @@
 import base64
 import os
 import random
+import json
 
 import numpy as np
 from pygltflib import GLTF2, Node, Skin, Accessor, BufferView, BufferFormat
@@ -12,28 +13,28 @@ import mathutil
 def load_gltf(filename):
     gltf = GLTF2().load(filename)
     name = filename.split('/')[-1]
-    meshes = load_gltf_mesh(filename, gltf)
+    
+    file_ext = filename.split('.')[-1]
+    glb_data = None
+    if file_ext == "glb":
+        with open(filename, 'rb') as f:
+            glb_data = f.read()
+    meshes = load_gltf_mesh(filename, gltf,glb_data)
 
-    joints = load_gltf_joint(filename, gltf)
+    joints = load_gltf_joint(filename, gltf,glb_data)
    
-    character = Character(name, meshes = meshes, scale=[5,5,5])
+    character = Character(name, meshes = meshes, scale=[100,100,100])
     print("Success to load GLTF!")
 
     return character
 
 
-def load_gltf_mesh(file_path,gltf):
+def load_gltf_mesh(file_path,gltf,glb_data=None):
 
     meshes = []
     textures = []
 
-    glb_data = None
     folder_path = os.path.dirname(file_path) + "/"
-    file_ext = file_path.split('.')[-1]
-
-    if file_ext == "glb":
-        with open(file_path, 'rb') as f:
-            glb_data = f.read()
             
     for image in gltf.images:
         textures.append(folder_path + image.uri)
@@ -46,34 +47,35 @@ def load_gltf_mesh(file_path,gltf):
         indices = []
         joints = []
         weights = []
-        texture_id = None
+       
         for primitive in mesh.primitives:
             if primitive.attributes.POSITION is not None:
-                accessor = gltf.accessors[primitive.attributes.POSITION]
-                bufferView = gltf.bufferViews[accessor.bufferView]
-                buffer = get_buffer_data(file_path, gltf,bufferView,glb_data)
+                vertex_accessor = gltf.accessors[primitive.attributes.POSITION]
+                bufferView = gltf.bufferViews[vertex_accessor.bufferView]
+                # buffer = glb_data[bufferView.byteOffset:bufferView.byteOffset + bufferView.byteLength]
 
-                buffer_data = np.frombuffer(buffer, dtype=np.float32, count=accessor.count * 3)
+                buffer = get_buffer_data(file_path, gltf,bufferView,glb_data)
+                buffer_data = np.frombuffer(buffer, dtype=np.float32, count=vertex_accessor.count * 3)
                 # buffer_data = buffer_data.reshape(accessor.count, 3)
 
                 vertices.extend(buffer_data.tolist())
 
             if primitive.attributes.NORMAL is not None:
-                accessor = gltf.accessors[primitive.attributes.NORMAL]
-                bufferView = gltf.bufferViews[accessor.bufferView]
+                normal_accessor = gltf.accessors[primitive.attributes.NORMAL]
+                bufferView = gltf.bufferViews[normal_accessor.bufferView]
                 buffer = get_buffer_data(file_path, gltf,bufferView,glb_data)
 
-                buffer_data = np.frombuffer(buffer, dtype=np.float32, count=accessor.count * 3)
+                buffer_data = np.frombuffer(buffer, dtype=np.float32, count=normal_accessor.count * 3)
                 # buffer_data = buffer_data.reshape(accessor.count, 3)
 
                 normals.extend(buffer_data.tolist())
 
             if primitive.attributes.TEXCOORD_0 is not None:
-                accessor = gltf.accessors[primitive.attributes.TEXCOORD_0]
-                bufferView = gltf.bufferViews[accessor.bufferView]
+                uvs_accessor = gltf.accessors[primitive.attributes.TEXCOORD_0]
+                bufferView = gltf.bufferViews[uvs_accessor.bufferView]
                 buffer = get_buffer_data(file_path, gltf,bufferView,glb_data)
 
-                buffer_data = np.frombuffer(buffer, dtype=np.float32, count=accessor.count * 2)
+                buffer_data = np.frombuffer(buffer, dtype=np.float32, count=uvs_accessor.count * 2)
                 # buffer_data = buffer_data.reshape(accessor.count, 2)
 
                 uvs.extend(buffer_data.tolist())
@@ -86,21 +88,22 @@ def load_gltf_mesh(file_path,gltf):
                 buffer_data = np.frombuffer(buffer, dtype=np.uint16, count=accessor.count)
                 indices.extend(buffer_data.tolist())
 
-            # if primitive.attributes.JOINTS_0 is not None:
-            #     accessor = gltf.accessors[primitive.attributes.JOINTS_0]
-            #     bufferView = gltf.bufferViews[accessor.bufferView]
-            #     buffer = get_buffer_data(file_path, gltf, bufferView, glb_data)
-            #     data = np.frombuffer(buffer, dtype=np.uint16, count=accessor.count * 4, offset=accessor.byteOffset)
-            #     data = data.reshape(accessor.count, 4)
-            #     joints.extend(data.tolist())
+            # if primitive.attributes.WEIGHTS_0 is not None and primitive.attributes.JOINTS_0 is not None:
+            #     weights_accessor = gltf.accessors[primitive.attributes.WEIGHTS_0]
+            #     bufferView = gltf.bufferViews[weights_accessor.bufferView]
+            #     # weights_buffer = gltf.buffers[bufferView.buffer]
+            #     weights_buffer = get_buffer_data(file_path, gltf, bufferView, glb_data)
+            #     weights_data = np.frombuffer(weights_buffer, dtype=np.float32,count=weights_accessor.count * 4, offset=weights_accessor.byteOffset)
+            #     weights_data = weights_data.reshape(weights_accessor.count, 4)
+            #     weights.extend(weights_data.tolist())
+                
+            #     joints_accessor = gltf.accessors[primitive.attributes.JOINTS_0]
+            #     bufferView = gltf.bufferViews[joints_accessor.bufferView]
+            #     joints_buffer = get_buffer_data(file_path, gltf, bufferView, glb_data)
+            #     joints_data = np.frombuffer(joints_buffer, dtype=np.uint8, count=joints_accessor.count * 4, offset=joints_accessor.byteOffset)
+            #     joints_data = joints_data.reshape(joints_accessor.count, 4)
+            #     joints.extend(joints_data.tolist())
 
-            # if primitive.attributes.WEIGHTS_0 is not None:
-            #     accessor = gltf.accessors[primitive.attributes.WEIGHTS_0]
-            #     bufferView = gltf.bufferViews[accessor.bufferView]
-            #     buffer = get_buffer_data(file_path, gltf, bufferView, glb_data)
-            #     data = np.frombuffer(buffer, dtype=np.float32, count=accessor.count * 4)
-            #     data = data.reshape(accessor.count, 4)
-            #     weights.extend(data.tolist())
 
             texture_id = primitive.material
 
@@ -123,7 +126,7 @@ def load_gltf_mesh(file_path,gltf):
 
     return meshes
 
-def load_gltf_joint(folder_path, gltf):
+def load_gltf_joint(folder_path, gltf,glb_data):
     joints = []
     inverse_bind_matrices = []
 
@@ -136,7 +139,7 @@ def load_gltf_joint(folder_path, gltf):
         accessor = gltf.accessors[skin.inverseBindMatrices]
         bufferView = gltf.bufferViews[accessor.bufferView]
 
-        buffer = get_buffer_data(folder_path, gltf,bufferView)
+        buffer = get_buffer_data(folder_path, gltf,bufferView,glb_data)
 
         buffer_data = np.frombuffer(buffer, dtype=np.float32, count=accessor.count * 16)
         buffer_data = buffer_data.reshape(accessor.count, 4, 4)
@@ -194,7 +197,7 @@ def create_joint(data,names,scale_joint):
 
     return joints
 
-def get_buffer_data(file_path, gltf,buffer_view, glb_data = None):
+def get_buffer_data(file_path, gltf,buffer_view, glb_data=None):
     folder_path = os.path.dirname(file_path) + "/"
     file_ext = file_path.split('.')[-1]
     buffer = gltf.buffers[buffer_view.buffer]

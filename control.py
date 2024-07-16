@@ -33,19 +33,16 @@ class Control:
     def on_key_press(self, symbol, modifier):
         pass
     
-    def on_key_release(self, symbol, modifier):
+    def on_key_release(self, symbol, modifier)->None:
         key_interact = {
             pyglet.window.key.ESCAPE: self.window.quit,
             pyglet.window.key.SPACE: lambda: setattr(self.window, 'animate', not self.window.animate),
             pyglet.window.key.R: self.window.reset,
-            pyglet.window.key.A: lambda: self.window.GUI.on_key_release(pyglet.window.key.A, modifier),
-            pyglet.window.key.D: lambda: self.window.GUI.on_key_release(pyglet.window.key.D, modifier),
-            pyglet.window.key.F: lambda: self.window.GUI.on_key_release(pyglet.window.key.F, modifier),
-            pyglet.window.key.W: lambda: self.window.GUI.on_key_release(symbol, modifier),
-            pyglet.window.key.S: lambda: self.window.GUI.on_key_release(symbol, modifier),
         }
         if symbol in key_interact:
             key_interact[symbol]()
+            
+        self.window.GUI.on_key_release(symbol, modifier)
 
     def on_mouse_motion(self, x, y, dx, dy):
         # TODO:
@@ -58,9 +55,8 @@ class Control:
 
     def on_mouse_release(self, x, y, button, modifier):
         if button == 1:  # rotation
-            if self.window.is_ui_active() is True:
-                self.window.GUI.on_mouse_release(x, y, button, modifier)
-                return
+            self.window.GUI.on_mouse_release(x, y, button, modifier)
+            return
 
     def on_mouse_drag(self, x, y, dx, dy, button, modifier):
         if button == 1:  # rotation

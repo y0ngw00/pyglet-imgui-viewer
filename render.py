@@ -125,7 +125,7 @@ class RenderWindow(pyglet.window.Window):
             shape.shader_program["fogEnd"] = self.fog_end
             shape.shader_program["fogColor"] = self.fog_color
             
-        self.GUI.update_ui(is_animate = self.animate)
+        self.GUI.update_ui(self.animate)
 
     def add_shape(self, obj) -> None:
         shape = CustomGroup(obj, len(self.shapes))
@@ -212,3 +212,7 @@ class RenderWindow(pyglet.window.Window):
     @property
     def get_view_mat(self):
         return self.__view_mat
+    
+    def draw_trajectory(self, pos_traj):
+        self.scene.draw_trajectory(pos_traj)
+        return
