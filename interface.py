@@ -30,7 +30,7 @@ class UI:
         imgui.get_io().fonts.get_tex_data_as_rgba32()
         self.impl = create_renderer(window)
         
-        self.new_font = imgui.get_io().fonts.add_font_from_file_ttf("pyglet_render/model/PublicSans-SemiBold.ttf", 20)
+        self.new_font = imgui.get_io().fonts.add_font_from_file_ttf("pyglet_render/data/PublicSans-SemiBold.ttf", 20)
         self.impl.refresh_font_texture()
         imgui.new_frame()  
         imgui.end_frame()
