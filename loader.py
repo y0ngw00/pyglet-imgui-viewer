@@ -8,6 +8,8 @@ from pygltflib import GLTF2, Node, Skin, Accessor, BufferView, BufferFormat
 
 from utils import BVH
 from object import Character,Joint,Link,Object,MeshType
+from extern_file_parser import pycomcon
+
 import mathutil
 
 def load_gltf(filename):
