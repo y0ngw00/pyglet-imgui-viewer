@@ -16,6 +16,18 @@
 #include "Joint.h"
 using namespace fbxsdk;
 
+struct SubMesh
+{
+    unsigned int m_IndexOffset;
+    unsigned int m_TriangleCount;
+
+    SubMesh()
+    {
+        m_IndexOffset = 0;
+        m_TriangleCount = 0;
+    }
+};
+
 FBXLoader::
 FBXLoader()
 {
@@ -25,7 +37,7 @@ FBXLoader()
 FBXLoader::
 ~FBXLoader()
 {
-    clearSDK();
+    ClearSDK();
 
     m_Joints.clear();
     m_Meshes.clear();
@@ -40,7 +52,7 @@ initialize()
 
 void
 FBXLoader::
-clearSDK()
+ClearSDK()
 {	
 	if (m_fbxScene)
 	{
@@ -61,6 +73,16 @@ LoadFBX(const std::string& _filePath)
     std::cout<<"Load FBX file from : "<<_filePath<<"\n";
 
     m_fbxScene = FbxScene::Create(sdkManager, "");
+
+    // Create a geometry converter
+    FbxGeometryConverter converter(sdkManager);
+
+    // Triangulate the scene
+    bool result = converter.Triangulate(m_fbxScene, /*replace=*/true);
+    if (!result) {
+        std::cerr << "Failed to triangulate the scene" << std::endl;
+        return false;
+    }
     bool bLoadResult = loadScene(sdkManager, _filePath);
     if(bLoadResult == false)
     {
@@ -76,60 +98,22 @@ LoadFBX(const std::string& _filePath)
     FbxNode* rootNode = m_fbxScene->GetRootNode();
 
     this->ProcessNode(rootNode);
-    FbxAMatrix globalPosition = globalPosition = rootNode->EvaluateGlobalTransform();
-    if(rootNode->GetNodeAttribute()) 
-	{
-	// 	//geometry offset 값은 자식 노드에 상속되지 않는다.
-		FbxAMatrix geometryOffset = GetGeometry(rootNode);
-		FbxAMatrix globalOffPosition = globalPosition * geometryOffset;
+    // FbxAMatrix globalPosition = globalPosition = rootNode->EvaluateGlobalTransform();
+    // if(rootNode->GetNodeAttribute()) 
+	// {
+	// // 	//geometry offset 값은 자식 노드에 상속되지 않는다.
+	// 	FbxAMatrix geometryOffset = GetGeometry(rootNode);
+	// 	FbxAMatrix globalOffPosition = globalPosition * geometryOffset;
 
-	}
-
-
-    //load texture 
-
-    //load joint
-
-    //load skinning
-
-
-    // // Display the scene.
-    // DisplayMetaData(m_fbxScene);
-
-    // FBXSDK_printf("\n\n---------------------\nGlobal Light Settings\n---------------------\n\n");
-
-    // if( gVerbose ) DisplayGlobalLightSettings(&m_fbxScene->GetGlobalSettings());
-
-    // FBXSDK_printf("\n\n----------------------\nGlobal Camera Settings\n----------------------\n\n");
-
-    // if( gVerbose ) DisplayGlobalCameraSettings(&m_fbxScene->GetGlobalSettings());
-
-    // FBXSDK_printf("\n\n--------------------\nGlobal Time Settings\n--------------------\n\n");
-
-    // if( gVerbose ) DisplayGlobalTimeSettings(&m_fbxScene->GetGlobalSettings());
-
-    // FBXSDK_printf("\n\n---------\nHierarchy\n---------\n\n");
-
-    // if( gVerbose ) DisplayHierarchy(&m_fbxScenene);
-
-    // FBXSDK_printf("\n\n------------\nNode Content\n------------\n\n");
-
-    // if( gVerbose ) DisplayContent(m_fbxScene);
-
-    // FBXSDK_printf("\n\n----\nPose\n----\n\n");
-
-    // if( gVerbose ) DisplayPose(m_fbxScene);
-
-    // FBXSDK_printf("\n\n---------\nAnimation\n---------\n\n");
-
-    // if( gVerbose ) DisplayAnimation(m_fbxScene);
-
-    // //now display generic information
-
-    // FBXSDK_printf("\n\n---------\nGeneric Information\n---------\n\n");
-    // if( gVerbose ) DisplayGenericInfo(m_fbxScene);
+	// }
 
     //Delete the FBX Manager. All the objects that have been allocated using the FBX Manager and that haven't been explicitly destroyed are also automatically destroyed.
+    if (m_fbxScene)
+	{
+		m_fbxScene->Destroy();
+		m_fbxScene = NULL;
+	}
+
     if( sdkManager ) sdkManager->Destroy();
 	if( bLoadResult ) FBXSDK_printf("Program Success!\n");
 
@@ -229,17 +213,19 @@ loadMesh(FbxNode* _pNode)
 
     }
 
-    // Process the vertex indices.
-
     for(int i = 0; i < numPolygons; i++) {
         for(int j = 0; j < numPolygonVertices; j++) {
             int vertexIndex = lMesh->GetPolygonVertex(i, j);
+            // if(numPolygonVertices==3)
+                // std::cout<<"Triangle exists"<<'\n';
             indices[i*numPolygonVertices+j] = vertexIndex;
+
+            
             // Now vertexIndex is the index of a vertex of the polygon.
         }
     }
 
-    Mesh* mesh = new Mesh(pos, nor, uvs, indices);
+    Mesh* mesh = new Mesh(pos, nor, uvs, indices, numPolygonVertices);
 
     m_Meshes.push_back(mesh);
 
@@ -349,7 +335,6 @@ loadScene(FbxManager* _pManager, const std::string& _pFileName)
 
     //Import the scene.
     bResult = fbxImporter->Import(m_fbxScene);
-    std::cout<<"FBX SDK versi"<<"\n";
     if(bResult==false && fbxImporter->GetStatus() == FbxStatus::ePasswordError)
     {
         std::cout<<"This file requires password."<<"\n";
@@ -622,6 +607,13 @@ GetMeshCount()
     return m_Meshes.size();
 }
 
+int
+FBXLoader::
+GetMeshStride(int index)
+{
+    return m_Meshes[index]->GetStride();
+}
+
 Eigen::VectorXd
 FBXLoader::
 GetMeshPosition(int index)
@@ -782,7 +774,9 @@ PYBIND11_MODULE(pycomcon, m){
 	py::class_<FBXLoader>(m, "FBXLoader")
 		.def(py::init<>())
         .def("load_fbx", &FBXLoader::LoadFBX)
+        .def("clear_sdk", &FBXLoader::ClearSDK)
         .def("get_mesh_count", &FBXLoader::GetMeshCount)
+        .def("get_mesh_stride", &FBXLoader::GetMeshStride)
         .def("get_mesh_position", &FBXLoader::GetMeshPosition)
         .def("get_mesh_normal", &FBXLoader::GetMeshNormal)
         .def("get_mesh_texcoord", &FBXLoader::GetMeshTextureCoord)

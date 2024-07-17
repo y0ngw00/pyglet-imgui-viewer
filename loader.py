@@ -153,6 +153,79 @@ def load_gltf_joint(folder_path, gltf,glb_data):
     # return (Animation(quat_rotations, positions, orients, offsets, parents), names, frametime)
     return joints, inverse_bind_matrices
 
+def load_fbx(filename):
+    fbx_loader = pycomcon.FBXLoader()
+    loadResult = fbx_loader.load_fbx(filename)
+    name = filename.split('/')[-1]
+    
+    meshes = load_fbx_mesh(fbx_loader)
+
+    # joints = load_fbx_joint(fbx_loader)
+   
+    character = Character(name, meshes = meshes, scale=[1,1,1])
+    print("Success to load FBX!")
+    return character
+
+def load_fbx_mesh(fbx_loader):
+    meshes = []
+    
+    num_mesh = fbx_loader.get_mesh_count()
+    
+    for i in range(num_mesh):
+        vertices = fbx_loader.get_mesh_position(i)
+        normals = fbx_loader.get_mesh_normal(i)
+        uvs = fbx_loader.get_mesh_texcoord(i)
+        indices = fbx_loader.get_mesh_indices(i)
+        mesh = Object(mesh_type=MeshType.Custom,
+                      mesh_info={"vertices":vertices, 
+                                 "normals":normals,
+                                "uvs":uvs,
+                                "indices":indices})
+        mesh.stride = fbx_loader.get_mesh_stride(i)
+        # mesh = Object(mesh_type=MeshType.Custom,
+        #               mesh_info={"vertices":vertices, 
+        #                          "normals":normals,
+        #                         "uvs":uvs,
+        #                         "indices":indices,
+        #                         "joint_indices" : np.array(joints),
+        #                         "skin_weight": np.array(weights)})
+        
+        meshes.append(mesh)
+    
+    return meshes
+
+def load_fbx_joint(fbx_loader):
+    joints = []
+    
+    num_joint = fbx_loader.get_joint_count()
+    
+    for i in range(num_joint):
+        
+        name = fbx_loader.get_joint_name(i)
+        joint = Joint(name,5.0)
+        
+        parent_idx = fbx_loader.get_parent_idx(i)
+        transform = fbx_loader.get_joint_transform(i)
+        
+        if parent_idx == -1:
+            joint.set_root(True)
+            joint.set_transform(transform)
+        else:
+            joint.set_parent(joints[parent_idx])
+            joint.set_transform(transform)
+            
+        joints.append(joint)
+        
+    # # animation
+    # for frame, rot in enumerate(data.rotations):
+    #     for idx, joint in enumerate(joints):
+    #         joint.rotations.append(rot[idx])
+
+    #         if joint.is_root is True:
+    #             joint.positions.append(data.positions[frame][idx])
+        
+    return joints
+
 def load_bvh(filepath, scale = [1.0,1.0,1.0]):
     if not os.path.exists(filepath):
         return None

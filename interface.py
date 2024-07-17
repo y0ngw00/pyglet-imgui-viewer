@@ -294,6 +294,11 @@ class UI:
                         file_descriptions = "GLTF Files"
                         file_ext = ["*.gltf","*.glb"]
                         is_open_file = True
+                        
+                    if imgui.menu_item("FBX", None)[0]:
+                        file_descriptions = "FBX Files"
+                        file_ext = ["*.fbx"]
+                        is_open_file = True
 
                     imgui.end_menu()
                 imgui.separator()
@@ -498,6 +503,14 @@ class UI:
             self.circles.append(DancerCircle(character,self.xsize_box, self.ysize_box, 1))
             self.pos_idx2+=1
         
+        elif ext == "fbx":
+            loader.load_fbx(file_path)
+            character = loader.load_fbx(file_path)
+            character.set_position(self.pos_list[self.pos_idx2])
+            
+            self.circles.append(DancerCircle(character,self.xsize_box, self.ysize_box, 1))
+            self.pos_idx2+=1
+    
         if character is not None:
             self.scene.add_character(character)
         return

@@ -11,7 +11,7 @@ class Mesh
 {
 public:
     Mesh();
-    Mesh(const Eigen::VectorXd& _vertices, const Eigen::VectorXd& _normals, const Eigen::VectorXd& _texCoords, const Eigen::VectorXi& _indices);
+    Mesh(const Eigen::VectorXd& _vertices, const Eigen::VectorXd& _normals, const Eigen::VectorXd& _texCoords, const Eigen::VectorXi& _indices, const int _stride);
     
     virtual ~Mesh();
 
@@ -19,6 +19,7 @@ public:
     Eigen::VectorXd GetNormals() const { return mNormals; }
     Eigen::VectorXd GetTexCoords() const { return mTexCoords; }
     Eigen::VectorXi GetIndices() const { return mIndices; }
+    int GetStride() const { return mStride; }
 
 // Load functions
 private:
@@ -30,6 +31,7 @@ private:
     Eigen::VectorXd mNormals;
     Eigen::VectorXd mTexCoords;
     Eigen::VectorXi mIndices;
+    int mStride;
 };
 
 

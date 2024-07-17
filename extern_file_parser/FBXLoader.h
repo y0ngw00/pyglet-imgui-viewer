@@ -13,11 +13,13 @@ class FBXLoader
 {
 public:
     FBXLoader();
+    void ClearSDK();
     bool LoadFBX(const std::string& _filePath);
     void ProcessNode(FbxNode* node);
     void CreateScene();
 
     int GetMeshCount();
+    int GetMeshStride(int index);
     Eigen::VectorXd GetMeshPosition(int index);
     Eigen::VectorXd GetMeshNormal(int index);
     Eigen::VectorXd GetMeshTextureCoord(int index);
@@ -34,7 +36,6 @@ public:
 private:
 
     void initialize();
-    void clearSDK();
     bool loadScene(FbxManager* _pManager, const std::string& _pFileName);
     bool loadMesh(FbxNode* _pNode);
     bool loadJoint(FbxNode* _node);
