@@ -1,3 +1,11 @@
 ﻿__pycache__
 .vscode
 tutorial
+
+
+CMakeFiles
+c_env
+build
+
+*.so
+*.a
