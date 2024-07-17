@@ -213,6 +213,15 @@ class RenderWindow(pyglet.window.Window):
     def get_view_mat(self):
         return self.__view_mat
     
+    @property
+    def get_frame(self):
+        return self.frame
+    
+    @get_frame.setter
+    def set_frame(self, f):
+        self.frame = f
+        
+    
     def draw_trajectory(self, pos_traj):
         self.scene.draw_trajectory(pos_traj)
         return
