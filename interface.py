@@ -19,6 +19,7 @@ from tkinter import filedialog
 import loader
 from ui import DancerCircle, KeyFrame, Sequencer, Sequence, SequenceTrack, DancerFormation, TitleBar,ModelConnector
 
+from enum_list import FileType
 class UI:
     def __init__(self, window):
         imgui.create_context()

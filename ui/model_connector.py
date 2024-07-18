@@ -15,6 +15,7 @@ import numpy as np
 import pickle as pkl
 
 from test import synthesize
+from enum_list import FileType
 
 class ModelConnector:
     def __init__(self, parent_window, scene):
@@ -40,7 +41,7 @@ class ModelConnector:
                 # selected_character_file = self.render_file_dialog(file_descriptions, file_ext)
                 # if selected_character_file:
                     # print(f"Open File: {selected_character_file}")
-                self.open_file(selected_character_file)
+                self.parent_window.open_file(selected_character_file, FileType.Character)
 
             if imgui.button("Select audio file"):
                 file_descriptions = "Audio files (.wav)"
@@ -49,7 +50,7 @@ class ModelConnector:
                 # if selected_audio_file:
                 #     print(f"Open File: {selected_audio_file}")
                 #     self.open_file(selected_audio_file)
-                self.selected_audio_file = str(selected_audio_file)
+                self.selected_audio_file = str(selected_audio_file, FileType.Audio)
             
             imgui.text(self.selected_audio_file)
             imgui.spacing()
@@ -74,7 +75,7 @@ class ModelConnector:
                     # pos_traj += self.pos_list[self.pos_idx]
                     self.scene.draw_trajectory(pos_traj)
                     synthesize(vel_traj,self.selected_audio_file, self.selected_network_file, output_path, endframe)
-                    self.parent_window.open_file(output_path + ".bvh")
+                    self.parent_window.open_file(output_path + ".bvh", FileType.Character)
             imgui.spacing()
             
             if imgui.button("Generate!"):
@@ -90,11 +91,11 @@ class ModelConnector:
                 pos_traj += self.pos_list[self.pos_idx]
                 self.scene.draw_trajectory(pos_traj)
                 synthesize(vel_traj,self.selected_audio_file, self.selected_network_file, output_path)
-                self.parent_window.open_file(output_path + ".bvh")
+                self.parent_window.open_file(output_path + ".bvh", FileType.Character)
                  
         else:
             synthesize(vel_traj,self.selected_audio_file, self.selected_network_file, output_path)   
-            self.parent_window.open_file(output_path + ".bvh")
+            self.parent_window.open_file(output_path + ".bvh", FileType.Character)
         
     def generate_trajectory(self, circle, nframe: int) -> Tuple[np.ndarray, np.ndarray]:
         pos_traj = np.zeros([nframe,3], dtype = np.float32)

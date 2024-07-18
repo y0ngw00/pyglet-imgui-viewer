@@ -9,16 +9,9 @@ from primitives import CustomMesh,Cube,Sphere, GridPlane, Cylinder
 import sys
 import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from utils.Quaternions import Quaternions
+from motionutils.Quaternions import Quaternions
 
-class MeshType(Enum):
-    Custom = 0
-    Sphere = 1
-    Cube = 2
-    GridPlane = 3
-    Cylinder = 4
-    
-
+from enum_list import MeshType
 class Object:
     def __init__(self,mesh_type:MeshType, mesh_info):
         self.children = []

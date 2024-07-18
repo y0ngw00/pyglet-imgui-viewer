@@ -6,7 +6,7 @@ import json
 import numpy as np
 from pygltflib import GLTF2, Node, Skin, Accessor, BufferView, BufferFormat
 
-from utils import BVH
+from motionutils import BVH
 from object import Character,Joint,Link,Object,MeshType
 from extern_file_parser import pycomcon
 
