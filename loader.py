@@ -258,6 +258,7 @@ def load_bvh_animation(filepath):
         
     data = BVH.load(filepath)
     joints = create_joint(data[0], data[1],scale_joint = 5.0)
+    
     print("BVH load success.")
 
     return joints

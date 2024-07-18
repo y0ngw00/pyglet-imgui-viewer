@@ -144,7 +144,22 @@ class Character(Object):
                 j.animate(frame)
             self.root.set_scale(self.scale)
             
-    def add_animation(self, joints, frame):
+    def add_animation(self, joints, frame, initialize_position = False):
+        if initialize_position is True:
+            closest_frame = frame
+            if closest_frame > len(self.root.positions):
+                closest_frame = len(self.root.positions) - 1
+             
+            root = joints[0]
+            curr_pos = self.root.positions[closest_frame]
+            pos_diff = root.positions[0] - curr_pos
+            root.positions -= pos_diff
+            
+            curr_rot = self.root.rotations[closest_frame]
+            rot_diff_inv =  Quaternions(curr_rot) * -(Quaternions(root.rotations[0]))
+            root.rotations = [rot_diff_inv * Quaternions(q) for q in root.rotations]
+            root.rotations[0] = curr_rot            
+            
         for idx, joint in enumerate(joints):
             if idx > len(self.joints):
                 self.joints.append(joint)
@@ -184,15 +199,29 @@ class Joint(Object):
         self.set_transform(m)
         
     def add_animation(self, joint, frame):
+        rest_pos = None
+        rest_rot = None
         if frame > len(self.rotations):
             self.fill_animation(frame)
-        
-        for i in range(len(joint.rotations)):
-            idx = frame + i
+        else:
+            if len(self.rotations) > frame + len(joint.rotations):
+                if self.is_root is True:
+                    rest_pos = self.rotations[frame + len(joint.rotations):]
+                rest_rot = self.rotations[frame + len(joint.rotations):]
+ 
             if self.is_root is True:
-                self.positions.append(joint.positions[i])
-            
-            self.rotations.append(joint.rotations[i])
+                self.positions = self.positions[:frame]           
+            self.rotations = self.rotations[:frame]
+
+                
+        if self.is_root is True:
+            self.positions.extend(joint.positions)
+        self.rotations.extend(joint.rotations)
+        
+        if rest_pos is not None:
+            self.positions.extend(rest_pos)
+        if rest_rot is not None:
+            self.rotations.extend(rest_rot)
     
     def fill_animation(self, frame):
         if len(self.rotations) == 0:

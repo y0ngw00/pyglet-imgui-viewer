@@ -122,7 +122,8 @@ class Sequence:
         
     def insert_track(self, file_path, start_frame):
         joints = loader.load_bvh_animation(file_path)
-        self.target.add_animation(joints, start_frame)
+        self.target.add_animation(joints, start_frame, initialize_position= True)
+        self.tracks.append(SequenceTrack(self, start_frame, len(joints[0].positions)))
                 
     def is_picked(self,x,y)->bool:
         if self.x_origin<=x<=self.x_origin+self.xsize_box and self.y_origin<=y<=self.y_origin+self.ysize_box:
@@ -143,4 +144,4 @@ class SequenceTrack:
         draw_list = imgui.get_window_draw_list()
         draw_list.add_rect_filled(x, y, 
                            x+dx * (self.frame_end - self.frame_start), y+dy, 
-                           self.track_color, rounding=4, thickness=2)
+                           self.track_color, rounding=4)

@@ -3,9 +3,6 @@ import pyglet
 from pyglet.math import Mat4, Vec3
 from object import Object,MeshType
 
-from imgui.integrations.pyglet import PygletRenderer
-import imgui
-
 import shader
 import ui
 
