@@ -50,7 +50,7 @@ class UI:
         
         self.titlebar = TitleBar(self)
         self.DancerFormation = DancerFormation(self)
-        self.Sequencer = Sequencer()
+        self.Sequencer = Sequencer(self)
         self.model_connector = ModelConnector(self,self.scene)
         
         self.impl.refresh_font_texture()        
@@ -196,30 +196,36 @@ class UI:
         return selected_file
     
 
-    def open_file(self, file_path):
+    def open_file(self, file_path, file_type = FileType.Character):
         ext = file_path.split('.')[-1]
         name = file_path.split('/')[-1]
-        if ext == "bvh":
-            character = loader.load_bvh(file_path)
-            character.set_position(self.pos_list[self.pos_idx])
-            self.pos_idx+=1
-
-        elif ext == "gltf" or ext == "glb":
-            character = loader.load_gltf(file_path)
-            character.set_position(self.pos_list[self.pos_idx2])
-            self.add_dancer(character)
-            self.pos_idx2+=1
         
-        elif ext == "fbx":
-            loader.load_fbx(file_path)
-            character = loader.load_fbx(file_path)
-            character.set_position(self.pos_list[self.pos_idx2])
+        if file_type == FileType.Character:
+            if ext == "bvh":
+                character = loader.load_bvh(file_path)
+                character.set_position(self.pos_list[self.pos_idx])
+                self.add_dancer(character)
+                self.pos_idx+=1
+
+            elif ext == "gltf" or ext == "glb":
+                character = loader.load_gltf(file_path)
+                character.set_position(self.pos_list[self.pos_idx2])
+                self.add_dancer(character)
+                self.pos_idx2+=1
             
-            self.add_dancer(character)
-            self.pos_idx2+=1
-    
-        if character is not None:
-            self.scene.add_character(character)
+            elif ext == "fbx":
+                loader.load_fbx(file_path)
+                character = loader.load_fbx(file_path)
+                character.set_position(self.pos_list[self.pos_idx2])
+                
+                self.add_dancer(character)
+                self.pos_idx2+=1
+                    
+            if character is not None:
+                self.scene.add_character(character)
+                
+
+
         return
     
     def get_frame(self):

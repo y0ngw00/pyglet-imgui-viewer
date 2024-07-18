@@ -160,9 +160,9 @@ def load_fbx(filename):
     
     meshes = load_fbx_mesh(fbx_loader)
 
-    # joints = load_fbx_joint(fbx_loader)
-   
-    character = Character(name, meshes = meshes, scale=[1,1,1])
+    joints = load_fbx_joint(fbx_loader)
+    character = Character(name, joints = joints,scale=[1,1,1], scale_link = 5.0)
+    # character = Character(name, meshes = meshes, scale=[1,1,1])
     print("Success to load FBX!")
     return character
 
@@ -232,15 +232,35 @@ def load_bvh(filepath, scale = [1.0,1.0,1.0]):
     
     ext = filepath.split('.')[-1]
     name = filepath.split('/')[-1]
-    if ext == "bvh":
-        data = BVH.load(filepath)
-        joints = create_joint(data[0], data[1],scale_joint = 5.0)
-        character = Character(name, joints = joints,scale=scale, scale_link = 5.0)
-        print("BVH load success.")
+    if ext != "bvh":
+        print("This file is not BVH format. Please check the file extension.")
+        return None
+        
+    data = BVH.load(filepath)
+    joints = create_joint(data[0], data[1],scale_joint = 5.0)
+    character = Character(name, joints = joints,scale=scale, scale_link = 5.0)
+    print("BVH load success.")
 
-        data={}
+    data={}
 
-        return character
+    return character
+
+
+def load_bvh_animation(filepath):
+    if not os.path.exists(filepath):
+        return None
+    
+    ext = filepath.split('.')[-1]
+    name = filepath.split('/')[-1]
+    if ext != "bvh":
+        print("This file is not BVH format. Please check the file extension.")
+        return None
+        
+    data = BVH.load(filepath)
+    joints = create_joint(data[0], data[1],scale_joint = 5.0)
+    print("BVH load success.")
+
+    return joints
 
 def create_joint(data,names,scale_joint):
     joints = []

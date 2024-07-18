@@ -119,15 +119,6 @@ class Character(Object):
         for l in self.links:
             l.set_color(color)
 
-    def animate(self, frame):
-        
-        if self.root is not None:
-            if frame < 0 or len(self.root.rotations) <= frame:
-                return
-            for j in self.joints:
-                j.animate(frame)
-            self.root.set_scale(self.scale)
-
     def set_scale(self, scale = [1.0,1.0,1.0]):
         self.scale *= scale
         super().set_scale(self.scale)
@@ -144,6 +135,23 @@ class Character(Object):
             links.append(link)
             
         return links
+    
+    def animate(self, frame):    
+        if self.root is not None:
+            if frame < 0 or len(self.root.rotations) <= frame:
+                return
+            for j in self.joints:
+                j.animate(frame)
+            self.root.set_scale(self.scale)
+            
+    def add_animation(self, joints, frame):
+        for idx, joint in enumerate(joints):
+            if idx > len(self.joints):
+                self.joints.append(joint)
+                
+            else:
+                self.joints[idx].add_animation(joint, frame)
+        
 
 class Joint(Object):
     def __init__(self, name,scale_joint):
@@ -152,7 +160,6 @@ class Joint(Object):
         # Ordered list of channels: each
         # list entry is one of [XYZ]position, [XYZ]rotation
         self.channels = []
-        self.frames = []
         self.rotations = []
         self.positions = []
         self.offset = np.array([0.,0.,0.]) # static translation vector
@@ -163,7 +170,9 @@ class Joint(Object):
     def set_root(self, is_root):
         self.is_root = is_root
 
-    def animate(self, frame):        
+    def animate(self, frame):
+        if frame > len(self.rotations):
+            return        
         m = np.eye(4, dtype=np.float32)
         m[0:3, 0:3] = Quaternions(self.rotations[frame]).transforms()[0]
         m = m.T # Because I use row-major matrix....sorry
@@ -173,7 +182,29 @@ class Joint(Object):
             m[3, 0:3] = self.transform[3, 0:3]
 
         self.set_transform(m)
-
+        
+    def add_animation(self, joint, frame):
+        if frame > len(self.rotations):
+            self.fill_animation(frame)
+        
+        for i in range(len(joint.rotations)):
+            idx = frame + i
+            if self.is_root is True:
+                self.positions.append(joint.positions[i])
+            
+            self.rotations.append(joint.rotations[i])
+    
+    def fill_animation(self, frame):
+        if len(self.rotations) == 0:
+            self.rotations.append(np.array([1,0,0,0]))
+            self.positions.append(np.array([0,0,0]))
+        else:
+            for i in range(frame - len(self.rotations)):
+                if self.is_root is True:
+                    self.positions.append(self.positions[-1])
+                self.rotations.append(self.rotations[-1])
+                
+        return
 class Link(Object):
     def __init__(self, parent, child, scale):
         super().__init__(MeshType.Cylinder, {"diameter": 1.0, "height": 1.0, "num_segments":16})  
