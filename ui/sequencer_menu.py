@@ -32,7 +32,8 @@ class SequencerMenu:
             imgui.end_popup()
 
     def open_motion_library(self):
-        fileName = filedialog.askopenfilename(initialdir = "./data/mixamo_library")
+        file_types = [("motion files", "*.bvh")]
+        fileName = filedialog.askopenfilename(filetypes=file_types,initialdir = "./data/mixamo_library")
         if not os.path.exists(fileName):
             return None
         self.parent_window.insert_motion(fileName)

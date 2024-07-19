@@ -49,7 +49,7 @@ class DancerFormation:
                         color = imgui.get_color_u32_rgba(1,0.7,0,1)
                         
                 
-                if circle in self.last_clicked_item and self.window.animate is False:
+                if circle in self.last_clicked_item and self.parent_window.is_playing() is False:
                     color = imgui.get_color_u32_rgba(1,1,0,1)
                     
                 draw_list.add_circle_filled(x_origin+circle.x, y_origin+circle.y, circle.radius,color)

@@ -261,7 +261,7 @@ def load_bvh_animation(filepath):
     
     print("BVH load success.")
 
-    return joints
+    return name, joints
 
 def create_joint(data,names,scale_joint):
     joints = []

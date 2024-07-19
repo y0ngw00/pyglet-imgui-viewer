@@ -17,7 +17,7 @@ import tkinter as tk
 from tkinter import filedialog
 
 import loader
-from ui import DancerCircle, KeyFrame, Sequencer, Sequence, SequenceTrack, DancerFormation, TitleBar,ModelConnector
+from ui import DancerCircle, KeyFrame, Sequencer, Sequence, SequenceTrack, DancerFormation, TitleBar,CustomBrowser
 
 from enum_list import FileType
 class UI:
@@ -66,7 +66,6 @@ class UI:
         self.custom_browser.render()
         self.Sequencer.render(x,self.window.height - y)
 
-
     def is_ui_active(self):
         return imgui.is_any_item_active()
     
@@ -83,6 +82,8 @@ class UI:
         selected_file = filedialog.askopenfilename(filetypes=file_types)
         return selected_file
     
+    def insert_motion(self, file_path):
+        self.Sequencer.insert_motion(file_path)
 
     def open_file(self, file_path, file_type = FileType.Character):
         ext = file_path.split('.')[-1]
@@ -116,8 +117,14 @@ class UI:
 
         return
     
+    def is_playing(self):
+        return self.window.animate
+    
     def get_frame(self):
         return self.window.frame
+    
+    def set_frame(self, new_frame):
+        self.window.set_frame = new_frame
     
     def on_key_press(self, symbol, modifiers) -> None:
         pass
@@ -136,6 +143,7 @@ class UI:
 
     def on_mouse_drag(self, x, y, dx, dy, button, modifier) -> None:
         self.DancerFormation.on_mouse_drag(x, self.window.height - y, dx, dy)
+        self.Sequencer.on_mouse_drag(x, self.window.height - y, dx, dy)
                 
     def update_ui(self, is_animate) -> None:
         self.DancerFormation.update_ui(is_animate, self.window.frame)
