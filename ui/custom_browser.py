@@ -1,6 +1,7 @@
 import os
 import sys
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+import glob
 
 from typing import Tuple
 from pathlib import Path
@@ -9,15 +10,15 @@ import pyglet
 
 import imgui
 import imgui.core
-from imgui.integrations.pyglet import create_renderer
 
 import numpy as np
 import pickle as pkl
 
 from test import synthesize
 from enum_list import FileType
+from dancer_custom_condition import CustomCondition
 
-class ModelConnector:
+class CustomBrowser:
     def __init__(self, parent_window, scene):
         self.parent_window = parent_window
         self.scene = scene
@@ -26,11 +27,49 @@ class ModelConnector:
         self.selected_audio_file = ""
         self.selected_network_file = ""
         
+        self.selected_file_idx = 0
+        self.motion_library_dir = "./data/mixamo_library/"
+        self.custom_condition_viewer = CustomCondition()
+        
+        files = glob.glob(self.motion_library_dir + '*.bvh')
+        self.motion_files = [os.path.splitext(os.path.basename(file))[0] for file in files]
+        
         
     def render(self):
-        imgui.begin("Test Window")
+        imgui.begin("Custom Editor")
         # clicked, value = imgui.input_text("Text Input", "")
+        if imgui.begin_tab_bar("Tab Browser", imgui.TAB_BAR_FITTING_POLICY_DEFAULT):
+            imgui.set_next_item_width(100)
+            if imgui.begin_tab_item("Motion Library").selected:
+                self.render_motion_library()
+                imgui.end_tab_item()
 
+            if imgui.begin_tab_item("Model Connector").selected:
+                self.render_model_connector()
+                imgui.end_tab_item()
+
+            if imgui.begin_tab_item("Custom Condition").selected:
+                self.custom_condition_viewer.render()
+                imgui.end_tab_item()
+                
+            imgui.end_tab_bar()
+
+        imgui.end()
+        
+    def render_motion_library(self):               
+        # if imgui.tree_node("Checkpoint"):
+            
+            imgui.text("Current: "+ self.motion_files[self.selected_file_idx])
+            imgui.same_line()
+            if imgui.button("Insert Motion"):
+                file_path = self.motion_library_dir + self.motion_files[self.selected_file_idx] + ".bvh"
+                self.parent_window.insert_motion(file_path)
+
+            imgui.push_item_width(imgui.get_window_width() * 0.8)
+            clicked, self.selected_file_idx = imgui.listbox('', self.selected_file_idx, self.motion_files)
+            imgui.pop_item_width()
+        
+    def render_model_connector(self):
         with imgui.font(self.new_font):
             imgui.text("Current number of characters: {}".format(self.parent_window.get_num_dancers()))
             imgui.same_line()
@@ -80,7 +119,6 @@ class ModelConnector:
             
             if imgui.button("Generate!"):
                 self.generate_motion()
-        imgui.end()
 
     def generate_motion(self):
         output_path = os.path.dirname(self.selected_audio_file)+"/" + self.selected_audio_file.split("/")[-1].split(".")[0] + "_output"
