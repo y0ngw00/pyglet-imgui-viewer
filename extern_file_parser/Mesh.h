@@ -5,14 +5,30 @@
 
 #include <Eigen/Core>
 #include <Eigen/Geometry>
+#include <unordered_map>
+
+struct IndexWeightPair
+{
+	unsigned int index;	//index of joint 
+	double weight;		//weight of influence by the joint
+	IndexWeightPair() :
+		index(0), weight(0.0)
+	{}
+};
+
+struct ControlPointInfo
+{
+	std::vector<int> ctrlPoint;
+	std::vector<IndexWeightPair> weightPairs;
+};
 
 
 class Mesh
 {
 public:
     Mesh();
-    Mesh(const Eigen::VectorXd& _vertices, const Eigen::VectorXd& _normals, const Eigen::VectorXd& _texCoords, const Eigen::VectorXi& _indices, const int _stride);
-    
+    Mesh(const Eigen::VectorXd& _vertices, const Eigen::VectorXd& _normals, const Eigen::VectorXd& _texCoords, const std::vector<unsigned int>& _indices, const int _stride);
+    void SetSkinningData(const std::unordered_map<int, ControlPointInfo>& _skinData);
     virtual ~Mesh();
 
     Eigen::VectorXd GetVertices() const { return mVertices; }
@@ -31,6 +47,7 @@ private:
     Eigen::VectorXd mNormals;
     Eigen::VectorXd mTexCoords;
     std::vector<unsigned int> mIndices;
+    std::unordered_map<int, ControlPointInfo> mSkinData;
     int mStride;
 };
 

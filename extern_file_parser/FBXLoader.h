@@ -9,11 +9,13 @@
 
 class Mesh;
 class Joint;
+class IndexWeightPair;
+class ControlPointInfo;
 class FBXLoader
 {
 public:
     FBXLoader();
-    void ClearSDK();
+    bool LoadFBXfromAssimp(const std::string& _filePath);
     bool LoadFBX(const std::string& _filePath);
     void ProcessNode(FbxScene* _scene, FbxNode* node);
     void CreateScene();
@@ -40,6 +42,10 @@ private:
     bool loadScene(FbxManager* _pManager, FbxScene* _scene, const std::string& _pFileName);
     bool loadMesh(FbxNode* _pNode);
     bool loadJoint(FbxScene* _scene, FbxNode* _node);
+    void loadSkin(FbxNode* _pNode, std::unordered_map<int, ControlPointInfo>& out_controlPointsInfo);
+    int FindJointIndexByName(const std::string& _jointName);
+    void DebugSumOfWeights(std::unordered_map<int, ControlPointInfo>& out_controlPointsInfo);
+
 
 // Utility functions
 private:

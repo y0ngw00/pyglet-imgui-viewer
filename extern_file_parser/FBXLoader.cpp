@@ -2,6 +2,7 @@
 #include <fstream>
 #include <iostream>
 #include <vector>
+#include <unordered_map>
 
 #include <Eigen/Core>
 #include <Eigen/Geometry>
@@ -301,109 +302,120 @@ loadJoint(FbxScene* _scene, FbxNode* _node)
     return true;
 }
 
+void
+FBXLoader::
+loadSkin(FbxNode* _pNode, std::unordered_map<int, ControlPointInfo>& out_controlPointsInfo)
+{
+    FbxMesh* mesh = (FbxMesh*) _pNode->GetNodeAttribute ();
+    if(mesh == nullptr)
+    {
+        std::cout<<"Mesh Node attribute is not valid"<<"\n";
+        return;
+    }
+    unsigned int numOfDeformers = mesh->GetDeformerCount();
+
+	//Get transform matrix
+	FbxAMatrix geometryTransform = _pNode->EvaluateGlobalTransform();
+	//A deformer is a FBX thing, which contains some clusters
+	//A cluster contains a link, which is basically a joint
+	//Normally, there is only one deformer in a mesh
+    // std::cout<<mesh->GetName()<<"'s deformer count : "<<numOfDeformers<<"\n";
+	for (unsigned int deformerIndex = 0; deformerIndex != numOfDeformers; ++deformerIndex) {
+		//There are many types of deformers in FBX
+		//We are using only skins, so we see if there is a skin
+		FbxSkin *currSkin = reinterpret_cast<FbxSkin*>(mesh->GetDeformer(deformerIndex, FbxDeformer::eSkin));
+		if (!currSkin) {
+			continue;
+		}
+
+		unsigned int numOfClusters = currSkin->GetClusterCount();
+        // std::cout<<mesh->GetName()<<"'s cluster count : "<<numOfClusters<<"\n";
+
+		for (unsigned int clusterIndex = 0; clusterIndex != numOfClusters; ++clusterIndex) {
+			FbxCluster *currCluster = currSkin->GetCluster(clusterIndex);
+            if(currCluster)
+            {
+                FbxString currJointName = currCluster->GetLink()->GetName();
+                // int currJointIndex = FindJointIndexByName(currJointName);
+                // if (currJointIndex == -1) {
+                //     FBXSDK_printf("error: can't find the joint: %s\n\n", currJointName);
+                //     continue;
+                // }
+                // std::cout<<"cluster "<<clusterIndex<<"'s linked joint : "<<currJointName<<"\n";
+            }
+
+
+			//FbxAMatrix transformMatrix;
+			//FbxAMatrix transformLinkMatrix;
+			//FbxAMatrix globalBindPoseInverseMatrix;
+			//
+			//currCluster->GetTransformMatrix(transformMatrix);
+			//currCluster->GetTransformLinkMatrix(transformLinkMatrix);
+			//globalBindPoseInverseMatrix = transformLinkMatrix.Inverse() * transformMatrix * geometryTransform;
+
+			////Update the information of the joints
+			//skeleton.joints[currJointIndex].node = currCluster->GetLink();
+			//skeleton.joints[currJointIndex].globalBindPoseInverse = globalBindPoseInverseMatrix;
+
+			unsigned int numOfIndices = currCluster->GetControlPointIndicesCount();
+            // std::cout<<"cluster "<<clusterIndex<<"'s indices and weights count : "<<numOfIndices<<"\n";
+
+            int* indices = currCluster->GetControlPointIndices();
+            double* weights = currCluster->GetControlPointWeights();
+			for (unsigned int i = 0; i != numOfIndices; ++i) {
+				IndexWeightPair weightPair;
+				weightPair.index = clusterIndex;		
+				weightPair.weight = weights[i];		//weight to control point of current joint
+				//add index-weight pair into ControlPointInfo Struct
+                out_controlPointsInfo[indices[i]].ctrlPoint.push_back(clusterIndex);
+				out_controlPointsInfo[indices[i]].weightPairs.push_back(weightPair);
+			}
+			
+		}
+	}
+    DebugSumOfWeights(out_controlPointsInfo);		//should be 1.0
+
+}
+
+int
+FBXLoader::
+FindJointIndexByName(const std::string& _jointName)
+{
+    for(int i=0; i<m_Joints.size(); i++)
+    {
+        if(m_Joints[i]->GetName() == _jointName)
+        {
+            return i;
+        }
+    }
+    return -1;
+}
+
 // void
 // FBXLoader::
 // ProcessJointsAndAnimations(FbxNode *node)
 // {
 // 	FbxMesh *currMesh = node->GetMesh();
-// 	unsigned int numOfDeformers = currMesh->GetDeformerCount();
-
-// 	//Get transform matrix
-// 	FbxAMatrix geometryTransform = GetGeometryTransformation(node);
-	
-// 	//A deformer is a FBX thing, which contains some clusters
-// 	//A cluster contains a link, which is basically a joint
-// 	//Normally, there is only one deformer in a mesh
-// 	for (unsigned int deformerIndex = 0; deformerIndex != numOfDeformers; ++deformerIndex) {
-// 		//There are many types of deformers in FBX
-// 		//We are using only skins, so we see if there is a skin
-// 		FbxSkin *currSkin = reinterpret_cast<FbxSkin*>(currMesh->GetDeformer(deformerIndex, FbxDeformer::eSkin));
-// 		if (!currSkin) {
-// 			continue;
-// 		}
-
-// 		unsigned int numOfClusters = currSkin->GetClusterCount();
-// 		for (unsigned int clusterIndex = 0; clusterIndex != numOfClusters; ++clusterIndex) {
-// 			FbxCluster *currCluster = currSkin->GetCluster(clusterIndex);
-// 			FbxString currJointName = currCluster->GetLink()->GetName();
-// 			int currJointIndex = FindJointIndexByName(currJointName);
-// 			if (currJointIndex == -1) {
-// 				FBXSDK_printf("error: can't find the joint: %s\n\n", currJointName);
-// 				continue;
-// 			}
-
-// 			//FbxAMatrix transformMatrix;
-// 			//FbxAMatrix transformLinkMatrix;
-// 			//FbxAMatrix globalBindPoseInverseMatrix;
-// 			//
-// 			//currCluster->GetTransformMatrix(transformMatrix);
-// 			//currCluster->GetTransformLinkMatrix(transformLinkMatrix);
-// 			//globalBindPoseInverseMatrix = transformLinkMatrix.Inverse() * transformMatrix * geometryTransform;
-
-// 			////Update the information of the joints
-// 			//skeleton.joints[currJointIndex].node = currCluster->GetLink();
-// 			//skeleton.joints[currJointIndex].globalBindPoseInverse = globalBindPoseInverseMatrix;
-
-
-// 			FbxAMatrix localMatrix = currCluster->GetLink()->EvaluateLocalTransform();
-
-// 			skeleton.joints[currJointIndex].node = currCluster->GetLink();	//获取当前的关节
-// 			skeleton.joints[currJointIndex].localMatrix = localMatrix;			
-			
-// 			unsigned int numOfIndices = currCluster->GetControlPointIndicesCount();
-// 			for (unsigned int i = 0; i != numOfIndices; ++i) {
-// 				IndexWeightPair weightPair;
-// 				weightPair.index = currJointIndex;		
-// 				weightPair.weight = currCluster->GetControlPointWeights()[i];		//weight to control point of current joint
-// 				//add index-weight pair into ControlPointInfo Struct
-// 				controlPointsInfo[currCluster->GetControlPointIndices()[i]].weightPairs.push_back(weightPair);
-// 			}
-
-// 			//Get Animation information
-// 			//Now only support one take
-// 			FbxAnimStack *currAnimStack = pScene->GetSrcObject<FbxAnimStack>(0);
-// 			FbxString animStackName = currAnimStack->GetName();
-// 			animationName = animStackName;
-// 			FbxTakeInfo *takeInfo = pScene->GetTakeInfo(animStackName);
-// 			FbxTime start = currAnimStack->GetLocalTimeSpan().GetStart();
-// 			FbxTime end = currAnimStack->GetLocalTimeSpan().GetStop();
-
-// 			animationLength = end.GetFrameCount(FbxTime::eFrames24) - start.GetFrameCount(FbxTime::eFrames24) + 1;
-// 			KeyFrame **currAnim = &skeleton.joints[currJointIndex].animation;
-
-// 			for (FbxLongLong i = start.GetFrameCount(FbxTime::eFrames24); i != end.GetFrameCount(FbxTime::eFrames24); ++i) {
-// 				FbxTime currTime;
-// 				currTime.SetFrame(i, FbxTime::eFrames24);
-// 				*currAnim = new KeyFrame();	
-// 				(*currAnim)->frameNum = i;
-// 				FbxAMatrix currTransformOffset = node->EvaluateGlobalTransform(currTime) * geometryTransform;
-// 				(*currAnim)->globalTransform = currTransformOffset.Inverse() * currCluster->GetLink()->EvaluateGlobalTransform(currTime);
-// 				currAnim = &((*currAnim)->next);
-				
-// 			}
-			
-// 		}
-// 	}
 	
 // 	DebugSumOfWeights();		//should be 1.0
 // }
 
-// void
-// FbxLoader::
-// DebugSumOfWeights()
-// {
-// 	for (auto it = controlPointsInfo.begin(); it != controlPointsInfo.end(); ++it) {
-// 		vector<IndexWeightPair> weightPairs = it->second.weightPairs;
-// 		double sumOfWeights = 0.0;
-// 	//	FBXSDK_printf("\joint id		weight\n");
-// 		for (auto weightPair : weightPairs) {
-// 		//	FBXSDK_printf("%d		%lf\n", weightPair.index, weightPair.weight);
-// 			sumOfWeights += weightPair.weight;
-// 		}
-// 		//FBXSDK_printf("the sum of weights is: %lf\n", sumOfWeights);
-// 		assert((sumOfWeights - 1.0) < 10e-5);	//sum of weight is not equal to 1.0
-// 	}
-// }
+void
+FBXLoader::
+DebugSumOfWeights(std::unordered_map<int, ControlPointInfo>& out_controlPointsInfo)
+{
+	for (auto it = out_controlPointsInfo.begin(); it != out_controlPointsInfo.end(); ++it) {
+		std::vector<IndexWeightPair> weightPairs = it->second.weightPairs;
+		double sumOfWeights = 0.0;
+	//	FBXSDK_printf("\joint id		weight\n");
+		for (auto& weightPair : weightPairs) {
+		//	FBXSDK_printf("%d		%lf\n", weightPair.index, weightPair.weight);
+			sumOfWeights += weightPair.weight;
+		}
+		//FBXSDK_printf("the sum of weights is: %lf\n", sumOfWeights);
+		assert((sumOfWeights - 1.0) < 10e-5);	//sum of weight is not equal to 1.0
+	}
+}
 
 // Check the fbx sdk version and load fbx Scene.
 bool
