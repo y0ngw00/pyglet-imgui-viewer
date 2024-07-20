@@ -11,13 +11,14 @@ class Joint
 {
 public:
     Joint();
-    Joint(const std::string& _name, int _parentIndex, const Eigen::MatrixXd& _transform);
+    Joint(const std::string& _name, int _parentIndex, const Eigen::MatrixXd& _transform, const std::vector<Eigen::MatrixXd>& _animList);
     
     virtual ~Joint();
 
     std::string GetName() const { return name; }
     int GetParentIndex() const { return parentIndex; }
     Eigen::MatrixXd GetTransform() const { return transform; }
+    std::vector<Eigen::MatrixXd> GetAnimList() const { return animList; }
 
 // Load functions
 private:
@@ -28,6 +29,7 @@ private:
     std::string name;
     int parentIndex;
     Eigen::MatrixXd transform;
+    std::vector<Eigen::MatrixXd> animList;
 };
 
 
