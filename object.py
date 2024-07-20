@@ -186,11 +186,10 @@ class Joint(Object):
         self.is_root = is_root
 
     def animate(self, frame):
-        if frame > len(self.rotations):
+        if frame > len(self.rotations)-1:
             return        
         m = np.eye(4, dtype=np.float32)
         m[0:3, 0:3] = Quaternions(self.rotations[frame]).transforms()[0]
-        m = m.T # Because I use row-major matrix....sorry
         if self.is_root is True:
             m[3, 0:3] = self.positions[frame]
         else:

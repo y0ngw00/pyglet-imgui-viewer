@@ -72,18 +72,18 @@ LoadFBX(const std::string& _filePath)
 
     std::cout<<"Load FBX file from : "<<_filePath<<"\n";
 
-    m_fbxScene = FbxScene::Create(sdkManager, "");
+    FbxScene* fbxScene = FbxScene::Create(sdkManager, "");
 
     // Create a geometry converter
     FbxGeometryConverter converter(sdkManager);
 
     // Triangulate the scene
-    bool result = converter.Triangulate(m_fbxScene, /*replace=*/true);
+    bool result = converter.Triangulate(fbxScene, /*replace=*/true);
     if (!result) {
         std::cerr << "Failed to triangulate the scene" << std::endl;
         return false;
     }
-    bool bLoadResult = loadScene(sdkManager, _filePath);
+    bool bLoadResult = loadScene(sdkManager, fbxScene, _filePath);
     if(bLoadResult == false)
     {
         std::cout<<"Some errors occurred while loading the scene.."<<"\n";
@@ -95,9 +95,9 @@ LoadFBX(const std::string& _filePath)
     //Scale
 
     //load mesh
-    FbxNode* rootNode = m_fbxScene->GetRootNode();
+    FbxNode* rootNode = fbxScene->GetRootNode();
 
-    this->ProcessNode(rootNode);
+    this->ProcessNode(fbxScene, rootNode);
     // FbxAMatrix globalPosition = globalPosition = rootNode->EvaluateGlobalTransform();
     // if(rootNode->GetNodeAttribute()) 
 	// {
@@ -108,10 +108,10 @@ LoadFBX(const std::string& _filePath)
 	// }
 
     //Delete the FBX Manager. All the objects that have been allocated using the FBX Manager and that haven't been explicitly destroyed are also automatically destroyed.
-    if (m_fbxScene)
+    if (fbxScene)
 	{
-		m_fbxScene->Destroy();
-		m_fbxScene = NULL;
+		fbxScene->Destroy();
+		fbxScene = NULL;
 	}
 
     if( sdkManager ) sdkManager->Destroy();
@@ -121,7 +121,7 @@ LoadFBX(const std::string& _filePath)
 
 }
 
-void FBXLoader::ProcessNode(FbxNode* node) {
+void FBXLoader::ProcessNode(FbxScene* _scene, FbxNode* node) {
     // Process the node's attributes.
     for(int i = 0; i < node->GetNodeAttributeCount(); i++) {
         FbxNodeAttribute* attribute = node->GetNodeAttributeByIndex(i);
@@ -134,7 +134,7 @@ void FBXLoader::ProcessNode(FbxNode* node) {
         case FbxNodeAttribute::eSkeleton:
         {
             if(node!=nullptr)
-                loadJoint(node);
+                loadJoint(_scene, node);
             break;
         }
             
@@ -145,7 +145,7 @@ void FBXLoader::ProcessNode(FbxNode* node) {
 
     // Recursively process the node's children.
     for(int j = 0; j < node->GetChildCount(); j++) {
-        ProcessNode(node->GetChild(j));
+        ProcessNode(_scene, node->GetChild(j));
     }
 }
 
@@ -235,7 +235,7 @@ loadMesh(FbxNode* _pNode)
 
 bool
 FBXLoader::
-loadJoint(FbxNode* _node)
+loadJoint(FbxScene* _scene, FbxNode* _node)
 {
     if(_node == nullptr)
     {
@@ -261,21 +261,143 @@ loadJoint(FbxNode* _node)
                 }
             }
         }
-		FbxAMatrix localMatrix = GetNodeTransform(_node);
+        FbxAMatrix geometryOffset = GetGeometry(_node);
+		FbxAMatrix localMatrix = _node->EvaluateLocalTransform();
 
 		Eigen::MatrixXd m= FbxToEigenMatrix(localMatrix, 1.0f);
-        
-        m_Joints.push_back(new Joint(name, parentIndex, m));
-		// m_JointList.push_back(_node);
+
+        //Get Animation information
+        std::vector<Eigen::MatrixXd> animList;
+        FbxAnimStack *currAnimStack = _scene->GetSrcObject<FbxAnimStack>(0);
+        if (currAnimStack != nullptr)
+        {
+            FbxString animStackName = currAnimStack->GetName();
+            FbxTakeInfo *takeInfo = _scene->GetTakeInfo(animStackName);
+            FbxTime start = currAnimStack->GetLocalTimeSpan().GetStart();
+            FbxTime end = currAnimStack->GetLocalTimeSpan().GetStop();
+
+            for (FbxLongLong i = start.GetFrameCount(FbxTime::eFrames30); i != end.GetFrameCount(FbxTime::eFrames30); ++i) {
+                FbxTime currTime;
+                currTime.SetFrame(i, FbxTime::eFrames30);
+                FbxAMatrix currTransform = _node->EvaluateLocalTransform(currTime);
+                Eigen::MatrixXd m= FbxToEigenMatrix(currTransform, 1.0f);
+                animList.push_back(m);
+            }
+        }
+
+        m_Joints.push_back(new Joint(name, parentIndex, m, animList));
 	}
     return true;
-	//return tf;
 }
+
+// void
+// FBXLoader::
+// ProcessJointsAndAnimations(FbxNode *node)
+// {
+// 	FbxMesh *currMesh = node->GetMesh();
+// 	unsigned int numOfDeformers = currMesh->GetDeformerCount();
+
+// 	//Get transform matrix
+// 	FbxAMatrix geometryTransform = GetGeometryTransformation(node);
+	
+// 	//A deformer is a FBX thing, which contains some clusters
+// 	//A cluster contains a link, which is basically a joint
+// 	//Normally, there is only one deformer in a mesh
+// 	for (unsigned int deformerIndex = 0; deformerIndex != numOfDeformers; ++deformerIndex) {
+// 		//There are many types of deformers in FBX
+// 		//We are using only skins, so we see if there is a skin
+// 		FbxSkin *currSkin = reinterpret_cast<FbxSkin*>(currMesh->GetDeformer(deformerIndex, FbxDeformer::eSkin));
+// 		if (!currSkin) {
+// 			continue;
+// 		}
+
+// 		unsigned int numOfClusters = currSkin->GetClusterCount();
+// 		for (unsigned int clusterIndex = 0; clusterIndex != numOfClusters; ++clusterIndex) {
+// 			FbxCluster *currCluster = currSkin->GetCluster(clusterIndex);
+// 			FbxString currJointName = currCluster->GetLink()->GetName();
+// 			int currJointIndex = FindJointIndexByName(currJointName);
+// 			if (currJointIndex == -1) {
+// 				FBXSDK_printf("error: can't find the joint: %s\n\n", currJointName);
+// 				continue;
+// 			}
+
+// 			//FbxAMatrix transformMatrix;
+// 			//FbxAMatrix transformLinkMatrix;
+// 			//FbxAMatrix globalBindPoseInverseMatrix;
+// 			//
+// 			//currCluster->GetTransformMatrix(transformMatrix);
+// 			//currCluster->GetTransformLinkMatrix(transformLinkMatrix);
+// 			//globalBindPoseInverseMatrix = transformLinkMatrix.Inverse() * transformMatrix * geometryTransform;
+
+// 			////Update the information of the joints
+// 			//skeleton.joints[currJointIndex].node = currCluster->GetLink();
+// 			//skeleton.joints[currJointIndex].globalBindPoseInverse = globalBindPoseInverseMatrix;
+
+
+// 			FbxAMatrix localMatrix = currCluster->GetLink()->EvaluateLocalTransform();
+
+// 			skeleton.joints[currJointIndex].node = currCluster->GetLink();	//获取当前的关节
+// 			skeleton.joints[currJointIndex].localMatrix = localMatrix;			
+			
+// 			unsigned int numOfIndices = currCluster->GetControlPointIndicesCount();
+// 			for (unsigned int i = 0; i != numOfIndices; ++i) {
+// 				IndexWeightPair weightPair;
+// 				weightPair.index = currJointIndex;		
+// 				weightPair.weight = currCluster->GetControlPointWeights()[i];		//weight to control point of current joint
+// 				//add index-weight pair into ControlPointInfo Struct
+// 				controlPointsInfo[currCluster->GetControlPointIndices()[i]].weightPairs.push_back(weightPair);
+// 			}
+
+// 			//Get Animation information
+// 			//Now only support one take
+// 			FbxAnimStack *currAnimStack = pScene->GetSrcObject<FbxAnimStack>(0);
+// 			FbxString animStackName = currAnimStack->GetName();
+// 			animationName = animStackName;
+// 			FbxTakeInfo *takeInfo = pScene->GetTakeInfo(animStackName);
+// 			FbxTime start = currAnimStack->GetLocalTimeSpan().GetStart();
+// 			FbxTime end = currAnimStack->GetLocalTimeSpan().GetStop();
+
+// 			animationLength = end.GetFrameCount(FbxTime::eFrames24) - start.GetFrameCount(FbxTime::eFrames24) + 1;
+// 			KeyFrame **currAnim = &skeleton.joints[currJointIndex].animation;
+
+// 			for (FbxLongLong i = start.GetFrameCount(FbxTime::eFrames24); i != end.GetFrameCount(FbxTime::eFrames24); ++i) {
+// 				FbxTime currTime;
+// 				currTime.SetFrame(i, FbxTime::eFrames24);
+// 				*currAnim = new KeyFrame();	
+// 				(*currAnim)->frameNum = i;
+// 				FbxAMatrix currTransformOffset = node->EvaluateGlobalTransform(currTime) * geometryTransform;
+// 				(*currAnim)->globalTransform = currTransformOffset.Inverse() * currCluster->GetLink()->EvaluateGlobalTransform(currTime);
+// 				currAnim = &((*currAnim)->next);
+				
+// 			}
+			
+// 		}
+// 	}
+	
+// 	DebugSumOfWeights();		//should be 1.0
+// }
+
+// void
+// FbxLoader::
+// DebugSumOfWeights()
+// {
+// 	for (auto it = controlPointsInfo.begin(); it != controlPointsInfo.end(); ++it) {
+// 		vector<IndexWeightPair> weightPairs = it->second.weightPairs;
+// 		double sumOfWeights = 0.0;
+// 	//	FBXSDK_printf("\joint id		weight\n");
+// 		for (auto weightPair : weightPairs) {
+// 		//	FBXSDK_printf("%d		%lf\n", weightPair.index, weightPair.weight);
+// 			sumOfWeights += weightPair.weight;
+// 		}
+// 		//FBXSDK_printf("the sum of weights is: %lf\n", sumOfWeights);
+// 		assert((sumOfWeights - 1.0) < 10e-5);	//sum of weight is not equal to 1.0
+// 	}
+// }
 
 // Check the fbx sdk version and load fbx Scene.
 bool
 FBXLoader::
-loadScene(FbxManager* _pManager, const std::string& _pFileName)
+loadScene(FbxManager* _pManager, FbxScene* _scene, const std::string& _pFileName)
 {
     int sdkMajor,  sdkMinor,  sdkRevision;
     int fileMajor, fileMinor, fileRevision;
@@ -334,7 +456,7 @@ loadScene(FbxManager* _pManager, const std::string& _pFileName)
     }
 
     //Import the scene.
-    bResult = fbxImporter->Import(m_fbxScene);
+    bResult = fbxImporter->Import(_scene);
     if(bResult==false && fbxImporter->GetStatus() == FbxStatus::ePasswordError)
     {
         std::cout<<"This file requires password."<<"\n";
@@ -646,6 +768,7 @@ GetMeshPositionIndex(int index)
     return mesh->GetIndices();
 }
 
+const
 std::string
 FBXLoader::
 GetJointName(int index)
@@ -668,7 +791,7 @@ GetParentIndex(int index)
     return m_Joints[index]->GetParentIndex();
 }
 
-
+const
 Eigen::MatrixXd
 FBXLoader::
 GetJointTransform(int index)
@@ -682,6 +805,14 @@ GetJointTransform(int index)
     // FbxMatrix fbxM =  FbxAMatrix(translation, rotation, scaling);
     // FbxAMatrix fbxM = GetNodeTransform(node);
     // return FbxToEigenMatrix(fbxM);
+}
+
+const
+std::vector<Eigen::MatrixXd>
+FBXLoader::
+GetJointAnimList(int index)
+{
+    return m_Joints[index]->GetAnimList();
 }
 
 FbxAMatrix
@@ -773,8 +904,8 @@ namespace py = pybind11;
 PYBIND11_MODULE(pycomcon, m){
 	py::class_<FBXLoader>(m, "FBXLoader")
 		.def(py::init<>())
+        .def("load_fbx_assimp", &FBXLoader::LoadFBXfromAssimp)
         .def("load_fbx", &FBXLoader::LoadFBX)
-        .def("clear_sdk", &FBXLoader::ClearSDK)
         .def("get_mesh_count", &FBXLoader::GetMeshCount)
         .def("get_mesh_stride", &FBXLoader::GetMeshStride)
         .def("get_mesh_position", &FBXLoader::GetMeshPosition)
@@ -784,5 +915,6 @@ PYBIND11_MODULE(pycomcon, m){
         .def("get_joint_name", &FBXLoader::GetJointName)
         .def("get_joint_count", &FBXLoader::GetJointCount)
         .def("get_parent_idx", &FBXLoader::GetParentIndex)
-        .def("get_joint_transform", &FBXLoader::GetJointTransform);
+        .def("get_joint_transform", &FBXLoader::GetJointTransform)
+        .def("get_joint_animation", &FBXLoader::GetJointAnimList);
 }

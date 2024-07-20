@@ -15,7 +15,7 @@ public:
     FBXLoader();
     void ClearSDK();
     bool LoadFBX(const std::string& _filePath);
-    void ProcessNode(FbxNode* node);
+    void ProcessNode(FbxScene* _scene, FbxNode* node);
     void CreateScene();
 
     int GetMeshCount();
@@ -25,10 +25,11 @@ public:
     Eigen::VectorXd GetMeshTextureCoord(int index);
     Eigen::VectorXi GetMeshPositionIndex(int index);
 
-    std::string GetJointName(int index);
+    const std::string GetJointName(int index);
     int GetJointCount();
     int GetParentIndex(int index);
-    Eigen::MatrixXd GetJointTransform(int index);
+    const Eigen::MatrixXd GetJointTransform(int index);
+    const std::vector<Eigen::MatrixXd> GetJointAnimList(int index);
     
     virtual ~FBXLoader();
 
@@ -36,9 +37,9 @@ public:
 private:
 
     void initialize();
-    bool loadScene(FbxManager* _pManager, const std::string& _pFileName);
+    bool loadScene(FbxManager* _pManager, FbxScene* _scene, const std::string& _pFileName);
     bool loadMesh(FbxNode* _pNode);
-    bool loadJoint(FbxNode* _node);
+    bool loadJoint(FbxScene* _scene, FbxNode* _node);
 
 // Utility functions
 private:
@@ -50,8 +51,6 @@ private:
     Eigen::Quaterniond FbxToEigenQuaternion(const FbxAMatrix& _fbxMatrix);
 
 private:
-    FbxScene* m_fbxScene;
-
     std::vector<Mesh*> m_Meshes;
     std::vector<Joint*> m_Joints;
 };

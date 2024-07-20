@@ -6,7 +6,7 @@ import json
 import numpy as np
 from pygltflib import GLTF2, Node, Skin, Accessor, BufferView, BufferFormat
 
-from motionutils import BVH
+from motionutils import BVH,Quaternions
 from object import Character,Joint,Link,Object,MeshType
 from extern_file_parser import pycomcon
 
@@ -207,12 +207,25 @@ def load_fbx_joint(fbx_loader):
         parent_idx = fbx_loader.get_parent_idx(i)
         transform = fbx_loader.get_joint_transform(i)
         
+        animation_data = fbx_loader.get_joint_animation(i)
+        animation_data = np.array(animation_data)
+
         if parent_idx == -1:
             joint.set_root(True)
-            joint.set_transform(transform)
+            joint.set_position(transform[3,0:3])
+            if len(animation_data) > 0:
+                rot_mat = animation_data[:,:3,:3]
+                rot_quat = Quaternions.Quaternions.from_transforms(rot_mat).qs
+                joint.rotations = rot_quat
+                joint.positions = animation_data[:,3,0:3]            
         else:
             joint.set_parent(joints[parent_idx])
-            joint.set_transform(transform)
+            joint.set_position(transform[3,0:3])
+            if len(animation_data) > 0:
+                rot_mat = animation_data[:,:3,:3]
+                rot_quat = Quaternions.Quaternions.from_transforms(rot_mat).qs
+                joint.rotations = rot_quat
+            
             
         joints.append(joint)
         
@@ -286,7 +299,9 @@ def create_joint(data,names,scale_joint):
 
     for frame, rot in enumerate(data.rotations):
         for idx, joint in enumerate(joints):
-            joint.rotations.append(rot[idx])
+            rotation = rot[idx]
+            rotation[1:] *= -1 # Because I use row-major matrix....sorry
+            joint.rotations.append(rotation)
 
             if joint.is_root is True:
                 joint.positions.append(data.positions[frame][idx])
