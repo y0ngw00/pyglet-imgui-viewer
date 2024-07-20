@@ -129,9 +129,10 @@ class RenderWindow(pyglet.window.Window):
 
     def add_shape(self, obj) -> None:
         shape = CustomGroup(obj, len(self.shapes))
+        primitive_type = GL_TRIANGLES if obj.mesh.stride==3 else GL_QUADS
 
         if len(obj.mesh.indices) ==0:
-            shape.shader_program.vertex_list(len(obj.mesh.vertices)//obj.mesh.stride,GL_TRIANGLES,
+            shape.shader_program.vertex_list(len(obj.mesh.vertices)//3,GL_TRIANGLES,
                         batch = self.batch,
                         group = shape,
                         vertices = ('f', obj.mesh.vertices),

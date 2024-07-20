@@ -159,10 +159,13 @@ def load_fbx(filename):
     name = filename.split('/')[-1]
     
     meshes = load_fbx_mesh(fbx_loader)
+    
+    meshes[0].set_color((0, 4, 47, 255))
+    meshes[1].set_color((200, 200, 200, 255))
 
     joints = load_fbx_joint(fbx_loader)
-    character = Character(name, joints = joints,scale=[1,1,1], scale_link = 5.0)
-    # character = Character(name, meshes = meshes, scale=[1,1,1])
+    # character = Character(name, joints = joints,scale=[1,1,1], scale_link = 5.0)
+    character = Character(name, meshes = meshes,joints = joints, scale=[1,1,1])
     print("Success to load FBX!")
     return character
 
@@ -181,7 +184,7 @@ def load_fbx_mesh(fbx_loader):
                                  "normals":normals,
                                 "uvs":uvs,
                                 "indices":indices})
-        mesh.stride = fbx_loader.get_mesh_stride(i)
+        mesh.mesh.stride = fbx_loader.get_mesh_stride(i)
         # mesh = Object(mesh_type=MeshType.Custom,
         #               mesh_info={"vertices":vertices, 
         #                          "normals":normals,

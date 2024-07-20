@@ -18,7 +18,7 @@ public:
     Eigen::VectorXd GetVertices() const { return mVertices; }
     Eigen::VectorXd GetNormals() const { return mNormals; }
     Eigen::VectorXd GetTexCoords() const { return mTexCoords; }
-    Eigen::VectorXi GetIndices() const { return mIndices; }
+    std::vector<unsigned int> GetIndices() const { return mIndices; }
     int GetStride() const { return mStride; }
 
 // Load functions
@@ -30,7 +30,7 @@ private:
     Eigen::VectorXd mVertices;
     Eigen::VectorXd mNormals;
     Eigen::VectorXd mTexCoords;
-    Eigen::VectorXi mIndices;
+    std::vector<unsigned int> mIndices;
     int mStride;
 };
 

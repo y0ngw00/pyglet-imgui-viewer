@@ -172,15 +172,13 @@ loadMesh(FbxNode* _pNode)
 
     int numVertices = lMesh->GetControlPointsCount();
     int numPolygons = lMesh->GetPolygonCount();
-    int numPolygonVertices = lMesh->GetPolygonSize(0);
     FbxVector4* controlPoints = lMesh->GetControlPoints();
-    std::cout<<"Number of vertices : "<<numVertices<<"\n";
     // Process the vertices.
 
     Eigen::VectorXd pos(numVertices*3);
     Eigen::VectorXd nor(numVertices*3);
     Eigen::VectorXd uvs(numVertices*2);
-    Eigen::VectorXi indices(numPolygons*numPolygonVertices);
+    std::vector<unsigned int> indices;
 
     // Process the normals.
     FbxGeometryElementNormal* normalElement = lMesh->GetElementNormal();
@@ -213,19 +211,32 @@ loadMesh(FbxNode* _pNode)
 
     }
 
-    for(int i = 0; i < numPolygons; i++) {
-        for(int j = 0; j < numPolygonVertices; j++) {
-            int vertexIndex = lMesh->GetPolygonVertex(i, j);
-            // if(numPolygonVertices==3)
-                // std::cout<<"Triangle exists"<<'\n';
-            indices[i*numPolygonVertices+j] = vertexIndex;
+    for(int i = 0; i < numPolygons; i++) 
+    {
+        int polygonSize = lMesh->GetPolygonSize(i);
+        std::vector<unsigned int> polygonindex;
 
-            
-            // Now vertexIndex is the index of a vertex of the polygon.
+        for(int j = 0; j < polygonSize; j++) 
+        {
+            int vertexIndex = lMesh->GetPolygonVertex(i, j);
+            polygonindex.push_back(vertexIndex);
         }
+        // force to triangulate quad meshes (limitation of the current implementation)
+        if (lMesh->GetPolygonSize(i) == 4)
+        {
+            unsigned int index_four = polygonindex[3];
+            unsigned int index_two = polygonindex[1];
+            polygonindex.insert(polygonindex.begin()+2, index_two);
+            polygonindex.insert(polygonindex.begin()+2, index_four);
+        }
+        indices.insert( indices.end(), polygonindex.begin(), polygonindex.end() );
     }
 
-    Mesh* mesh = new Mesh(pos, nor, uvs, indices, numPolygonVertices);
+    Mesh* mesh = new Mesh(pos, nor, uvs, indices, 3);
+
+    std::unordered_map<int, ControlPointInfo>  out_controlPointsInfo;
+    loadSkin(_pNode,out_controlPointsInfo);
+    mesh->SetSkinningData(out_controlPointsInfo);
 
     m_Meshes.push_back(mesh);
 
@@ -760,7 +771,7 @@ GetMeshTextureCoord(int index)
     return mesh->GetTexCoords();
 }
 
-Eigen::VectorXi
+std::vector<unsigned int>
 FBXLoader::
 GetMeshPositionIndex(int index)
 {

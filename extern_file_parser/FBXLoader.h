@@ -23,7 +23,7 @@ public:
     Eigen::VectorXd GetMeshPosition(int index);
     Eigen::VectorXd GetMeshNormal(int index);
     Eigen::VectorXd GetMeshTextureCoord(int index);
-    Eigen::VectorXi GetMeshPositionIndex(int index);
+    std::vector<unsigned int> GetMeshPositionIndex(int index);
 
     const std::string GetJointName(int index);
     int GetJointCount();
