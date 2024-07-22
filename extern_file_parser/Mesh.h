@@ -18,8 +18,8 @@ struct IndexWeightPair
 
 struct ControlPointInfo
 {
-	std::vector<int> ctrlPoint;
-	std::vector<IndexWeightPair> weightPairs;
+	std::vector<unsigned int> skin_joints;
+	std::vector<float> skin_weights;
 };
 
 
@@ -28,7 +28,7 @@ class Mesh
 public:
     Mesh();
     Mesh(const Eigen::VectorXd& _vertices, const Eigen::VectorXd& _normals, const Eigen::VectorXd& _texCoords, const std::vector<unsigned int>& _indices, const int _stride);
-    void SetSkinningData(const std::unordered_map<int, ControlPointInfo>& _skinData);
+    void SetSkinningData(const std::vector<ControlPointInfo> & _skinData);
     virtual ~Mesh();
 
     Eigen::VectorXd GetVertices() const { return mVertices; }
@@ -36,6 +36,10 @@ public:
     Eigen::VectorXd GetTexCoords() const { return mTexCoords; }
     std::vector<unsigned int> GetIndices() const { return mIndices; }
     int GetStride() const { return mStride; }
+
+    const std::vector<unsigned int> GetMeshSkinJoints(int vertex_index);
+    const std::vector<float> GetMeshSkinWeights(int vertex_index);
+    const std::vector<ControlPointInfo>& GetSkinningData() const { return mSkinData; }
 
 // Load functions
 private:
@@ -47,7 +51,7 @@ private:
     Eigen::VectorXd mNormals;
     Eigen::VectorXd mTexCoords;
     std::vector<unsigned int> mIndices;
-    std::unordered_map<int, ControlPointInfo> mSkinData;
+    std::vector<ControlPointInfo> mSkinData;
     int mStride;
 };
 

@@ -15,20 +15,18 @@ public:
     
     virtual ~Joint();
 
-    std::string GetName() const { return name; }
-    int GetParentIndex() const { return parentIndex; }
-    Eigen::MatrixXd GetTransform() const { return transform; }
-    std::vector<Eigen::MatrixXd> GetAnimList() const { return animList; }
+    void SetInvBindPose(const Eigen::MatrixXd& _invBindPose) { invBindPose = _invBindPose; }
 
 // Load functions
 private:
 
     void initialize();
 
-private:
+public:
     std::string name;
     int parentIndex;
     Eigen::MatrixXd transform;
+    Eigen::MatrixXd invBindPose;
     std::vector<Eigen::MatrixXd> animList;
 };
 

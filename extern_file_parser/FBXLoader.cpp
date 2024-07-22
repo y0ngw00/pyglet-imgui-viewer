@@ -98,7 +98,13 @@ LoadFBX(const std::string& _filePath)
     //load mesh
     FbxNode* rootNode = fbxScene->GetRootNode();
 
+
     this->ProcessNode(fbxScene, rootNode);
+
+    for(int i=0; i<m_meshNodes.size(); i++)
+    {
+        loadMesh(m_meshNodes[i]);
+    }
     // FbxAMatrix globalPosition = globalPosition = rootNode->EvaluateGlobalTransform();
     // if(rootNode->GetNodeAttribute()) 
 	// {
@@ -235,8 +241,10 @@ loadMesh(FbxNode* _pNode)
 
     Mesh* mesh = new Mesh(pos, nor, uvs, indices, 3);
 
-    std::unordered_map<int, ControlPointInfo>  out_controlPointsInfo;
+    std::vector<ControlPointInfo>  out_controlPointsInfo;
+    out_controlPointsInfo.resize(numVertices);
     loadSkin(_pNode,out_controlPointsInfo);
+
     mesh->SetSkinningData(out_controlPointsInfo);
 
     m_Meshes.push_back(mesh);
@@ -297,6 +305,8 @@ loadJoint(FbxScene* _scene, FbxNode* _node)
             }
         }
 
+        // std::cout<<"Joint "<<m_Joints.size()<<": "<<name<<"\n";
+
         m_Joints.push_back(new Joint(name, parentIndex, m, animList));
 	}
     return true;
@@ -304,7 +314,7 @@ loadJoint(FbxScene* _scene, FbxNode* _node)
 
 void
 FBXLoader::
-loadSkin(FbxNode* _pNode, std::unordered_map<int, ControlPointInfo>& out_controlPointsInfo)
+loadSkin(FbxNode* _pNode, std::vector<ControlPointInfo>& out_controlPointsInfo)
 {
     FbxMesh* mesh = (FbxMesh*) _pNode->GetNodeAttribute ();
     if(mesh == nullptr)
@@ -336,43 +346,42 @@ loadSkin(FbxNode* _pNode, std::unordered_map<int, ControlPointInfo>& out_control
             if(currCluster)
             {
                 FbxString currJointName = currCluster->GetLink()->GetName();
-                // int currJointIndex = FindJointIndexByName(currJointName);
-                // if (currJointIndex == -1) {
-                //     FBXSDK_printf("error: can't find the joint: %s\n\n", currJointName);
-                //     continue;
-                // }
-                // std::cout<<"cluster "<<clusterIndex<<"'s linked joint : "<<currJointName<<"\n";
+                int currJointIndex = FindJointIndexByName(std::string(currJointName.Buffer()));
+                if (currJointIndex == -1) {
+                    FBXSDK_printf("error: can't find the joint: %s\n\n", currJointName);
+                    continue;
+                }
+
+                //FbxAMatrix transformMatrix;
+                FbxAMatrix transformLinkMatrix;
+                //FbxAMatrix globalBindPoseInverseMatrix;
+                //
+                //currCluster->GetTransformMatrix(transformMatrix);
+                currCluster->GetTransformLinkMatrix(transformLinkMatrix);
+                FbxAMatrix globalBindPoseInverseMatrix = transformLinkMatrix.Inverse();
+                //globalBindPoseInverseMatrix = transformLinkMatrix.Inverse() * transformMatrix * geometryTransform;
+
+                m_Joints[currJointIndex]->SetInvBindPose(FbxToEigenMatrix(globalBindPoseInverseMatrix));
+
+                unsigned int numOfIndices = currCluster->GetControlPointIndicesCount();
+                // std::cout<<"cluster "<<clusterIndex<<"'s indices and weights count : "<<numOfIndices<<"\n";
+
+                int* indices = currCluster->GetControlPointIndices();
+                double* weights = currCluster->GetControlPointWeights();
+                for (unsigned int i = 0; i != numOfIndices; ++i) {
+                    // IndexWeightPair weightPair;
+                    // weightPair.index = clusterIndex;		
+                    // weightPair.weight = weights[i];		//weight to control point of current joint
+                    //add index-weight pair into ControlPointInfo Struct
+                    out_controlPointsInfo[indices[i]].skin_joints.push_back(currJointIndex);
+                    out_controlPointsInfo[indices[i]].skin_weights.push_back(weights[i]);
+                }
             }
-
-
-			//FbxAMatrix transformMatrix;
-			//FbxAMatrix transformLinkMatrix;
-			//FbxAMatrix globalBindPoseInverseMatrix;
-			//
-			//currCluster->GetTransformMatrix(transformMatrix);
-			//currCluster->GetTransformLinkMatrix(transformLinkMatrix);
-			//globalBindPoseInverseMatrix = transformLinkMatrix.Inverse() * transformMatrix * geometryTransform;
-
-			////Update the information of the joints
-			//skeleton.joints[currJointIndex].node = currCluster->GetLink();
-			//skeleton.joints[currJointIndex].globalBindPoseInverse = globalBindPoseInverseMatrix;
-
-			unsigned int numOfIndices = currCluster->GetControlPointIndicesCount();
-            // std::cout<<"cluster "<<clusterIndex<<"'s indices and weights count : "<<numOfIndices<<"\n";
-
-            int* indices = currCluster->GetControlPointIndices();
-            double* weights = currCluster->GetControlPointWeights();
-			for (unsigned int i = 0; i != numOfIndices; ++i) {
-				IndexWeightPair weightPair;
-				weightPair.index = clusterIndex;		
-				weightPair.weight = weights[i];		//weight to control point of current joint
-				//add index-weight pair into ControlPointInfo Struct
-                out_controlPointsInfo[indices[i]].ctrlPoint.push_back(clusterIndex);
-				out_controlPointsInfo[indices[i]].weightPairs.push_back(weightPair);
-			}
 			
 		}
 	}
+
+
     DebugSumOfWeights(out_controlPointsInfo);		//should be 1.0
 
 }
@@ -402,15 +411,15 @@ FindJointIndexByName(const std::string& _jointName)
 
 void
 FBXLoader::
-DebugSumOfWeights(std::unordered_map<int, ControlPointInfo>& out_controlPointsInfo)
+DebugSumOfWeights(std::vector<ControlPointInfo>& out_controlPointsInfo)
 {
-	for (auto it = out_controlPointsInfo.begin(); it != out_controlPointsInfo.end(); ++it) {
-		std::vector<IndexWeightPair> weightPairs = it->second.weightPairs;
+	for (const auto& it : out_controlPointsInfo) {
+		std::vector<float> skin_weights = it.skin_weights;
 		double sumOfWeights = 0.0;
 	//	FBXSDK_printf("\joint id		weight\n");
-		for (auto& weightPair : weightPairs) {
+		for (auto& skin_weight : skin_weights) {
 		//	FBXSDK_printf("%d		%lf\n", weightPair.index, weightPair.weight);
-			sumOfWeights += weightPair.weight;
+			sumOfWeights += skin_weight;
 		}
 		//FBXSDK_printf("the sum of weights is: %lf\n", sumOfWeights);
 		assert((sumOfWeights - 1.0) < 10e-5);	//sum of weight is not equal to 1.0
@@ -451,8 +460,8 @@ loadScene(FbxManager* _pManager, FbxScene* _scene, const std::string& _pFileName
 
     fbxImporter->GetFileVersion(fileMajor, fileMinor, fileRevision);
 
-    std::cout<<"FBX SDK version is "<< sdkMajor<<" "<<sdkMinor<<" "<< sdkRevision<<"\n";
-    std::cout<<"FBX file format version SDK is "<< fileMajor<<" "<<fileMinor<<" "<< fileRevision<<"\n";
+    // std::cout<<"FBX SDK version is "<< sdkMajor<<" "<<sdkMinor<<" "<< sdkRevision<<"\n";
+    // std::cout<<"FBX file format version SDK is "<< fileMajor<<" "<<fileMinor<<" "<< fileRevision<<"\n";
 
     ///major, minor, revision 까지 체크 
     unsigned int fileVersion = (fileMajor << 16 | fileMinor << 8 | fileRevision);
@@ -792,50 +801,38 @@ GetMeshPositionIndex(int index)
 }
 
 const
-std::string
+std::vector<unsigned int>
 FBXLoader::
-GetJointName(int index)
+GetMeshSkinJoints(int mesh_index, int vertex_index)
 {
-    return m_Joints[index]->GetName();
-}
-
-int
-FBXLoader::
-GetJointCount()
-{
-    return m_Joints.size();
-}
-
-
-int
-FBXLoader::
-GetParentIndex(int index)
-{
-    return m_Joints[index]->GetParentIndex();
+    Mesh* mesh = m_Meshes[mesh_index];
+    return mesh->GetMeshSkinJoints(vertex_index);
 }
 
 const
-Eigen::MatrixXd
+std::vector<float>
 FBXLoader::
-GetJointTransform(int index)
+GetMeshSkinWeights(int mesh_index, int vertex_index)
 {
-    return m_Joints[index]->GetTransform();
-    // Joint* node = m_Joints[index];
-    // const FbxVector4 translation = node->GetGeometricTranslation(FbxNode::eSourcePivot);
-    // const FbxVector4 rotation = node->GetGeometricRotation(FbxNode::eSourcePivot);
-    // const FbxVector4 scaling = node->GetGeometricScaling(FbxNode::eSourcePivot);
-
-    // FbxMatrix fbxM =  FbxAMatrix(translation, rotation, scaling);
-    // FbxAMatrix fbxM = GetNodeTransform(node);
-    // return FbxToEigenMatrix(fbxM);
+    Mesh* mesh = m_Meshes[mesh_index];
+    return mesh->GetMeshSkinWeights(vertex_index);
 }
 
 const
-std::vector<Eigen::MatrixXd>
+std::vector<ControlPointInfo>
 FBXLoader::
-GetJointAnimList(int index)
+GetMeshSkinData(int mesh_index)
 {
-    return m_Joints[index]->GetAnimList();
+    Mesh* mesh = m_Meshes[mesh_index];
+    return mesh->GetSkinningData();
+}
+
+const
+std::vector<Joint*>
+FBXLoader::
+GetJoints()
+{
+    return m_Joints;
 }
 
 FbxAMatrix
@@ -925,6 +922,17 @@ FbxToEigenQuaternion(const FbxAMatrix& _fbxMatrix)
 namespace py = pybind11;
 
 PYBIND11_MODULE(pycomcon, m){
+    py::class_<ControlPointInfo>(m, "ControlPointInfo")
+        .def(py::init<>())
+        .def_readwrite("skin_weights", &ControlPointInfo::skin_weights)
+        .def_readwrite("skin_joints", &ControlPointInfo::skin_joints);
+    py::class_<Joint>(m, "Joint")
+        .def(py::init<>())
+        .def_readwrite("name", &Joint::name)
+        .def_readwrite("transform", &Joint::transform)
+        .def_readwrite("invBindPose", &Joint::invBindPose)
+        .def_readwrite("parentIndex", &Joint::parentIndex)
+        .def_readwrite("animList", &Joint::animList);
 	py::class_<FBXLoader>(m, "FBXLoader")
 		.def(py::init<>())
         .def("load_fbx_assimp", &FBXLoader::LoadFBXfromAssimp)
@@ -935,9 +943,8 @@ PYBIND11_MODULE(pycomcon, m){
         .def("get_mesh_normal", &FBXLoader::GetMeshNormal)
         .def("get_mesh_texcoord", &FBXLoader::GetMeshTextureCoord)
         .def("get_mesh_indices", &FBXLoader::GetMeshPositionIndex)
-        .def("get_joint_name", &FBXLoader::GetJointName)
-        .def("get_joint_count", &FBXLoader::GetJointCount)
-        .def("get_parent_idx", &FBXLoader::GetParentIndex)
-        .def("get_joint_transform", &FBXLoader::GetJointTransform)
-        .def("get_joint_animation", &FBXLoader::GetJointAnimList);
+        .def("get_mesh_skin_data", &FBXLoader::GetMeshSkinData)
+        .def("get_mesh_skin_joints", &FBXLoader::GetMeshSkinJoints)
+        .def("get_mesh_skin_weights", &FBXLoader::GetMeshSkinWeights)
+        .def("get_joints", &FBXLoader::GetJoints);
 }

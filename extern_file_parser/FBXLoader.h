@@ -26,12 +26,12 @@ public:
     Eigen::VectorXd GetMeshNormal(int index);
     Eigen::VectorXd GetMeshTextureCoord(int index);
     std::vector<unsigned int> GetMeshPositionIndex(int index);
+    
+    const std::vector<unsigned int> GetMeshSkinJoints(int mesh_index, int vertex_index);
+    const std::vector<float> GetMeshSkinWeights(int mesh_index, int vertex_index);
+    const std::vector<ControlPointInfo> GetMeshSkinData(int mesh_index);
 
-    const std::string GetJointName(int index);
-    int GetJointCount();
-    int GetParentIndex(int index);
-    const Eigen::MatrixXd GetJointTransform(int index);
-    const std::vector<Eigen::MatrixXd> GetJointAnimList(int index);
+    const std::vector<Joint*> GetJoints();
     
     virtual ~FBXLoader();
 
@@ -42,9 +42,9 @@ private:
     bool loadScene(FbxManager* _pManager, FbxScene* _scene, const std::string& _pFileName);
     bool loadMesh(FbxNode* _pNode);
     bool loadJoint(FbxScene* _scene, FbxNode* _node);
-    void loadSkin(FbxNode* _pNode, std::unordered_map<int, ControlPointInfo>& out_controlPointsInfo);
+    void loadSkin(FbxNode* _pNode, std::vector<ControlPointInfo>& out_controlPointsInfo);
     int FindJointIndexByName(const std::string& _jointName);
-    void DebugSumOfWeights(std::unordered_map<int, ControlPointInfo>& out_controlPointsInfo);
+    void DebugSumOfWeights(std::vector<ControlPointInfo>& out_controlPointsInfo);
 
 
 // Utility functions
@@ -57,6 +57,7 @@ private:
     Eigen::Quaterniond FbxToEigenQuaternion(const FbxAMatrix& _fbxMatrix);
 
 private:
+    std::vector<FbxNode*> m_meshNodes;
     std::vector<Mesh*> m_Meshes;
     std::vector<Joint*> m_Joints;
 };
