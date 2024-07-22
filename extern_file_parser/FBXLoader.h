@@ -15,7 +15,6 @@ class FBXLoader
 {
 public:
     FBXLoader();
-    bool LoadFBXfromAssimp(const std::string& _filePath);
     bool LoadFBX(const std::string& _filePath);
     void ProcessNode(FbxScene* _scene, FbxNode* node);
     void CreateScene();

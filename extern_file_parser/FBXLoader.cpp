@@ -38,8 +38,6 @@ FBXLoader()
 FBXLoader::
 ~FBXLoader()
 {
-    ClearSDK();
-
     m_Joints.clear();
     m_Meshes.clear();
 }
@@ -48,20 +46,6 @@ void
 FBXLoader::
 initialize()
 {
-    m_fbxScene = NULL;
-}
-
-void
-FBXLoader::
-ClearSDK()
-{	
-	if (m_fbxScene)
-	{
-		m_fbxScene->Destroy();
-		m_fbxScene = NULL;
-	}
-
-
 }
 
 bool
@@ -935,7 +919,6 @@ PYBIND11_MODULE(pycomcon, m){
         .def_readwrite("animList", &Joint::animList);
 	py::class_<FBXLoader>(m, "FBXLoader")
 		.def(py::init<>())
-        .def("load_fbx_assimp", &FBXLoader::LoadFBXfromAssimp)
         .def("load_fbx", &FBXLoader::LoadFBX)
         .def("get_mesh_count", &FBXLoader::GetMeshCount)
         .def("get_mesh_stride", &FBXLoader::GetMeshStride)

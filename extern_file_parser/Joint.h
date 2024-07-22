@@ -15,6 +15,7 @@ public:
     
     virtual ~Joint();
 
+    const std::string GetName() const { return name; }
     void SetInvBindPose(const Eigen::MatrixXd& _invBindPose) { invBindPose = _invBindPose; }
 
 // Load functions
