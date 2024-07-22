@@ -45,8 +45,8 @@ class UI:
         self.Sequencer = Sequencer(self)
         self.custom_browser = CustomBrowser(self,self.scene)
         
-        self.impl.refresh_font_texture()        
-
+        self.impl.refresh_font_texture()
+        
     def render(self):
     
         imgui.render()
@@ -104,10 +104,11 @@ class UI:
             
             elif ext == "fbx":
                 loader.load_fbx(file_path)
-                character = loader.load_fbx(file_path)
+                character = loader.load_fbx(file_path, load_anim = False)
                 character.set_position(self.pos_list[self.pos_idx2])
                 
-                self.add_dancer(character)
+                if character.joints is not None:
+                    self.add_dancer(character)
                 self.pos_idx2+=1
                     
             if character is not None:

@@ -6,6 +6,8 @@ import math
 from pyglet.gl import *
 from ctypes import byref
 
+import torch
+
 import sys
 import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -92,20 +94,42 @@ class CustomMesh(Mesh):
         self.normals = mesh_info["normals"]
         self.uvs = mesh_info["uvs"]
         
-        self.num_vertices = len(self.vertices)//self.stride
+        self.num_vertices = len(self.vertices)//3
         self.colors =(255, 255,255, 255) * self.num_vertices
         self.indices = mesh_info["indices"]
         
-        self.skin_weight = []
-        self.joint_indices = []
-        if "joint_indices" in mesh_info:
-            self.joint_indices = mesh_info["joint_indices"]
-        if "skin_weight" in mesh_info:
-            self.skin_weight = mesh_info["skin_weight"]
+        self.skin_weights = []
+        self.skin_joints = []
+        is_skinned = False
+        
+        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+            
+        if "skin_data" in mesh_info:
+            skin_data = mesh_info["skin_data"]
+            self.skin_joints = torch.zeros((len(skin_data), 4), dtype=torch.int32, device = self.device)
+            self.skin_weights = torch.zeros((len(skin_data), 4), dtype=torch.float32, device= self.device)
+            for idx,data in enumerate(skin_data):
+                num_joint = len(data.skin_joints)
+                self.skin_joints[idx, 0:num_joint] = torch.tensor(data.skin_joints, dtype=torch.int32,device = self.device)
+                self.skin_weights[idx, 0:num_joint] = torch.tensor(data.skin_weights, dtype=torch.float32, device = self.device)
+            self.original_vertices = torch.tensor(self.vertices, dtype=torch.float32, device = self.device)
+            self.original_vertices = self.original_vertices.view(self.num_vertices, 3)
 
-    def animate(self, frame):
-        if len(self.skin_weight) == 0:
+            is_skinned = True
+            
+    def is_skinned(self):
+        return self.is_skinned
+
+    # skin_mesh
+    def skin_mesh(self, joint_bind_matrices):
+        if len(self.skin_joints) == 0:
             return
+        
+        ori_pos = torch.cat((self.original_vertices, torch.ones((self.num_vertices, 1), device = self.device)), dim=1)
+        bone_matrices = torch.sum(self.skin_weights.unsqueeze(-1).unsqueeze(-1) * joint_bind_matrices[self.skin_joints], dim=1)
+        positions = torch.einsum('ij,ijk->ik', ori_pos, bone_matrices)
+
+        self.vertices = positions[:, :3].flatten().tolist()
 
 class Cylinder(Mesh):
     '''

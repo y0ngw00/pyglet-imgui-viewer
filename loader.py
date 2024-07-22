@@ -153,18 +153,17 @@ def load_gltf_joint(folder_path, gltf,glb_data):
     # return (Animation(quat_rotations, positions, orients, offsets, parents), names, frametime)
     return joints, inverse_bind_matrices
 
-def load_fbx(filename):
+def load_fbx(filename, load_anim = False):
     fbx_loader = pycomcon.FBXLoader()
     loadResult = fbx_loader.load_fbx(filename)
     name = filename.split('/')[-1]
-    
-    meshes = load_fbx_mesh(fbx_loader)
-    
-    meshes[0].set_color((0, 4, 47, 255))
-    meshes[1].set_color((200, 200, 200, 255))
 
-    joints = load_fbx_joint(fbx_loader)
-    # character = Character(name, joints = joints,scale=[1,1,1], scale_link = 5.0)
+    meshes = load_fbx_mesh(fbx_loader)
+    if len(meshes) > 0:
+        meshes[0].set_color((0, 4, 47, 255))
+        meshes[1].set_color((200, 200, 200, 255))
+    joints = load_fbx_joint(fbx_loader, load_anim)
+
     character = Character(name, meshes = meshes,joints = joints, scale=[1,1,1])
     print("Success to load FBX!")
     return character
@@ -179,68 +178,78 @@ def load_fbx_mesh(fbx_loader):
         normals = fbx_loader.get_mesh_normal(i)
         uvs = fbx_loader.get_mesh_texcoord(i)
         indices = fbx_loader.get_mesh_indices(i)
-        mesh = Object(mesh_type=MeshType.Custom,
+                   
+        skin_data = np.array(fbx_loader.get_mesh_skin_data(i))    
+        if skin_data is None:
+            mesh = Object(mesh_type=MeshType.Custom,
                       mesh_info={"vertices":vertices, 
                                  "normals":normals,
                                 "uvs":uvs,
-                                "indices":indices})
-        mesh.mesh.stride = fbx_loader.get_mesh_stride(i)
-        # mesh = Object(mesh_type=MeshType.Custom,
-        #               mesh_info={"vertices":vertices, 
-        #                          "normals":normals,
-        #                         "uvs":uvs,
-        #                         "indices":indices,
-        #                         "joint_indices" : np.array(joints),
-        #                         "skin_weight": np.array(weights)})
-        
+                                "indices":indices,
+                                })
+        else:
+            mesh = Object(mesh_type=MeshType.Custom,
+                      mesh_info={"vertices":vertices, 
+                                 "normals":normals,
+                                "uvs":uvs,
+                                "indices":indices,
+                                "skin_data" : skin_data,
+                                })
+        mesh.mesh.stride = 3 # set to triangular mesh            
         meshes.append(mesh)
     
     return meshes
 
-def load_fbx_joint(fbx_loader):
+def load_fbx_joint(fbx_loader, load_anim):
     joints = []
     
-    num_joint = fbx_loader.get_joint_count()
-    
-    for i in range(num_joint):
-        
-        name = fbx_loader.get_joint_name(i)
+    fbx_joints = fbx_loader.get_joints()
+
+    # for i in range(num_joint):
+    for fbx_joint in fbx_joints:
+        name = fbx_joint.name             
         joint = Joint(name,5.0)
+
+        parent_idx = fbx_joint.parentIndex
+        transform = fbx_joint.transform
         
-        parent_idx = fbx_loader.get_parent_idx(i)
-        transform = fbx_loader.get_joint_transform(i)
+        joint.init_transform_inv = fbx_joint.invBindPose
         
-        animation_data = fbx_loader.get_joint_animation(i)
-        animation_data = np.array(animation_data)
+        animation_data =  None
+        if load_anim is True:
+            animation_data = fbx_joint.animList
+            animation_data = np.array(animation_data)
 
         if parent_idx == -1:
             joint.set_root(True)
             joint.set_position(transform[3,0:3])
-            if len(animation_data) > 0:
+            if animation_data is not None:
                 rot_mat = animation_data[:,:3,:3]
                 rot_quat = Quaternions.Quaternions.from_transforms(rot_mat).qs
-                joint.rotations = rot_quat
-                joint.positions = animation_data[:,3,0:3]            
+                joint.rotations = list(rot_quat)
+                joint.positions = list(animation_data[:,3,0:3])         
         else:
             joint.set_parent(joints[parent_idx])
             joint.set_position(transform[3,0:3])
-            if len(animation_data) > 0:
+            if animation_data is not None:
                 rot_mat = animation_data[:,:3,:3]
                 rot_quat = Quaternions.Quaternions.from_transforms(rot_mat).qs
-                joint.rotations = rot_quat
-            
+                joint.rotations = list(rot_quat)
             
         joints.append(joint)
-        
-    # # animation
-    # for frame, rot in enumerate(data.rotations):
-    #     for idx, joint in enumerate(joints):
-    #         joint.rotations.append(rot[idx])
 
-    #         if joint.is_root is True:
-    #             joint.positions.append(data.positions[frame][idx])
-        
     return joints
+
+def load_fbx_animation(filepath):
+    if not os.path.exists(filepath):
+        return None
+    
+    fbx_loader = pycomcon.FBXLoader()
+    loadResult = fbx_loader.load_fbx(filepath)
+    name = filepath.split('/')[-1]
+    
+    joints = load_fbx_joint(fbx_loader, load_anim = True)
+    return name, joints
 
 def load_bvh(filepath, scale = [1.0,1.0,1.0]):
     if not os.path.exists(filepath):
@@ -253,7 +262,7 @@ def load_bvh(filepath, scale = [1.0,1.0,1.0]):
         return None
         
     data = BVH.load(filepath)
-    joints = create_joint(data[0], data[1],scale_joint = 5.0)
+    joints = create_bvh_joint(data[0], data[1],scale_joint = 5.0)
     character = Character(name, joints = joints,scale=scale, scale_link = 5.0)
     print("BVH load success.")
 
@@ -273,13 +282,13 @@ def load_bvh_animation(filepath):
         return None
         
     data = BVH.load(filepath)
-    joints = create_joint(data[0], data[1],scale_joint = 5.0)
+    joints = create_bvh_joint(data[0], data[1],scale_joint = 5.0)
     
     print("BVH load success.")
 
     return name, joints
 
-def create_joint(data,names,scale_joint):
+def create_bvh_joint(data,names,scale_joint):
     joints = []
 
     # self.rotations = data.rotations

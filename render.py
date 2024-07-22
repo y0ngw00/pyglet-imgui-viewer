@@ -104,19 +104,16 @@ class RenderWindow(pyglet.window.Window):
         self.scene.animate(self.frame)
         self.scene.update()
 
+        if self.animate:
+            self.update_shape()
         for i, shape in enumerate(self.shapes):
             '''
             Update position/orientation in the scene. In the current setting, 
             shapes created later rotate faster while positions are not changed.
-            '''
-            # if self.animate:
-            #     rotate_angle = dt
-            #     rotate_axis = Vec3(0,0,1)
-            #     rotate_mat = Mat4.from_rotation(angle = rotate_angle, vector = rotate_axis)
-            # shape.object.transform.
+            '''                
 
-                # # Example) You can control the vertices of shape.
-                # shape.indexed_vertices_list.vertices[0] += 0.5 * dt
+            # # Example) You can control the vertices of shape.
+            # shape.indexed_vertices_list.vertices[0] += 0.5 * dt
             shape.shader_program['view_proj'] = view_proj
             shape.shader_program["lightPos"] = self.light_pos
             # shape.shader_program["viewPos"] = self.get_cam_eye
@@ -151,7 +148,11 @@ class RenderWindow(pyglet.window.Window):
                             uvs = ('f', obj.mesh.uvs),
                             )
         self.shapes.append(shape)
-
+        
+            
+    def update_shape(self):
+        for shape in self.shapes:
+            shape.indexed_vertices_list.vertices = shape.object.mesh.vertices
 
     def on_resize(self, width, height):
         glViewport(0, 0, *self.get_framebuffer_size())

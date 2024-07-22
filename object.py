@@ -3,6 +3,9 @@ from pyglet.math import Mat4, Vec3, Vec4
 import pyglet
 from enum import Enum
 
+import copy
+import torch
+
 import mathutil
 from primitives import CustomMesh,Cube,Sphere, GridPlane, Cylinder
 
@@ -66,6 +69,9 @@ class Object:
         if frame < 0 or hasattr(self.mesh, 'animate') is not True:
             return
         self.mesh.animate(frame)
+        
+    def get_world_transform(self):
+        return self.transform_gbl
 
     def update_world_transform(self):
         self.transform_gbl = self.transform @ self.parent.transform_gbl if self.parent is not None else self.transform
@@ -82,6 +88,8 @@ class Character(Object):
 
         self.root= None
         
+        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        
         if meshes is not None:
             self.meshes = meshes
             for m in meshes:
@@ -93,6 +101,7 @@ class Character(Object):
                     self.root = j
                     self.root.set_parent(self)
                     break
+            self.joint_bind_matrices = torch.zeros([len(joints),4,4], dtype = torch.float32, device=self.device)
             self.links = self.create_link(scale_link)
             
         self.set_scale(scale)          
@@ -140,8 +149,16 @@ class Character(Object):
         if self.root is not None:
             if frame < 0 or len(self.root.rotations) <= frame:
                 return
-            for j in self.joints:
+            for j_idx, j in enumerate(self.joints):
                 j.animate(frame)
+                if len(self.meshes)>0:
+                    transform =  j.get_init_transform_inverse() @ j.get_world_transform()
+                    self.joint_bind_matrices[j_idx] = torch.from_numpy(transform).to(self.device) 
+            
+            for m in self.meshes:
+                if isinstance(m, Object):
+                    m.mesh.skin_mesh(self.joint_bind_matrices)
+            
             self.root.set_scale(self.scale)
             
     def add_animation(self, joints, frame, initialize_position = False):
@@ -170,7 +187,7 @@ class Character(Object):
 
 class Joint(Object):
     def __init__(self, name,scale_joint):
-        super().__init__(MeshType.Sphere, {"stack":30, "slice":30, "scale":scale_joint})
+        super().__init__(MeshType.Sphere, {"stack":5, "slice":5, "scale":scale_joint})
         self.name = name
         # Ordered list of channels: each
         # list entry is one of [XYZ]position, [XYZ]rotation
@@ -178,6 +195,7 @@ class Joint(Object):
         self.rotations = []
         self.positions = []
         self.offset = np.array([0.,0.,0.]) # static translation vector
+        self.init_transform_inv = np.eye(4, dtype = float)
 
         self.order = None
         self.is_root = False
@@ -231,8 +249,10 @@ class Joint(Object):
                 if self.is_root is True:
                     self.positions.append(self.positions[-1])
                 self.rotations.append(self.rotations[-1])
-                
         return
+        
+    def get_init_transform_inverse(self):
+        return self.init_transform_inv
 class Link(Object):
     def __init__(self, parent, child, scale):
         super().__init__(MeshType.Cylinder, {"diameter": 1.0, "height": 1.0, "num_segments":16})  
