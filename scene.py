@@ -86,18 +86,19 @@ class Scene:
         #     object.update_world_transform()
         
     def add_character(self, character):
+                
+        if len(character.meshes) > 0:
+            for m in character.meshes:
+                self.window.add_shape(m)
         
-        if character.joints is not None:
-            character.set_joint_color((94,161,82,255))
-            character.set_link_color((150,75,0,255))
+        else:
+            if character.joints is not None:
+                character.set_joint_color((94,161,82,255))
+                character.set_link_color((150,75,0,255))
             for j in character.joints:
                 self.window.add_shape(j)
             for l in character.links:
                 self.window.add_shape(l)
-                
-        if character.meshes is not None:
-            for m in character.meshes:
-                self.window.add_shape(m)
 
         self.characters.append(character)
 
