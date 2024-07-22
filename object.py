@@ -162,20 +162,31 @@ class Character(Object):
             self.root.set_scale(self.scale)
             
     def add_animation(self, joints, frame, initialize_position = False):
-        if initialize_position is True:
+        if initialize_position is True and len(self.root.positions) >0:
             closest_frame = frame
-            if closest_frame > len(self.root.positions):
+            if closest_frame >= len(self.root.positions):
                 closest_frame = len(self.root.positions) - 1
-             
+                
+            
             root = joints[0]
+            
+            # reflect current xz-plane facing direction to motion data
+            curr_rot_mat = Quaternions(self.root.rotations[closest_frame]).transforms()[0]
+            face_dir = curr_rot_mat[:,2] / np.linalg.norm(curr_rot_mat[:,2])
+            angle = np.arccos(np.dot([0, 0, 1] , face_dir))
+            if np.cross([0, 0, 1] , face_dir)[1] < 0:
+                angle = -angle
+                
+            curr_rot = Quaternions.from_angle_axis(angle, np.array([0,1,0]))
+            curr_rot_mat = curr_rot.transforms()[0]
+            root.positions = [p @ curr_rot_mat for p in root.positions]
+            root.rotations = [(curr_rot * Quaternions(q)).qs for q in root.rotations]
+            
+            # position difference update to motion data
             curr_pos = self.root.positions[closest_frame]
             pos_diff = root.positions[0] - curr_pos
             root.positions -= pos_diff
             
-            curr_rot = self.root.rotations[closest_frame]
-            rot_diff_inv =  Quaternions(curr_rot) * -(Quaternions(root.rotations[0]))
-            root.rotations = [rot_diff_inv * Quaternions(q) for q in root.rotations]
-            root.rotations[0] = curr_rot            
             
         for idx, joint in enumerate(joints):
             if idx > len(self.joints):
@@ -223,7 +234,7 @@ class Joint(Object):
         else:
             if len(self.rotations) > frame + len(joint.rotations):
                 if self.is_root is True:
-                    rest_pos = self.rotations[frame + len(joint.rotations):]
+                    rest_pos = self.positions[frame + len(joint.positions):]
                 rest_rot = self.rotations[frame + len(joint.rotations):]
  
             if self.is_root is True:
