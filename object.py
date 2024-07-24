@@ -159,8 +159,9 @@ class Character(Object):
     
     def animate(self, frame):    
         if self.root is not None:
-            if frame < 0 or len(self.root.rotations) <= frame:
+            if frame < 0 or len(self.root.anim_layers) == 0:
                 return
+            
             for j_idx, j in enumerate(self.joints):
                 j.animate(frame)
                 if len(self.meshes)>0:
@@ -174,31 +175,30 @@ class Character(Object):
             self.root.set_scale(self.scale)
             
     def add_animation(self, joints, frame, initialize_position = False):
-        if initialize_position is True and len(self.root.positions) >0:
-            closest_frame = frame
-            if closest_frame >= len(self.root.positions):
-                closest_frame = len(self.root.positions) - 1
+        # if initialize_position is True and len(self.root.positions) >0:
+        #     closest_frame = frame
+        #     if closest_frame >= len(self.root.positions):
+        #         closest_frame = len(self.root.positions) - 1
                 
             
-            root = joints[0]
+        #     root = joints[0]
             
-            # reflect current xz-plane facing direction to motion data
-            curr_rot_mat = Quaternions(self.root.rotations[closest_frame]).transforms()[0]
-            face_dir = curr_rot_mat[:,2] / np.linalg.norm(curr_rot_mat[:,2])
-            angle = np.arccos(np.dot([0, 0, 1] , face_dir))
-            if np.cross([0, 0, 1] , face_dir)[1] < 0:
-                angle = -angle
+        #     # reflect current xz-plane facing direction to motion data
+        #     curr_rot_mat = Quaternions(self.root.rotations[closest_frame]).transforms()[0]
+        #     face_dir = curr_rot_mat[:,2] / np.linalg.norm(curr_rot_mat[:,2])
+        #     angle = np.arccos(np.dot([0, 0, 1] , face_dir))
+        #     if np.cross([0, 0, 1] , face_dir)[1] < 0:
+        #         angle = -angle
                 
-            curr_rot = Quaternions.from_angle_axis(angle, np.array([0,1,0]))
-            curr_rot_mat = curr_rot.transforms()[0]
-            root.positions = [p @ curr_rot_mat for p in root.positions]
-            root.rotations = [(curr_rot * Quaternions(q)).qs for q in root.rotations]
+        #     curr_rot = Quaternions.from_angle_axis(angle, np.array([0,1,0]))
+        #     curr_rot_mat = curr_rot.transforms()[0]
+        #     root.positions = [p @ curr_rot_mat for p in root.positions]
+        #     root.rotations = [(curr_rot * Quaternions(q)).qs for q in root.rotations]
             
-            # position difference update to motion data
-            curr_pos = self.root.positions[closest_frame]
-            pos_diff = root.positions[0] - curr_pos
-            root.positions -= pos_diff
-            
+        #     # position difference update to motion data
+        #     curr_pos = self.root.positions[closest_frame]
+        #     pos_diff = root.positions[0] - curr_pos
+        #     root.positions -= pos_diff
             
         for idx, joint in enumerate(joints):
             if idx > len(self.joints):
@@ -206,6 +206,11 @@ class Character(Object):
                 
             else:
                 self.joints[idx].add_animation(joint, frame)
+                
+    def remove_animation(self, idx):
+        for joint in self.joints:
+            anim = joint.anim_layers[idx]
+            joint.anim_layers.remove(anim)
         
 
 class Joint(Object):
@@ -217,6 +222,7 @@ class Joint(Object):
         self.channels = []
         self.rotations = []
         self.positions = []
+        self.anim_layers = []
         self.offset = np.array([0.,0.,0.]) # static translation vector
         self.init_transform_inv = np.eye(4, dtype = float)
 
@@ -227,56 +233,65 @@ class Joint(Object):
         self.is_root = is_root
 
     def animate(self, frame):
-        if frame > len(self.rotations)-1:
-            return        
-        m = np.eye(4, dtype=np.float32)
-        m[0:3, 0:3] = Quaternions(self.rotations[frame]).transforms()[0]
-        if self.is_root is True:
-            m[3, 0:3] = self.positions[frame]
-        else:
-            m[3, 0:3] = self.transform[3, 0:3]
+        for anim_layer in self.anim_layers:
+            anim_layer.animate(frame)
+        # if frame > len(self.rotations)-1:
+        #     return        
+        # m = np.eye(4, dtype=np.float32)
+        # m[0:3, 0:3] = Quaternions(self.rotations[frame]).transforms()[0]
+        # if self.is_root is True:
+        #     m[3, 0:3] = self.positions[frame]
+        # else:
+        #     m[3, 0:3] = self.transform[3, 0:3]
 
-        self.set_transform(m)
+        # self.set_transform(m)
         
     def add_animation(self, joint, frame):
-        rest_pos = None
-        rest_rot = None
-        if frame > len(self.rotations):
-            self.fill_animation(frame)
-        else:
-            if len(self.rotations) > frame + len(joint.rotations):
-                if self.is_root is True:
-                    rest_pos = self.positions[frame + len(joint.positions):]
-                rest_rot = self.rotations[frame + len(joint.rotations):]
+        
+        anim_layer = joint.anim_layers
+        for anim in anim_layer:
+            anim.joint = self
+            anim.frame_start += frame
+            anim.frame_end += frame
+            self.anim_layers.append(anim)
+        # rest_pos = None
+        # rest_rot = None
+        # if frame > len(self.rotations):
+        #     self.fill_animation(frame)
+        # else:
+        #     if len(self.rotations) > frame + len(joint.rotations):
+        #         if self.is_root is True:
+        #             rest_pos = self.positions[frame + len(joint.positions):]
+        #         rest_rot = self.rotations[frame + len(joint.rotations):]
  
-            if self.is_root is True:
-                self.positions = self.positions[:frame]           
-            self.rotations = self.rotations[:frame]
+        #     if self.is_root is True:
+        #         self.positions = self.positions[:frame]           
+        #     self.rotations = self.rotations[:frame]
 
                 
-        if self.is_root is True:
-            self.positions.extend(joint.positions)
-        self.rotations.extend(joint.rotations)
+        # if self.is_root is True:
+            # self.positions.extend(joint.positions)
+        # self.rotations.extend(joint.rotations)
         
-        if rest_pos is not None:
-            self.positions.extend(rest_pos)
-        if rest_rot is not None:
-            self.rotations.extend(rest_rot)
+        # if rest_pos is not None:
+            # self.positions.extend(rest_pos)
+        # if rest_rot is not None:
+            # self.rotations.extend(rest_rot)
     
-    def fill_animation(self, frame):
-        if len(self.rotations) == 0:
-            self.rotations.append(np.array([1,0,0,0]))
-            self.positions.append(np.array([0,0,0]))
-        else:
-            for i in range(frame - len(self.rotations)):
-                if self.is_root is True:
-                    self.positions.append(self.positions[-1])
-                self.rotations.append(self.rotations[-1])
-        return
+    # def fill_animation(self, frame):
+    #     if len(self.rotations) == 0:
+    #         self.rotations.append(np.array([1,0,0,0]))
+    #         self.positions.append(np.array([0,0,0]))
+    #     else:
+    #         for i in range(frame - len(self.rotations)):
+    #             if self.is_root is True:
+    #                 self.positions.append(self.positions[-1])
+    #             self.rotations.append(self.rotations[-1])
+    #     return
     
     def translate(self, pos):
         self.transform[3,0:3] = pos
-        if self.rotations is not None:
+        if self.positions is not None:
             self.positions = [p + pos for p in self.positions] 
         return
         

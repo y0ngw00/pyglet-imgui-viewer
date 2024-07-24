@@ -66,6 +66,10 @@ class Sequencer(BoxItem):
     def open_motion_library(self):
         pass
     
+    def delete_motion(self):
+        if self.picked is not None and isinstance(self.picked, Sequence):
+            self.picked.delete_track()
+    
     def insert_motion(self, file_path):
         if self.picked is not None and isinstance(self.picked, Sequence):
             self.picked.insert_track(file_path, self.parent_window.get_frame())
@@ -123,11 +127,17 @@ class Sequence(BoxItem):
         self.padding_x = 0
         self.padding_y = 10
         self.sequence_pos_start = sequence_pos_start
-        self.sequence_height = sequence_height - self.padding_y
+        self.sequence_height = sequence_height - 2*self.padding_y
         
         self.text_color = imgui.get_color_u32_rgba(1,1,1,1)
         self.sequence_color = imgui.get_color_u32_rgba(1,0.7,0,1)   
         self.background_color = imgui.get_color_u32_rgba(1,1,1,0.3)     
+
+        if len(target.joints) > 0 and len(target.joints[0].anim_layers)>0:
+            for anim_layer in target.joints[0].anim_layers:
+                frame_start = anim_layer.frame_start
+                frame_end = anim_layer.frame_end
+                self.children.append(SequenceTrack(self, target.name, frame_start, frame_end, height = sequence_height))
     
     def render(self, idx, is_picked):
         draw_list = imgui.get_window_draw_list()
@@ -150,17 +160,18 @@ class Sequence(BoxItem):
             track.render(self.x_origin, self.y_origin)
         
     def insert_track(self, file_path, start_frame):
-        name, joints = loader.load_bvh_animation(file_path)
+        name, joints = loader.load_fbx_animation(file_path)
         self.target.add_animation(joints, start_frame, initialize_position= True)
-        # self.children.append(SequenceTrack(parent = self, 
-        #                                    name = name, 
-        #                                    root_joint_anim=self.target.joints[0].anim_layers[-1],
-        #                                    height = self.ysize_box)) 
+        self.children.append(SequenceTrack(parent = self, 
+                                           name = name, 
+                                           frame_start = start_frame,
+                                           frame_end = start_frame + len(joints[0].anim_layers[-1].rotations) -1,
+                                           height = self.ysize_box)) 
         
     def delete_track(self):
         for idx, track in enumerate(self.children):
             if track.picked is True:
-                self.target.remove_animation(idx, track.name)
+                self.target.remove_animation(idx)
                 self.children.remove(track)
                 break
     
@@ -179,20 +190,23 @@ class Sequence(BoxItem):
     
 
 class SequenceTrack(BoxItem):
-    def __init__(self, parent, name, start, end):
-        self.name = name
-        self.frame_start = start
-        self.frame_end = end
+    def __init__(self, parent, name, frame_start, frame_end, height, frame_speed = 1.0):
+        super().__init__()
         self.parent = parent
+        self.name = name
+        self.frame_start = frame_start
+        self.frame_end = frame_end
+        self.frame_speed = frame_speed
+        self.height = height
+        self.layout_padding = [10,10]
         
         self.track_color = imgui.get_color_u32_rgba(1,1,0.7,1)
         self.text_color = imgui.get_color_u32_rgba(0,0,0,1)
+        
+        self.picked = False
+        self.x_boundary_picked= False
     
-    def render(self, x, y):
-        
-        self.frame_start = self.root_joint_anim.frame_start
-        self.frame_end = self.root_joint_anim.frame_end
-        
+    def render(self, x, y):        
         self.update_position(x = x + self.frame_speed * self.frame_start,
                                 y = y,
                                 xsize_box = self.frame_speed * (self.frame_end - self.frame_start),

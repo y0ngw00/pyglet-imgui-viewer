@@ -9,6 +9,7 @@ from pygltflib import GLTF2, Node, Skin, Accessor, BufferView, BufferFormat
 from motionutils import BVH
 from motionutils.Quaternions import Quaternions
 from object import Object,MeshType,Character,Joint,Link
+from animation_layer import AnimationLayer
 from extern_file_parser import pycomcon
 
 import mathutil
@@ -229,10 +230,15 @@ def load_fbx_joint(fbx_loader, load_anim):
             if animation_data is not None:
                 rot_mat = animation_data[:,:3,:3]
                 rot_quat = Quaternions.from_transforms(rot_mat).qs
-                joint.rotations = list(rot_quat)
-                if parent_idx == -1:
-                    joint.positions = list(animation_data[:,3,0:3])
-            
+                
+                anim_layer = AnimationLayer(joint)
+                anim_layer.rotations = list(rot_quat)
+                if parent_idx ==-1:
+                    anim_layer.positions = list(animation_data[:,3,0:3])
+                anim_layer.frame_end = len(animation_data) - 1
+                anim_layer.frame_start = 0    
+                
+                joint.anim_layers.append(anim_layer)            
         joints.append(joint)
 
     return joints
