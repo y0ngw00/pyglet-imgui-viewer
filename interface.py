@@ -92,20 +92,20 @@ class UI:
         if file_type == FileType.Character:
             if ext == "bvh":
                 character = loader.load_bvh(file_path)
-                character.set_position(self.pos_list[self.pos_idx])
+                character.translate(self.pos_list[self.pos_idx])
                 self.add_dancer(character)
                 self.pos_idx+=1
 
             elif ext == "gltf" or ext == "glb":
                 character = loader.load_gltf(file_path)
-                character.set_position(self.pos_list[self.pos_idx2])
+                character.translate(self.pos_list[self.pos_idx2])
                 self.add_dancer(character)
                 self.pos_idx2+=1
             
             elif ext == "fbx":
-                loader.load_fbx(file_path)
-                character = loader.load_fbx(file_path, load_anim = False)
-                character.set_position(self.pos_list[self.pos_idx2])
+                loader.load_fbx(file_path, load_anim)
+                character = loader.load_fbx(file_path, load_anim)
+                character.translate(self.pos_list[self.pos_idx2])
                 
                 if character.joints is not None:
                     self.add_dancer(character)

@@ -51,7 +51,6 @@ class Object:
         self.transform = tf
 
     def set_position(self, pos) -> None:
-        # self.transform = Mat4.from_translation(vector = pos)
         self.transform[3, 0:3] = pos
 
     def set_scale(self, scale = [1.0,1.0,1.0]):
@@ -109,13 +108,26 @@ class Character(Object):
             self.root.set_scale(scale)
 
         self.update_world_transform()
+    
+    def translate(self, pos):
+        if self.root is not None:
+            self.root.translate(pos)
+        else:
+            self.transform[3,0:3] = pos
+        return
         
     def set_position(self, pos):
-        self.transform[3,0:3] = pos
+        if self.root is not None:
+            self.root.transform[3,0:3] = pos
+        else:
+            self.transform[3,0:3] = pos
         return
     
     def get_position(self):
-        return self.transform_gbl[3,0:3]
+        if self.root is not None:
+            return self.root.transform_gbl[3,0:3]
+        else:
+            return self.transform_gbl[3,0:3]
 
     def set_rotation(self, rot):
         pass
@@ -260,6 +272,12 @@ class Joint(Object):
                 if self.is_root is True:
                     self.positions.append(self.positions[-1])
                 self.rotations.append(self.rotations[-1])
+        return
+    
+    def translate(self, pos):
+        self.transform[3,0:3] = pos
+        if self.rotations is not None:
+            self.positions = [p + pos for p in self.positions] 
         return
         
     def get_init_transform_inverse(self):
