@@ -133,10 +133,10 @@ class UI:
     def on_key_release(self, symbol, modifiers) -> None:
         self.DancerFormation.on_key_release(symbol, modifiers,self.window.frame)
 
-    def on_mouse_down(self, x, y, button, modifier) -> None:
+    def on_mouse_press(self, x, y, button, modifier) -> None:
         new_y = self.window.height - y
-        self.DancerFormation.on_mouse_down(x, new_y, button, modifier)
-
+        self.DancerFormation.on_mouse_press(x, new_y, button, modifier)
+        self.Sequencer.on_mouse_press(x, new_y, button, modifier)
 
     def on_mouse_release(self, x, y, button, modifier) -> None:
         self.DancerFormation.on_mouse_release(x, self.window.height - y, button, modifier)

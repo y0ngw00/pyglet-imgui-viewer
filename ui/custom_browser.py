@@ -29,14 +29,15 @@ class CustomBrowser:
         
         self.selected_file_idx = 0
         self.motion_library_dir = "./data/mixamo_library/"
+        self.character_path = "X_Bot.fbx"
         self.custom_condition_viewer = CustomCondition()
         
-        files = glob.glob(self.motion_library_dir + '*.bvh')
+        files = glob.glob(self.motion_library_dir + '*.fbx')
         self.motion_files = [os.path.splitext(os.path.basename(file))[0] for file in files]
         
         
     def render(self):
-        imgui.begin("Custom Editor")
+        imgui.begin("Custom Editor", flags=imgui.WINDOW_NO_MOVE)
         # clicked, value = imgui.input_text("Text Input", "")
         if imgui.begin_tab_bar("Tab Browser", imgui.TAB_BAR_FITTING_POLICY_DEFAULT):
             imgui.set_next_item_width(100)
@@ -58,15 +59,19 @@ class CustomBrowser:
         
     def render_motion_library(self):               
         # if imgui.tree_node("Checkpoint"):
-            
+            imgui.text("Number of Dancers: "+ str(self.parent_window.get_num_dancers()))
+            imgui.same_line()
+            if imgui.button("Create Dancer"):
+                self.parent_window.open_file(self.motion_library_dir + self.character_path, FileType.Character, load_anim = False)
+
             imgui.text("Current: "+ self.motion_files[self.selected_file_idx])
             imgui.same_line()
             if imgui.button("Insert Motion"):
-                file_path = self.motion_library_dir + self.motion_files[self.selected_file_idx] + ".bvh"
+                file_path = self.motion_library_dir + self.motion_files[self.selected_file_idx] + ".fbx"
                 self.parent_window.insert_motion(file_path)
 
             imgui.push_item_width(imgui.get_window_width() * 0.8)
-            clicked, self.selected_file_idx = imgui.listbox('', self.selected_file_idx, self.motion_files)
+            clicked, self.selected_file_idx = imgui.listbox('', self.selected_file_idx, self.motion_files, height_in_items = 30)
             imgui.pop_item_width()
         
     def render_model_connector(self):

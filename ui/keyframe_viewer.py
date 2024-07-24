@@ -20,7 +20,7 @@ class KeyframeViewer:
         pass
 
     def render(self):
-        if imgui.begin("Keyframe editor", True):
+        if imgui.begin("Keyframe editor", True, flags=imgui.WINDOW_NO_MOVE):
             draw_list = imgui.get_window_draw_list()
             canvas_pos = imgui.get_cursor_screen_pos()  # Get the position of the canvas window
 

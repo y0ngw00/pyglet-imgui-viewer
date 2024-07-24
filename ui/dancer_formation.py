@@ -7,16 +7,11 @@ from imgui.integrations.pyglet import create_renderer
 from keyframe import KeyFrame
 from dancer_circle import DancerCircle
 from keyframe_viewer import KeyframeViewer
-
-class DancerFormation:
+from box_item import BoxItem
+class DancerFormation(BoxItem):
     def __init__(self, parent_window):
-        self.circles = []   
-        self.xsize_box = 500
-        self.ysize_box = 500
-                
-        self.x_box = 0
-        self.y_box = 0
-                
+        super().__init__()
+        self.circles = []                   
         self.last_clicked_item = []
         
         self.parent_window = parent_window
@@ -28,13 +23,12 @@ class DancerFormation:
             canvas_pos = imgui.get_cursor_screen_pos()  # Get the position of the canvas window
 
             layout_padding = [10,10]
-            x_origin = canvas_pos.x+layout_padding[0]
-            y_origin = canvas_pos.y+layout_padding[1]
-            
-            self.x_box = x_origin
-            self.y_box = y_origin
-            
-            draw_list.add_rect(x_origin, y_origin, x_origin+self.xsize_box, y_origin+self.ysize_box, imgui.get_color_u32_rgba(1,0,0,1), rounding=5, thickness=3)
+            self.update_position(x = canvas_pos.x+layout_padding[0],
+                                 y = canvas_pos.y+layout_padding[1],
+                                 xsize_box = 500,
+                                 ysize_box = 500)
+            self.draw_box(draw_list, color=imgui.get_color_u32_rgba(1,0,0,1), rounding=5, thickness=3)
+            # draw_list.add_rect(self.x_origin, self.y_origin, y+self.xsize_box, y_origin+self.ysize_box, )
             
             frame = self.parent_window.get_frame()
             
@@ -52,7 +46,7 @@ class DancerFormation:
                 if circle in self.last_clicked_item and self.parent_window.is_playing() is False:
                     color = imgui.get_color_u32_rgba(1,1,0,1)
                     
-                draw_list.add_circle_filled(x_origin+circle.x, y_origin+circle.y, circle.radius,color)
+                draw_list.add_circle_filled(self.x_origin+circle.x, self.y_origin+circle.y, circle.radius,color)
 
             imgui.end()
             
@@ -113,13 +107,13 @@ class DancerFormation:
             self.last_clicked_item = []
             
     def on_mouse_drag(self,x, y, dx, dy):
-        if self.is_in_formation_box(x, y):
+        if self.is_picked(x, y):
             for circle in self.last_clicked_item:
                 circle.translate(dx, -dy)
                 
-    def on_mouse_down(self, x, y, button, modifier) -> None:
+    def on_mouse_press(self, x, y, button, modifier) -> None:
         for circle in self.circles:
-            if (x-self.x_box-circle.x)**2 + (y - self.y_box-circle.y)**2 < circle.radius**2:
+            if (x-self.x_origin-circle.x)**2 + (y - self.y_origin-circle.y)**2 < circle.radius**2:
                 circle.set_is_clicked = True
             else:
                 circle.set_is_clicked = False
@@ -128,11 +122,6 @@ class DancerFormation:
         if is_animate:
             for circle in self.circles:
                 circle.animate(frame)
-
-    def is_in_formation_box(self, x, y) -> bool:
-        if self.x_box<=x<=self.x_box+self.xsize_box and self.y_box<=y<=self.y_box+self.ysize_box:
-            return True
-        return False
     
     def is_ui_active(self):
         return imgui.is_any_item_active()

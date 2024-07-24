@@ -49,8 +49,9 @@ class Control:
         pass
 
     def on_mouse_press(self, x, y, button, modifier):
+        self.window.GUI.on_mouse_press(x, y, button, modifier)
         if button == 1:  # rotation
-            self.window.GUI.on_mouse_down(x, y, button, modifier)
+            self.window.GUI.on_mouse_press(x, y, button, modifier)
             return
 
     def on_mouse_release(self, x, y, button, modifier):
