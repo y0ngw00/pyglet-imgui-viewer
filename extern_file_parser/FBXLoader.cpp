@@ -119,8 +119,9 @@ void FBXLoader::ProcessNode(FbxScene* _scene, FbxNode* node) {
 
         switch(attribute->GetAttributeType()) {
         case FbxNodeAttribute::eMesh:
-            // if(node!=nullptr) m_meshNodes.push_back(node);
-            loadMesh(node);
+            if(node!=nullptr) 
+                m_meshNodes.push_back(node);
+
             break;
         case FbxNodeAttribute::eSkeleton:
         {
