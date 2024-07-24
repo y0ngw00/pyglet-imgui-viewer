@@ -17,7 +17,7 @@ class Scene:
         
     def draw_default_scene(self):
         mat4_identity =  np.eye(4, dtype = np.float32)
-        plane = Object(MeshType.GridPlane, {"grid_x":100, "grid_z":40, "scale":50.0})
+        plane = Object(MeshType.GridPlane, {"grid_x":100, "grid_z":40, "scale":100.0})
         plane.set_transform(mat4_identity)
         self.add_object(plane)
         
