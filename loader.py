@@ -212,30 +212,26 @@ def load_fbx_joint(fbx_loader, load_anim):
         joint = Joint(name,5.0)
 
         parent_idx = fbx_joint.parentIndex
-        transform = fbx_joint.transform
-        
+        transform = fbx_joint.transform 
         joint.init_transform_inv = fbx_joint.invBindPose
-        
+
+        if parent_idx == -1:
+            joint.set_root(True)
+        else:
+            joint.set_parent(joints[parent_idx])
+        joint.set_position(transform[3,0:3])
+                    
         animation_data =  None
         if load_anim is True:
             animation_data = fbx_joint.animList
             animation_data = np.array(animation_data)
 
-        if parent_idx == -1:
-            joint.set_root(True)
-            joint.set_position(transform[3,0:3])
             if animation_data is not None:
                 rot_mat = animation_data[:,:3,:3]
                 rot_quat = Quaternions.from_transforms(rot_mat).qs
                 joint.rotations = list(rot_quat)
-                joint.positions = list(animation_data[:,3,0:3])         
-        else:
-            joint.set_parent(joints[parent_idx])
-            joint.set_position(transform[3,0:3])
-            if animation_data is not None:
-                rot_mat = animation_data[:,:3,:3]
-                rot_quat = Quaternions.from_transforms(rot_mat).qs
-                joint.rotations = list(rot_quat)
+                if parent_idx == -1:
+                    joint.positions = list(animation_data[:,3,0:3])
             
         joints.append(joint)
 
