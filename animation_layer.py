@@ -41,10 +41,12 @@ class AnimationLayer:
         
         self.animation_length = frame_end - frame_start + 1
         
-    def translate_full_region(self, dx):
+    def translate_region(self, dx):
         self.frame_full_region_start += dx
         self.frame_full_region_end += dx
-        
+        self.frame_play_region_start += dx
+        self.frame_play_region_end += dx
+                
     def update_full_region(self, frame_start, frame_end):
         self.frame_full_region_start = frame_start
         self.frame_full_region_end = frame_end

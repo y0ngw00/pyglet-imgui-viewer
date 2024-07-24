@@ -181,6 +181,12 @@ class Sequence(BoxItem):
             if track == _track:
                 self.target.update_animation_layer(idx, frame_start, frame_end)
                 break
+            
+    def translate_animation_layer(self, _track, dx):
+        for idx, track in enumerate(self.children):
+            if track == _track:
+                self.target.translate_animation_layer(idx, dx)
+                break
     
     def on_mouse_press(self, x, y, button, modifier) -> None:
         if self.is_picked(x,y):
@@ -212,6 +218,7 @@ class SequenceTrack(BoxItem):
         
         self.picked = False
         self.boundary_picked= None
+        self.translated = 0
     
     def render(self, x, y):        
         self.update_position(x = x + self.frame_speed * self.frame_start,
@@ -240,11 +247,20 @@ class SequenceTrack(BoxItem):
             self.parent.update_animation_layer(self, self.frame_start, self.frame_end)
             self.boundary_picked = None
             
+        if self.translated != 0:
+            self.parent.translate_animation_layer(self, self.translated)
+            self.translated = 0
+            
     def on_mouse_drag(self, x, y, dx, dy):
         if self.picked is True:
             if self.boundary_picked == Boundary.Left:
                 self.frame_start += dx
             elif self.boundary_picked == Boundary.Right:
                 self.frame_end += dx
+            else:
+                self.frame_start += dx
+                self.frame_end += dx   
+                self.translated += dx
+            
             
             
