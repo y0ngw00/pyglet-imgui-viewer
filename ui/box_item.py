@@ -1,6 +1,7 @@
 import imgui
 import imgui.core
 
+from enum_list import Boundary
 class BoxItem:
     def __init__(self):
         self.x_origin = 0
@@ -39,7 +40,11 @@ class BoxItem:
             return True
         return False
     
-    def is_x_boundary_picked(self,x)->bool:
-        if self.x_origin-5<=x<=self.x_origin+5 or self.x_origin+self.xsize_box-5<=x<=self.x_origin+self.xsize_box+5:
-            return True
-        return False
+    def is_boundary_picked(self,x)->bool:
+        if self.x_origin-5<=x<=self.x_origin+5:
+            return Boundary.Left
+        
+        elif self.x_origin+self.xsize_box-5<=x<=self.x_origin+self.xsize_box+5:
+            return Boundary.Right
+        
+        else: return None

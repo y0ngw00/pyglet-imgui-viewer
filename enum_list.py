@@ -13,3 +13,9 @@ class FileType(Enum):
     Audio=1
     Network=2
     Motion=3
+
+class Boundary(Enum):
+    Right = 0
+    Left = 1
+    Up = 2
+    Down = 3

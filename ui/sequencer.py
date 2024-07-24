@@ -8,6 +8,7 @@ import loader
 
 from sequencer_menu import SequencerMenu
 from box_item import BoxItem
+from enum_list import Boundary
 class Sequencer(BoxItem):
     def __init__(self, parent_window):
         super().__init__()
@@ -127,7 +128,7 @@ class Sequence(BoxItem):
         self.padding_x = 0
         self.padding_y = 10
         self.sequence_pos_start = sequence_pos_start
-        self.sequence_height = sequence_height - 2*self.padding_y
+        self.sequence_height = sequence_height - self.padding_y
         
         self.text_color = imgui.get_color_u32_rgba(1,1,1,1)
         self.sequence_color = imgui.get_color_u32_rgba(1,0.7,0,1)   
@@ -135,9 +136,9 @@ class Sequence(BoxItem):
 
         if len(target.joints) > 0 and len(target.joints[0].anim_layers)>0:
             for anim_layer in target.joints[0].anim_layers:
-                frame_start = anim_layer.frame_start
-                frame_end = anim_layer.frame_end
-                self.children.append(SequenceTrack(self, target.name, frame_start, frame_end, height = sequence_height))
+                frame_start = anim_layer.frame_full_region_start
+                frame_end = anim_layer.frame_full_region_end
+                self.children.append(SequenceTrack(self, target.name, frame_start, frame_end, height = self.sequence_height))
     
     def render(self, idx, is_picked):
         draw_list = imgui.get_window_draw_list()
@@ -174,6 +175,12 @@ class Sequence(BoxItem):
                 self.target.remove_animation(idx)
                 self.children.remove(track)
                 break
+            
+    def update_animation_layer(self, _track, frame_start, frame_end):
+        for idx, track in enumerate(self.children):
+            if track == _track:
+                self.target.update_animation_layer(idx, frame_start, frame_end)
+                break
     
     def on_mouse_press(self, x, y, button, modifier) -> None:
         if self.is_picked(x,y):
@@ -204,7 +211,7 @@ class SequenceTrack(BoxItem):
         self.text_color = imgui.get_color_u32_rgba(0,0,0,1)
         
         self.picked = False
-        self.x_boundary_picked= False
+        self.boundary_picked= None
     
     def render(self, x, y):        
         self.update_position(x = x + self.frame_speed * self.frame_start,
@@ -221,10 +228,7 @@ class SequenceTrack(BoxItem):
         draw_list.add_text(self.x_origin+self.layout_padding[0], self.y_origin+self.layout_padding[1], self.text_color,self.name)
         
     def on_mouse_press(self, x, y, button, modifier):
-        if self.is_x_boundary_picked(x):
-            self.x_boundary_picked = True
-        else:
-            self.x_boundary_picked = False
+        self.boundary_picked = self.is_boundary_picked(x)
         
     def on_mouse_release(self, x, y, button, modifier):
         if self.is_picked(x,y):
@@ -232,7 +236,15 @@ class SequenceTrack(BoxItem):
         else:
             self.picked = False
             
+        if self.boundary_picked is not None:
+            self.parent.update_animation_layer(self, self.frame_start, self.frame_end)
+            self.boundary_picked = None
+            
     def on_mouse_drag(self, x, y, dx, dy):
-        if self.picked is True and self.x_boundary_picked is True:
-            self.frame_end += dx
+        if self.picked is True:
+            if self.boundary_picked == Boundary.Left:
+                self.frame_start += dx
+            elif self.boundary_picked == Boundary.Right:
+                self.frame_end += dx
+            
             

@@ -235,8 +235,7 @@ def load_fbx_joint(fbx_loader, load_anim):
                 anim_layer.rotations = list(rot_quat)
                 if parent_idx ==-1:
                     anim_layer.positions = list(animation_data[:,3,0:3])
-                anim_layer.frame_end = len(animation_data) - 1
-                anim_layer.frame_start = 0    
+                anim_layer.initialize_region(0, len(animation_data) - 1)
                 
                 joint.anim_layers.append(anim_layer)            
         joints.append(joint)

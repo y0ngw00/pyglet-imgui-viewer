@@ -211,7 +211,10 @@ class Character(Object):
         for joint in self.joints:
             anim = joint.anim_layers[idx]
             joint.anim_layers.remove(anim)
-        
+            
+    def update_animation_layer(self, idx, frame_start, frame_end):
+        for joint in self.joints:
+            anim = joint.anim_layers[idx].update_play_region(frame_start, frame_end)        
 
 class Joint(Object):
     def __init__(self, name,scale_joint):
@@ -251,8 +254,7 @@ class Joint(Object):
         anim_layer = joint.anim_layers
         for anim in anim_layer:
             anim.joint = self
-            anim.frame_start += frame
-            anim.frame_end += frame
+            anim.translate_full_region(frame)       
             self.anim_layers.append(anim)
         # rest_pos = None
         # rest_rot = None
