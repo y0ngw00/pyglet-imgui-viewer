@@ -137,6 +137,7 @@ def load(filename, start=None, end=None, order=None, world=True):
         
         if "End Site" in line or "End site" in line:
             end_site = True
+            continue
             offsets = np.append(offsets, np.array([[0, 0, 0]]), axis=0)
             orients.qs = np.append(orients.qs, np.array([[1, 0, 0, 0]]), axis=0)
             parents = np.append(parents, active)

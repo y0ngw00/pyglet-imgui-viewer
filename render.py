@@ -23,13 +23,13 @@ class RenderWindow(pyglet.window.Window):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # glClearColor(219.0/255.0,236.0/255.0,244.0/255.0,1.0)
-        glClearColor(0.7,0.7,0.7,1.0)
+        glClearColor(0.9,0.9,0.9,1.0)
 
         self.batch = pyglet.graphics.Batch()
         '''
         View (camera) parameters
         '''
-        self.__cam_eye = Vec3(0,150,200)
+        self.__cam_eye = Vec3(0,200,700)
         self.__cam_target = Vec3(0,40,1.0)
         self.__cam_vup = Vec3(0,1,0)
         self.__view_mat = None
@@ -43,8 +43,8 @@ class RenderWindow(pyglet.window.Window):
         self.shapes=[]
 
         # Set up the fog parameters
-        self.fog_start = 200.0
-        self.fog_end = 500.0
+        self.fog_start = 1000.0
+        self.fog_end = 3000.0
         self.fog_color = (0.7, 0.7, 0.7, 1.0)
 
         # Light parameters

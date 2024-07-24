@@ -23,7 +23,7 @@ from enum_list import FileType
 class UI:
     def __init__(self, window):
         imgui.create_context()
-        imgui.get_io().display_size = 1920, 1080
+        imgui.get_io().display_size = window.width, window.height
         imgui.get_io().fonts.get_tex_data_as_rgba32()
         self.impl = create_renderer(window)
         
@@ -85,7 +85,7 @@ class UI:
     def insert_motion(self, file_path):
         self.Sequencer.insert_motion(file_path)
 
-    def open_file(self, file_path, file_type = FileType.Character):
+    def open_file(self, file_path, file_type = FileType.Character,load_anim = True):
         ext = file_path.split('.')[-1]
         name = file_path.split('/')[-1]
         
