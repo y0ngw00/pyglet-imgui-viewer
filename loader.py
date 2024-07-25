@@ -220,7 +220,9 @@ def load_fbx_joint(fbx_loader, load_anim):
             joint.set_root(True)
         else:
             joint.set_parent(joints[parent_idx])
-        joint.set_position(transform[3,0:3])
+        # joint.set_position(transform[3,0:3])
+        joint.set_transform(transform)
+
                     
         animation_data =  None
         if load_anim is True:

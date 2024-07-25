@@ -32,6 +32,9 @@ class AnimationLayer:
 
         self.joint.set_transform(m)
         
+    def translate_position(self, pos):
+        self.positions = [p + pos for p in self.positions] 
+        
     def initialize_region(self, frame_start, frame_end):
         self.frame_full_region_start = frame_start
         self.frame_full_region_end = frame_end

@@ -108,6 +108,7 @@ class Character(Object):
             self.root.set_scale(scale)
 
         self.update_world_transform()
+        self.skinning()
     
     def translate(self, pos):
         if self.root is not None:
@@ -157,6 +158,13 @@ class Character(Object):
             
         return links
     
+    def skinning(self):
+        transform = np.array([j.get_init_transform_inverse() @ j.get_world_transform() for j in self.joints], dtype=np.float32)
+        self.joint_bind_matrices = torch.from_numpy(transform).to(self.device) 
+        for m in self.meshes:
+            if isinstance(m, Object):
+                m.mesh.skin_mesh(self.joint_bind_matrices)
+    
     def animate(self, frame):    
         if self.root is not None:
             if frame < 0 or len(self.root.anim_layers) == 0:
@@ -164,14 +172,8 @@ class Character(Object):
             
             for j_idx, j in enumerate(self.joints):
                 j.animate(frame)
-                if len(self.meshes)>0:
-                    transform =  j.get_init_transform_inverse() @ j.get_world_transform()
-                    self.joint_bind_matrices[j_idx] = torch.from_numpy(transform).to(self.device) 
             
-            for m in self.meshes:
-                if isinstance(m, Object):
-                    m.mesh.skin_mesh(self.joint_bind_matrices)
-            
+            self.skinning()
             self.root.set_scale(self.scale)
             
     def add_animation(self, joints, frame, initialize_position = False):
@@ -296,8 +298,9 @@ class Joint(Object):
     
     def translate(self, pos):
         self.transform[3,0:3] = pos
-        if self.positions is not None:
-            self.positions = [p + pos for p in self.positions] 
+        for anim in self.anim_layers:
+            anim.translate_position(pos)
+        
         return
         
     def get_init_transform_inverse(self):
