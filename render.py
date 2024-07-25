@@ -14,7 +14,7 @@ from control import Control
 from interface import UI
 import shader
 
-
+from audio_manager import AudioManager
 
 class RenderWindow(pyglet.window.Window):
     '''
@@ -55,6 +55,10 @@ class RenderWindow(pyglet.window.Window):
         light_view = Mat4.look_at(self.light_pos, self.light_target, self.light_up)
         self.light_space_matrix = light_projection @ light_view
 
+        self.frame = 0
+        self.max_frame = 300
+        self.framerate = 30.0
+        self.animate = False
 
         self.setup()
         # Keyboard/Mouse control. Not implemented yet.
@@ -65,14 +69,20 @@ class RenderWindow(pyglet.window.Window):
 
         # User interface
         self.GUI = UI(self)
-
-        self.frame = 0
-        self.max_frame = 300
-        self.animate = False
+        self.audio_manager = AudioManager(self, framerate = self.framerate)
+        self.update_audio = False
 
     def reset(self) -> None:
         self.frame = 0
         self.animate = False
+        self.audio_manager.reset()
+        
+    def play(self) -> None:
+        self.animate = not self.animate
+        if self.animate:
+            self.audio_manager.play()
+        else:
+            self.audio_manager.pause()
         
     def setup(self) -> None:
         self.set_minimum_size(width = 400, height = 300)
@@ -123,10 +133,16 @@ class RenderWindow(pyglet.window.Window):
             shape.shader_program["fogColor"] = self.fog_color
             
         self.GUI.update_ui(self.animate)
+        
+        if self.update_audio is True:
+            self.audio_manager.update(self.frame, self.update_audio)
+            self.update_audio = False
+        
+    def set_update_audio_flag(self, flag):
+        self.update_audio = flag
 
     def add_shape(self, obj) -> None:
         shape = CustomGroup(obj, len(self.shapes))
-        primitive_type = GL_TRIANGLES if obj.mesh.stride==3 else GL_QUADS
 
         if len(obj.mesh.indices) ==0:
             shape.shader_program.vertex_list(len(obj.mesh.vertices)//3,GL_TRIANGLES,
@@ -149,7 +165,9 @@ class RenderWindow(pyglet.window.Window):
                             )
         self.shapes.append(shape)
         
-            
+    def initialize_audio(self, file_path):
+        self.audio_manager.open_audio_file(file_path)
+        
     def update_shape(self):
         for shape in self.shapes:
             shape.indexed_vertices_list.vertices = shape.object.mesh.vertices
@@ -161,7 +179,7 @@ class RenderWindow(pyglet.window.Window):
         return pyglet.event.EVENT_HANDLED
          
     def run(self):
-        pyglet.clock.schedule_interval(self.update, 1/60)
+        pyglet.clock.schedule_interval(self.update, 1/self.framerate)
         pyglet.app.run()
 
     def quit(self):

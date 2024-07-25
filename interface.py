@@ -82,6 +82,9 @@ class UI:
         selected_file = filedialog.askopenfilename(filetypes=file_types)
         return selected_file
     
+    def initialize_audio(self, file_path):
+        self.window.initialize_audio(file_path)
+    
     def insert_motion(self, file_path):
         self.Sequencer.insert_motion(file_path)
 
@@ -113,9 +116,6 @@ class UI:
                     
             if character is not None:
                 self.scene.add_character(character)
-                
-
-
         return
     
     def is_playing(self):
@@ -126,6 +126,7 @@ class UI:
     
     def set_frame(self, new_frame):
         self.window.set_frame = new_frame
+        self.window.set_update_audio_flag(True)
     
     def on_key_press(self, symbol, modifiers) -> None:
         pass

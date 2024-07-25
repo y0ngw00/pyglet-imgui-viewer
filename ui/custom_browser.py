@@ -90,11 +90,12 @@ class CustomBrowser:
             if imgui.button("Select audio file"):
                 file_descriptions = "Audio files (.wav)"
                 file_ext = "*.wav"
-                selected_audio_file = self.render_file_dialog(file_descriptions, file_ext)
+                selected_audio_file = self.parent_window.render_file_dialog(file_descriptions, file_ext)
                 # if selected_audio_file:
                 #     print(f"Open File: {selected_audio_file}")
                 #     self.open_file(selected_audio_file)
-                self.selected_audio_file = str(selected_audio_file, FileType.Audio)
+                self.selected_audio_file = str(selected_audio_file)
+                self.parent_window.initialize_audio(selected_audio_file)
             
             imgui.text(self.selected_audio_file)
             imgui.spacing()

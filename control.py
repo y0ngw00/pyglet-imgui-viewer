@@ -36,7 +36,7 @@ class Control:
     def on_key_release(self, symbol, modifier)->None:
         key_interact = {
             pyglet.window.key.ESCAPE: self.window.quit,
-            pyglet.window.key.SPACE: lambda: setattr(self.window, 'animate', not self.window.animate),
+            pyglet.window.key.SPACE: self.window.play,
             pyglet.window.key.R: self.window.reset,
         }
         if symbol in key_interact:
