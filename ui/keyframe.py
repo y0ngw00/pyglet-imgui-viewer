@@ -1,5 +1,5 @@
 
-
+import copy
 class KeyFrameAnimation:
     def __init__(self):
         self.keyframes = []
@@ -56,7 +56,7 @@ class KeyFrameAnimation:
 class KeyFrame:
     def __init__(self, frame, position):
         self.frame = frame
-        self.position = position
+        self.position = copy.deepcopy(position)
 
     def __eq__(self, other):
         if isinstance(other, KeyFrame):
