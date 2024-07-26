@@ -33,6 +33,8 @@ class Object:
         self.mesh = mesh_creator[mesh_type](mesh_info)
         self.texture_id = None
         self.texture = None
+        
+        self.selected = False
 
     def set_parent(self, parent):
         self.parent = parent
@@ -43,6 +45,12 @@ class Object:
     def add_child(self, child):
         self.children.append(child)
         return
+    
+    def select(self, selected):
+        self.selected = selected
+        
+    def is_selected(self):
+        return self.selected
     
     def set_color(self, color):
         self.mesh.colors = color * self.mesh.num_vertices
@@ -308,7 +316,7 @@ class Joint(Object):
     #     return
     
     def translate(self, pos):
-        self.transform[3,0:3] = pos
+        self.transform[3,0:3] += pos
         for anim in self.anim_layers:
             anim.translate_position(pos)
         

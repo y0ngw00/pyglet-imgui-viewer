@@ -24,8 +24,7 @@ class KeyframeViewer:
             draw_list = imgui.get_window_draw_list()
             canvas_pos = imgui.get_cursor_screen_pos()  # Get the position of the canvas window
 
-            changed, frame = imgui.slider_float("Frame", self.parent_window.get_frame(), 0.0, self.max_frame)
-                
+            imgui.text("Frame: {}".format(self.parent_window.get_frame()))                
             imgui.same_line()
             check_clicked, bAnimate = imgui.checkbox("Animate", self.keyframe_animate)
             if check_clicked is True:
@@ -41,11 +40,11 @@ class KeyframeViewer:
                 for idx, keyframe in enumerate(circle.pose_keyframe.keyframes):
                     x = canvas_x +  self.xsize_box * keyframe.frame / self.max_frame
                     
-                    if idx > 0 and keyframe.position != circle.pose_keyframe.keyframes[idx-1].position:
-                        prev_x = canvas_x +  self.xsize_box * circle.pose_keyframe.keyframes[idx-1].frame / self.max_frame
-                        draw_list.add_rect_filled(prev_x, canvas_y, x, canvas_y+20, imgui.get_color_u32_rgba(0.7, 0, 0, 1))
-                    else:
-                        draw_list.add_line(x, canvas_y, x, canvas_y+20, imgui.get_color_u32_rgba(0.7, 0, 0, 1))
+                    # if idx > 0 and keyframe.position != circle.pose_keyframe.keyframes[idx-1].position:
+                        # prev_x = canvas_x +  self.xsize_box * circle.pose_keyframe.keyframes[idx-1].frame / self.max_frame
+                        # draw_list.add_rect_filled(prev_x, canvas_y, x, canvas_y+20, imgui.get_color_u32_rgba(0.7, 0, 0, 1))
+                    # else:
+                    draw_list.add_line(x, canvas_y, x, canvas_y+20, imgui.get_color_u32_rgba(0.7, 0, 0, 1))
                         
                 imgui.text("trajectory")
 

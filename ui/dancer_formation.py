@@ -28,38 +28,22 @@ class DancerFormation(BoxItem):
                                  xsize_box = 500,
                                  ysize_box = 500)
             self.draw_box(draw_list, color=imgui.get_color_u32_rgba(1,0,0,1), rounding=5, thickness=3)
-            # draw_list.add_rect(self.x_origin, self.y_origin, y+self.xsize_box, y_origin+self.ysize_box, )
             
-            frame = self.parent_window.get_frame()
-            
-
             # Draw a dot
+            frame = self.parent_window.get_frame()
             for circle in self.circles:
-                color =  imgui.get_color_u32_rgba(1,1,1,1)
+                circle.render(draw_list, self.x_origin, self.y_origin, frame)
                 
-                if len(circle.sync_keyframe.keyframes) > 1:
-                    left, right = circle.sync_keyframe.get_nearest_keyframe(frame)
-                    if left %2 ==0 and right %2 ==1:
-                        color = imgui.get_color_u32_rgba(1,0.7,0,1)
-                        
-                
-                if circle in self.last_clicked_item and self.parent_window.is_playing() is False:
-                    color = imgui.get_color_u32_rgba(1,1,0,1)
-                    
-                draw_list.add_circle_filled(self.x_origin+circle.x, self.y_origin+circle.y, circle.radius,color)
-
             imgui.end()
             
         bChanged = self.keyframe_viewer.render()
-        
         if bChanged:
             self.update_ui(self.keyframe_viewer.is_keyframe_animate)
-
-        
+                    
         return
     
     def add_dancer(self, character):
-        self.circles.append(DancerCircle(character,self.xsize_box, self.ysize_box, 1))
+        self.circles.append(DancerCircle(character,self.xsize_box, self.ysize_box, 0.5))
     
     def get_num_dancers(self):
         return len(self.circles)
@@ -74,20 +58,20 @@ class DancerFormation(BoxItem):
         if symbol == pyglet.window.key.F:
             if modifiers == pyglet.window.key.MOD_CTRL:
                 for circle in self.circles:
-                    circle.add_keyframe(KeyFrame(frame, (circle.x, circle.y)))
+                    circle.add_keyframe(frame)
             else:
                 if len(self.last_clicked_item) >0:
                     for circle in self.last_clicked_item:
-                        circle.add_keyframe(KeyFrame(frame, (circle.x, circle.y)))
+                        circle.add_keyframe(frame)
                     
         if symbol == pyglet.window.key.G:
             if modifiers == pyglet.window.key.MOD_CTRL:
                 for circle in self.circles:
-                    circle.add_sync_keyframe(KeyFrame(frame, (circle.x, circle.y)))
+                    circle.add_sync_keyframe(frame)
             else:
                 if len(self.last_clicked_item) >0:
                     for circle in self.last_clicked_item:
-                        circle.add_sync_keyframe(KeyFrame(frame, (circle.x, circle.y)))
+                        circle.add_sync_keyframe(frame)
         
         dx = 5 if symbol==pyglet.window.key.D else -5 if symbol==pyglet.window.key.A else 0
         dy = 5 if symbol==pyglet.window.key.S else -5 if symbol==pyglet.window.key.W else 0
