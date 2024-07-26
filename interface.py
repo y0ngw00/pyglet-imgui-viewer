@@ -54,7 +54,6 @@ class UI:
         imgui.new_frame()
 
         self.titlebar.render()
-        
         self.render_ui_window()
 
         imgui.end_frame()

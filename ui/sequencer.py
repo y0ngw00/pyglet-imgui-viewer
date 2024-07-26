@@ -20,6 +20,7 @@ class Sequencer(BoxItem):
         
         self.show_popup = False
         self.picked = None
+        self.frame_bar_picked = False
         self.highlighted_color = imgui.get_color_u32_rgba(1,0.7,0,1)
         self.popup_menu = SequencerMenu(self)  
     
@@ -62,19 +63,41 @@ class Sequencer(BoxItem):
     def add_sequence(self,character):
         seq = Sequence(character, self.sequence_pos_start, self.sequence_height)
         self.children.append(seq)
-        self.picked = seq
-    
+        self.select(seq)
+        
+    def select(self, selected):
+        if selected is None and hasattr(self.picked, 'target'):
+            self.picked.target.select(False)
+        elif hasattr(selected, 'target'): # If there is already a picked item
+            selected.target.select(True)
+            if self.picked is not None:
+                self.picked.target.select(False)
+            
+        self.picked = selected
+        return
+
     def open_motion_library(self):
         pass
     
     def delete_motion(self):
         if self.picked is not None and isinstance(self.picked, Sequence):
             self.picked.delete_track()
+        self.show_popup = False
     
     def insert_motion(self, file_path):
         if self.picked is not None and isinstance(self.picked, Sequence):
             self.picked.insert_track(file_path, self.parent_window.get_frame())
+        self.show_popup = False
     
+    def get_track_speed(self):
+        if self.picked is not None and isinstance(self.picked, Sequence):
+            return self.picked.get_track_speed()
+        return -1
+        
+    def set_track_speed(self, speed):
+        if self.picked is not None and isinstance(self.picked, Sequence):
+            self.picked.set_track_speed(speed)
+           
     def is_mouse_in_frame_bar(self,x,y)->bool:
         frame = self.parent_window.get_frame()
         if self.x_origin+self.sequence_pos_start+frame-10<=x<=self.x_origin+self.sequence_pos_start+frame+10:
@@ -84,19 +107,24 @@ class Sequencer(BoxItem):
     
     def on_mouse_release(self, x, y, button, modifier):
         if self.is_picked(x,y):
+            for seq in self.children:
+                if seq.is_picked(x,y):
+                    self.select(seq)
+                    break
+                
             if button == 4:
                 self.popup_menu.update_position()
                 self.show_popup = True
                 
-            for seq in self.children:
-                if seq.is_picked(x,y):
-                    self.picked = seq
-                    break
         else :
             self.show_popup = False
-            if self.picked == "frame bar":
-                self.picked = None    
+            if self.frame_bar_picked is True:
+                self.frame_bar_picked = False
+
                 
+        if self.show_popup and button != 4:
+            return
+          
         for seq in self.children:
             seq.on_mouse_release(x,y,button,modifier)
             
@@ -112,10 +140,10 @@ class Sequencer(BoxItem):
         if self.show_popup:
             return
         
-        if self.is_mouse_in_frame_bar(x,y) or self.picked=="frame_bar":
+        if self.is_mouse_in_frame_bar(x,y) or self.frame_bar_picked is True:
             frame = self.parent_window.get_frame()
             self.parent_window.set_frame(frame+dx)
-            self.picked = "frame_bar"
+            self.frame_bar_picked = True
             
         for seq in self.children:
             seq.on_mouse_drag(x,y,dx,dy)
@@ -136,8 +164,8 @@ class Sequence(BoxItem):
 
         if len(target.joints) > 0 and len(target.joints[0].anim_layers)>0:
             for anim_layer in target.joints[0].anim_layers:
-                frame_start = anim_layer.frame_full_region_start
-                frame_end = anim_layer.frame_full_region_end
+                frame_start = anim_layer.frame_original_region_start
+                frame_end = anim_layer.frame_original_region_end
                 self.children.append(SequenceTrack(self, target.name, frame_start, frame_end, height = self.sequence_height))
     
     def render(self, idx, is_picked):
@@ -176,6 +204,20 @@ class Sequence(BoxItem):
                 self.children.remove(track)
                 break
             
+        
+    def get_track_speed(self):
+        for idx, track in enumerate(self.children):
+            if track.picked is True:
+                return track.track_speed
+            
+        return -1
+                
+    def set_track_speed(self, speed):
+        for idx, track in enumerate(self.children):
+            if track.picked is True:
+                track.track_speed = speed
+                self.target.set_animation_speed(idx, speed)
+                        
     def update_animation_layer(self, _track, frame_start, frame_end):
         for idx, track in enumerate(self.children):
             if track == _track:
@@ -210,6 +252,7 @@ class SequenceTrack(BoxItem):
         self.frame_start = frame_start
         self.frame_end = frame_end
         self.frame_speed = frame_speed
+        self.track_speed = 1.0
         self.height = height
         self.layout_padding = [10,10]
         
@@ -223,7 +266,7 @@ class SequenceTrack(BoxItem):
     def render(self, x, y):        
         self.update_position(x = x + self.frame_speed * self.frame_start,
                                 y = y,
-                                xsize_box = self.frame_speed * (self.frame_end - self.frame_start),
+                                xsize_box = self.frame_speed * (self.frame_end - self.frame_start)/self.track_speed,
                                 ysize_box = self.height)
         if(self.frame_end < self.frame_start):
             self.frame_end = self.frame_start
@@ -233,7 +276,7 @@ class SequenceTrack(BoxItem):
         if self.picked is True:
             self.draw_box(draw_list, color = imgui.get_color_u32_rgba(1,0,0,1), rounding=4, thickness=2)
         draw_list.add_text(self.x_origin+self.layout_padding[0], self.y_origin+self.layout_padding[1], self.text_color,self.name)
-        
+            
     def on_mouse_press(self, x, y, button, modifier):
         self.boundary_picked = self.is_boundary_picked(x)
         

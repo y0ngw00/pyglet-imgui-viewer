@@ -21,6 +21,7 @@ class SequencerMenu:
             imgui.core.set_next_window_position(*imgui.get_mouse_pos())
             self.update = False
 
+        speed = self.parent_window.get_track_speed()
         
         imgui.open_popup("my_popup")
         if imgui.begin_popup_context_window("my_popup"):
@@ -28,6 +29,11 @@ class SequencerMenu:
                 self.open_motion_library()
             if imgui.menu_item("Delete Motion")[0]:
                 self.parent_window.delete_motion()
+            if speed>0 and imgui.begin_menu("Change Speed"):
+                clicked, speed_changed = imgui.input_float("Speed", speed, 0.1)
+                if clicked and speed_changed != speed and speed_changed > 0:
+                    self.parent_window.set_track_speed(speed_changed)
+                imgui.end_menu()
 
             imgui.end_popup()
 
@@ -39,8 +45,6 @@ class SequencerMenu:
         if not os.path.exists(fileName):
             return None
         self.parent_window.insert_motion(fileName)
-    
-        
 
     def update_position(self):
         self.update = True
