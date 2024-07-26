@@ -114,7 +114,10 @@ class Character(Object):
         if self.root is not None:
             self.root.translate(pos)
         else:
-            self.transform[3,0:3] = pos
+            self.transform[3,0:3] += pos
+
+        self.update_world_transform()
+        self.skinning()
         return
         
     def set_position(self, pos):
@@ -122,8 +125,11 @@ class Character(Object):
             self.root.transform[3,0:3] = pos
         else:
             self.transform[3,0:3] = pos
-        return
     
+        self.update_world_transform()
+        self.skinning()
+        return
+        
     def get_position(self):
         if self.root is not None:
             return self.root.transform_gbl[3,0:3]

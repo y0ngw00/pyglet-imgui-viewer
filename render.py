@@ -111,11 +111,9 @@ class RenderWindow(pyglet.window.Window):
 
         if self.animate is True:
             self.frame += 1
-        self.scene.animate(self.frame)
+            self.scene.animate(self.frame)
         self.scene.update()
-
-        if self.animate:
-            self.update_shape()
+        self.update_shape()
         for i, shape in enumerate(self.shapes):
             '''
             Update position/orientation in the scene. In the current setting, 

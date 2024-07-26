@@ -206,8 +206,6 @@ def load_fbx_joint(fbx_loader, load_anim):
     joints = []
     fbx_joints = fbx_loader.get_joints()
     
-    load_anim = True
-
     for fbx_joint in fbx_joints:
         name = fbx_joint.name             
         joint = Joint(name,5.0)
