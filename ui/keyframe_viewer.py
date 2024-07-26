@@ -25,14 +25,13 @@ class KeyframeViewer:
             canvas_pos = imgui.get_cursor_screen_pos()  # Get the position of the canvas window
 
             imgui.text("Frame: {}".format(self.parent_window.get_frame()))                
-            imgui.same_line()
-            check_clicked, bAnimate = imgui.checkbox("Animate", self.keyframe_animate)
-            if check_clicked is True:
-                self.keyframe_animate = bAnimate
+
             slider_pos = (canvas_pos.x + 10, canvas_pos.y + 40)
 
-            for idx, circle in enumerate(self.parent_window.get_circles()):
-                imgui.text("Dancer '{}'".format(idx))
+            for idx, circle in enumerate(self.parent_window.get_circles()):               
+                clicked, bPlay = imgui.checkbox("Animate player "+str(idx), circle.target.get_is_animate)
+                if clicked:
+                    circle.target.set_is_animate = bPlay
                 canvas_x, canvas_y= copy.deepcopy(imgui.get_cursor_screen_pos())
                 canvas_x += 80
                 

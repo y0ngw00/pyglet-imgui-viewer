@@ -92,6 +92,7 @@ class Character(Object):
         self.joints = joints
         self.scale = np.array([1.0,1.0,1.0])
         self.meshes = []
+        self.is_animate = True
 
         self.root= None
         
@@ -154,6 +155,14 @@ class Character(Object):
     def set_link_color(self, color):
         for l in self.links:
             l.set_color(color)
+    
+    @property    
+    def get_is_animate(self):
+        return self.is_animate
+    
+    @get_is_animate.setter
+    def set_is_animate(self, is_animate):
+        self.is_animate = is_animate
 
     def set_scale(self, scale = [1.0,1.0,1.0]):
         self.scale *= scale
@@ -180,7 +189,7 @@ class Character(Object):
                 m.mesh.skin_mesh(self.joint_bind_matrices)
     
     def animate(self, frame):    
-        if self.root is not None:
+        if self.is_animate is True and self.root is not None:
             if frame < 0 or len(self.root.anim_layers) == 0:
                 return
             
