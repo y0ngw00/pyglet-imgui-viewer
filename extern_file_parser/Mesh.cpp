@@ -41,6 +41,13 @@ SetSkinningData(const std::vector<ControlPointInfo> & _skinData)
     mSkinData = _skinData;
 }
 
+void
+Mesh::
+SetDiffuseTexture(const std::string& _diffuseTexture)
+{
+    mDiffuseTexture = _diffuseTexture;
+}
+
 Mesh::
 ~Mesh()
 {

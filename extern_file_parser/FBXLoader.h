@@ -31,6 +31,7 @@ public:
     const std::vector<ControlPointInfo> GetMeshSkinData(int mesh_index);
 
     const std::vector<Joint*> GetJoints();
+    const std::vector<Mesh*> GetMeshes();
     
     virtual ~FBXLoader();
 
@@ -42,6 +43,7 @@ private:
     bool loadMesh(FbxNode* _pNode);
     bool loadJoint(FbxScene* _scene, FbxNode* _node);
     void loadSkin(FbxNode* _pNode, std::vector<ControlPointInfo>& out_controlPointsInfo);
+    bool loadTexture(FbxScene* _scene);
     int FindJointIndexByName(const std::string& _jointName);
     void DebugSumOfWeights(std::vector<ControlPointInfo>& out_controlPointsInfo);
 

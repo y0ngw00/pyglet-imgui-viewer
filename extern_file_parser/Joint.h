@@ -2,7 +2,7 @@
 #define __JOINT_H__
 
 #include <string>
-
+#include <vector>
 #include <Eigen/Core>
 #include <Eigen/Geometry>
 

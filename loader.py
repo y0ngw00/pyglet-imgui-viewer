@@ -161,9 +161,9 @@ def load_fbx(filename, load_anim = False):
     name = filename.split('/')[-1]
 
     meshes = load_fbx_mesh(fbx_loader)
-    if len(meshes) > 0:
-        meshes[0].set_color((0, 4, 47, 255))
-        meshes[1].set_color((200, 200, 200, 255))
+    # if len(meshes) > 0:
+        # meshes[0].set_color((0, 4, 47, 255))
+        # meshes[1].set_color((200, 200, 200, 255))
     joints = load_fbx_joint(fbx_loader, load_anim)
 
     character = Character(name, meshes = meshes,joints = joints, scale=[1,1,1])
@@ -173,15 +173,15 @@ def load_fbx(filename, load_anim = False):
 def load_fbx_mesh(fbx_loader):
     meshes = []
     
-    num_mesh = fbx_loader.get_mesh_count()
+    fbx_meshes = fbx_loader.get_meshes()
     
-    for i in range(num_mesh):
-        vertices = fbx_loader.get_mesh_position(i)
-        normals = fbx_loader.get_mesh_normal(i)
-        uvs = fbx_loader.get_mesh_texcoord(i)
-        indices = fbx_loader.get_mesh_indices(i)
+    for fbx_mesh in fbx_meshes:
+        vertices = fbx_mesh.vertices
+        normals = fbx_mesh.normals
+        uvs = fbx_mesh.texCoords
+        indices = fbx_mesh.indices
                    
-        skin_data = np.array(fbx_loader.get_mesh_skin_data(i))    
+        skin_data = np.array(fbx_mesh.skinData)    
         if skin_data is None:
             mesh = Object(mesh_type=MeshType.Custom,
                       mesh_info={"vertices":vertices, 
@@ -197,8 +197,19 @@ def load_fbx_mesh(fbx_loader):
                                 "indices":indices,
                                 "skin_data" : skin_data,
                                 })
+            
+        # diffuse_map = fbx_mesh.diffuseTexture
+        # diffuse_map = "/home/imo/Downloads/colorcode.jpeg"
+        # diffuse_map = "/home/imo/Project/DanceTransfer/data/mixamo_library/Amy.fbm/Ch46_1001_Diffuse.png"
+        # if diffuse_map != '':
+            # mesh.set_texture(diffuse_map)
+        
         mesh.mesh.stride = 3 # set to triangular mesh            
         meshes.append(mesh)
+        
+    # if diffuse_map == '':
+    meshes[1].set_color((200, 200, 200, 255))
+    meshes[0].set_color((0, 4, 47, 255))
     
     return meshes
 

@@ -2,7 +2,7 @@
 #define __MESH_H__
 
 #include <string>
-
+#include <vector>
 #include <Eigen/Core>
 #include <Eigen/Geometry>
 #include <unordered_map>
@@ -29,6 +29,7 @@ public:
     Mesh();
     Mesh(const Eigen::VectorXd& _vertices, const Eigen::VectorXd& _normals, const Eigen::VectorXd& _texCoords, const std::vector<unsigned int>& _indices, const int _stride);
     void SetSkinningData(const std::vector<ControlPointInfo> & _skinData);
+    void SetDiffuseTexture(const std::string& _diffuseTexture);
     virtual ~Mesh();
 
     Eigen::VectorXd GetVertices() const { return mVertices; }
@@ -46,12 +47,13 @@ private:
 
     void initialize();
 
-private:
+public:
     Eigen::VectorXd mVertices;
     Eigen::VectorXd mNormals;
     Eigen::VectorXd mTexCoords;
     std::vector<unsigned int> mIndices;
     std::vector<ControlPointInfo> mSkinData;
+    std::string mDiffuseTexture;
     int mStride;
 };
 
