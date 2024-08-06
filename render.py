@@ -23,7 +23,7 @@ class RenderWindow(pyglet.window.Window):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # glClearColor(219.0/255.0,236.0/255.0,244.0/255.0,1.0)
-        glClearColor(0.9,0.9,0.9,1.0)
+        # glClearColor(0.9,0.9,0.9,1.0)
 
         self.batch = pyglet.graphics.Batch()
         '''
@@ -59,6 +59,8 @@ class RenderWindow(pyglet.window.Window):
         self.max_frame = 300
         self.framerate = 30.0
         self.animate = False
+        self.show_scene = True
+        self.show_ui = True
 
         self.setup()
         # Keyboard/Mouse control. Not implemented yet.
@@ -92,45 +94,50 @@ class RenderWindow(pyglet.window.Window):
         
     def on_draw(self) -> None:
         self.clear()
-        self.batch.draw()
-        self.GUI.render()
+        if self.show_scene is True:
+            self.batch.draw()
+        if self.show_ui is True:
+            self.GUI.render()
 
     def update(self,dt) -> None:
         # 1. Create a view matrix
-        self.__view_mat = Mat4.look_at(
-            self.__cam_eye, target=self.__cam_target, up=self.__cam_vup)
         
-        # 2. Create a projection matrix 
-        self.proj_mat = Mat4.perspective_projection(
-            aspect = self.width/self.height, 
-            z_near=self.z_near, 
-            z_far=self.z_far, 
-            fov = self.__fov)
-
-        view_proj = self.proj_mat @ self.__view_mat
-
-        if self.animate is True:
-            self.frame += 1
-            self.scene.animate(self.frame)
-        self.scene.update()
-        self.update_shape()
-        for i, shape in enumerate(self.shapes):
-            '''
-            Update position/orientation in the scene. In the current setting, 
-            shapes created later rotate faster while positions are not changed.
-            '''                
-
-            # # Example) You can control the vertices of shape.
-            # shape.indexed_vertices_list.vertices[0] += 0.5 * dt
-            shape.shader_program['view_proj'] = view_proj
-            shape.shader_program["lightPos"] = self.light_pos
-            # shape.shader_program["viewPos"] = self.get_cam_eye
-            # shape.shader_program["lightSpaceMatrix"] = self.light_space_matrix
-            shape.shader_program["fogStart"] = self.fog_start
-            shape.shader_program["fogEnd"] = self.fog_end
-            shape.shader_program["fogColor"] = self.fog_color
+        if self.show_scene is True:
+            self.__view_mat = Mat4.look_at(
+                self.__cam_eye, target=self.__cam_target, up=self.__cam_vup)
             
-        self.GUI.update_ui(self.animate)
+            # 2. Create a projection matrix 
+            self.proj_mat = Mat4.perspective_projection(
+                aspect = self.width/self.height, 
+                z_near=self.z_near, 
+                z_far=self.z_far, 
+                fov = self.__fov)
+
+            view_proj = self.proj_mat @ self.__view_mat
+
+            if self.animate is True:
+                self.frame += 1
+                self.scene.animate(self.frame)
+            self.scene.update()
+            self.update_shape()
+            for i, shape in enumerate(self.shapes):
+                '''
+                Update position/orientation in the scene. In the current setting, 
+                shapes created later rotate faster while positions are not changed.
+                '''                
+
+                # # Example) You can control the vertices of shape.
+                # shape.indexed_vertices_list.vertices[0] += 0.5 * dt
+                shape.shader_program['view_proj'] = view_proj
+                shape.shader_program["lightPos"] = self.light_pos
+                # shape.shader_program["viewPos"] = self.get_cam_eye
+                # shape.shader_program["lightSpaceMatrix"] = self.light_space_matrix
+                shape.shader_program["fogStart"] = self.fog_start
+                shape.shader_program["fogEnd"] = self.fog_end
+                shape.shader_program["fogColor"] = self.fog_color
+            
+        if self.show_ui is True:
+            self.GUI.update_ui(self.animate)
         
         if self.update_audio is True:
             self.audio_manager.update(self.frame, self.update_audio)
