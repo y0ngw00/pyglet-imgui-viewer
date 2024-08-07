@@ -27,8 +27,11 @@ class Sequencer(BoxItem):
         self.picked = None
         self.frame_bar_picked = False
         self.highlighted_color = imgui.get_color_u32_rgba(1,0.7,0,1)
-        self.popup_menu = SequencerMenu(self)  
-    
+        self.popup_menu = SequencerMenu(self)
+        
+        self.formation_sequence = Sequence("Formation", None, self.sequence_pos_start, self.sequence_height)
+        self.group_sequence =  Sequence("Grouping", None, self.sequence_pos_start, self.sequence_height)
+        
     def render(self, x, y):
         x_scale, y_scale = imgui.get_io().display_size 
         x_pos = self.x_pos * x_scale
@@ -37,10 +40,11 @@ class Sequencer(BoxItem):
         y_size = self.y_size * y_scale
         imgui.set_next_window_position(x_pos, y_pos, imgui.ALWAYS)
         imgui.set_next_window_size(x_size, y_size, imgui.ALWAYS)
+
         window_flags = 0
         # if self.picked is not None:
-        window_flags = imgui.WINDOW_NO_MOVE | imgui.WINDOW_ALWAYS_VERTICAL_SCROLLBAR
-        if imgui.begin("Sequencer", True, flags = window_flags):
+        window_flags = imgui.WINDOW_ALWAYS_VERTICAL_SCROLLBAR
+        if imgui.begin("Sequencer", True, flags = window_flags):           
             draw_list = imgui.get_window_draw_list()
             canvas_pos = imgui.get_window_position()  # Get the position of the canvas window
             layout_padding = [10,45]
@@ -49,10 +53,25 @@ class Sequencer(BoxItem):
                                     y = canvas_pos.y+layout_padding[1],
                                     xsize_box = imgui.get_window_width()-40, 
                                     ysize_box = imgui.get_window_height()-40)
-            self.draw_box(draw_list, color = imgui.get_color_u32_rgba(1,1,1,1), rounding = 4, thickness = 2)
+            # self.draw_box(draw_list, color = imgui.get_color_u32_rgba(1,1,1,1), rounding = 4, thickness = 2)
 
-            for idx, seq in enumerate(self.children):
-                seq.render(idx, seq==self.picked)
+            if imgui.begin_tab_bar("Sequncer Tab", imgui.TAB_BAR_FITTING_POLICY_DEFAULT):
+                imgui.set_next_item_width(100)
+                if imgui.begin_tab_item("Grouping&Formation").selected:
+                    self.formation_sequence.render(0, False)
+                    self.group_sequence.render(1, False)
+                    imgui.end_tab_item()
+
+                if imgui.begin_tab_item("Motion Sequence").selected:
+                    for idx, seq in enumerate(self.motion_sequences):
+                        seq.render(idx, seq==self.picked)
+                    imgui.end_tab_item()
+                        
+                imgui.end_tab_bar()
+            
+                
+            # Scroll bar
+            imgui.set_cursor_pos((canvas_pos.x, self.sequence_height * len(self.motion_sequences) -  imgui.get_window_height()))
                 
             # Draw a play line
             frame = self.parent_window.get_frame()

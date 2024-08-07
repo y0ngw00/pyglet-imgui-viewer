@@ -3,7 +3,7 @@ from keyframe import KeyFrameAnimation, KeyFrame
 import imgui
 
 class DancerCircle:
-    def __init__(self, character, xsize_box, ysize_box, position_scale = 1, radius = 10):
+    def __init__(self, character, position_scale = 1, radius = 10):
         self.target = character
         self.radius = radius
         self.position_scale = position_scale
@@ -16,20 +16,18 @@ class DancerCircle:
         self.y = 0
         self.update_circle_pos()
                 
-        self.__name = character.get_name()
         self.__group_idx = 1
-        
               
         self.group_idx_font = Fonts["group_idx_font"]["font"]
         self.dancer_label= Fonts["dancer_label"]["font"]
 
     @property
     def get_name(self):
-        return self.__name
+        return self.target.get_name
     
     @get_name.setter
     def set_name(self, name):
-        self.__name = name
+        self.target.set_name = name
     
     @property
     def get_group_index(self):
@@ -88,8 +86,8 @@ class DancerCircle:
         
         # Dancer name
         with imgui.font(self.dancer_label):
-            text_size = imgui.calc_text_size(self.__name)
-            draw_list.add_text(x+self.x-text_size.x/2, y+self.y+self.radius+text_size.y/2, col = color, text = self.__name)
+            text_size = imgui.calc_text_size(self.get_name)
+            draw_list.add_text(x+self.x-text_size.x/2, y+self.y+self.radius+text_size.y/2, col = color, text = self.get_name)
         
     def translate(self, dx, dy):
         self.x +=dx
