@@ -15,6 +15,7 @@ import numpy as np
 import pickle as pkl
 
 from test import synthesize
+from fonts import Fonts
 from enum_list import FileType
 from dancer_custom_condition import CustomCondition
 
@@ -27,7 +28,7 @@ class CustomBrowser:
         self.y_size = y_size
         
         self.scene = scene
-        self.new_font = imgui.get_io().fonts.add_font_from_file_ttf("pyglet_render/data/PublicSans-SemiBold.ttf", 20)
+        self.button_font_bold = Fonts["button_font_bold"]["font"]
         
         self.selected_audio_file = ""
         self.selected_network_file = ""
@@ -88,7 +89,7 @@ class CustomBrowser:
             imgui.pop_item_width()
         
     def render_model_connector(self):
-        with imgui.font(self.new_font):
+        with imgui.font(self.button_font_bold):
             imgui.text("Current number of characters: {}".format(self.parent_window.get_num_dancers()))
             imgui.same_line()
             if imgui.button("Add character(GLTF,GLB)"):

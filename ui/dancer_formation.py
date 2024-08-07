@@ -4,8 +4,9 @@ import imgui
 import imgui.core
 from imgui.integrations.pyglet import create_renderer
 
+
+from fonts import Fonts
 from keyframe import KeyFrame
-from dancer_circle import DancerCircle
 from keyframe_viewer import KeyframeViewer
 from box_item import BoxItem
 class DancerFormation(BoxItem):

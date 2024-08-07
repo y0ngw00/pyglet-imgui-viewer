@@ -16,10 +16,10 @@ import numpy as np
 import tkinter as tk
 from tkinter import filedialog
 
+import fonts
+from enum_list import FileType
 import loader
 from ui import DancerCircle, KeyFrame, Sequencer, Sequence, SequenceTrack, DancerFormation, TitleBar,CustomBrowser
-
-from enum_list import FileType
 class UI:
     def __init__(self, window):
         imgui.create_context()
@@ -27,6 +27,7 @@ class UI:
         imgui.get_io().fonts.get_tex_data_as_rgba32()
         self.impl = create_renderer(window)
         
+        fonts.initialize_imgui_fonts()
         
         imgui.new_frame()  
         imgui.end_frame()

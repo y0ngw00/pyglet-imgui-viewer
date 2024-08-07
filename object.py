@@ -138,6 +138,9 @@ class Character(Object):
         self.update_world_transform()
         self.skinning()
         return
+    
+    def get_name(self):
+        return self.name
         
     def get_position(self):
         # if self.root is not None:
