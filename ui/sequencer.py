@@ -58,13 +58,13 @@ class Sequencer(BoxItem):
             if imgui.begin_tab_bar("Sequncer Tab", imgui.TAB_BAR_FITTING_POLICY_DEFAULT):
                 imgui.set_next_item_width(100)
                 if imgui.begin_tab_item("Grouping&Formation").selected:
-                    self.formation_sequence.render(0, False)
-                    self.group_sequence.render(1, False)
+                    self.formation_sequence.render(0)
+                    self.group_sequence.render(1)
                     imgui.end_tab_item()
 
                 if imgui.begin_tab_item("Motion Sequence").selected:
                     for idx, seq in enumerate(self.motion_sequences):
-                        seq.render(idx, seq==self.picked)
+                        seq.render(idx)
                     imgui.end_tab_item()
                         
                 imgui.end_tab_bar()
@@ -100,7 +100,7 @@ class Sequencer(BoxItem):
             self.picked.target.select(False)
         elif hasattr(selected, 'target'): # If there is already a picked item
             selected.target.select(True)
-            if self.picked is not None:
+            if self.picked is not None and self.picked != selected:
                 self.picked.target.select(False)
             
         self.picked = selected
@@ -136,22 +136,16 @@ class Sequencer(BoxItem):
         return False
     
     def on_mouse_release(self, x, y, button, modifier):
-        if self.is_picked(x,y):
-            for seq in self.motion_sequences:
-                if seq.is_picked(x,y):
-                    self.select(seq)
-                    break
-                
+        
+        self.show_popup = False
+        if self.is_picked(x,y):                
             if button == 4:
                 self.popup_menu.update_position()
-                self.show_popup = True
-                
+                self.show_popup = True                
         else :
-            self.show_popup = False
             if self.frame_bar_picked is True:
                 self.frame_bar_picked = False
 
-                
         if self.show_popup and button != 4:
             return
           
@@ -164,7 +158,10 @@ class Sequencer(BoxItem):
         
         if self.is_picked(x,y):
             for seq in self.motion_sequences:
-                seq.on_mouse_press(x,y,button,modifier)
+                if seq.is_picked(x,y):
+                    seq.on_mouse_press(x,y,button,modifier)
+                    self.select(seq)
+                    break
             
     def on_mouse_drag(self, x, y, dx, dy):
         if self.show_popup:

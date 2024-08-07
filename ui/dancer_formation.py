@@ -43,8 +43,8 @@ class DancerFormation(BoxItem):
             
             # Draw a dot
             frame = self.parent_window.get_frame()
-            for circle in self.parent_window.get_dancers():
-                circle.render(draw_list, self.x_origin + self.xsize_box/2, self.y_origin + self.ysize_box/2, frame)
+            for dancer in self.parent_window.get_dancers():
+                dancer.render(draw_list, self.x_origin + self.xsize_box/2, self.y_origin + self.ysize_box/2, frame)
                 
             imgui.end()
             
@@ -58,60 +58,57 @@ class DancerFormation(BoxItem):
         return self.parent_window.get_frame()
     
     def on_key_release(self, symbol, modifiers, frame) -> None:
+        dancers = self.parent_window.get_dancers()
         if symbol == pyglet.window.key.F:
-            if modifiers == pyglet.window.key.MOD_CTRL:
-                for circle in self.parent_window.get_dancers():
-                    circle.add_keyframe(frame)
-            else:
-                if len(self.last_clicked_item) >0:
-                    for circle in self.last_clicked_item:
-                        circle.add_keyframe(frame)
-                    
+            pass
+            # if modifiers == pyglet.window.key.MOD_CTRL:
+            #     for dancer in self.parent_window.get_dancers():
+            #         dancer.add_keyframe(frame)
+            # else:
+            #     dancers = self.parent_window.get_dancers()
+            #     for dancer in self.dancers:
+            #         dancer.add_keyframe(frame)
+                
         if symbol == pyglet.window.key.G:
-            if modifiers == pyglet.window.key.MOD_CTRL:
-                for circle in self.parent_window.get_dancers():
-                    circle.add_group_keyframe(frame)
-            else:
-                if len(self.last_clicked_item) >0:
-                    for circle in self.last_clicked_item:
-                        circle.add_group_keyframe(frame)
+            pass
+            # if modifiers == pyglet.window.key.MOD_CTRL:
+            #     for dancer in self.parent_window.get_dancers():
+            #         dancer.add_group_keyframe(frame)
+            # else:
+            #     if len(self.last_clicked_item) >0:
+            #         for dancer in self.last_clicked_item:
+            #             dancer.add_group_keyframe(frame)
         
         dx = 5 if symbol==pyglet.window.key.D else -5 if symbol==pyglet.window.key.A else 0
         dy = 5 if symbol==pyglet.window.key.S else -5 if symbol==pyglet.window.key.W else 0
-        if len(self.last_clicked_item) >0:
-            for circle in self.last_clicked_item:
-                circle.translate(dx, dy)
-    
+        for dancer in dancers:
+            if dancer.is_selected():
+                dancer.translate(dx, dy)
+
     def on_mouse_release(self, x, y, button, modifier) -> None:
-        circles = self.parent_window.get_dancers()
-        for circle in circles:
-            if circle.get_is_clicked:
-                if modifier is not pyglet.window.key.MOD_SHIFT and modifier != 17:
-                    self.last_clicked_item = []
-                self.last_clicked_item.append(circle)
-            circle.set_is_clicked = False
-            
-        if self.is_ui_active() is False:
-            self.last_clicked_item = []
+        dancers = self.parent_window.get_dancers()
             
     def on_mouse_drag(self,x, y, dx, dy):
         if self.is_picked(x, y):
-            for circle in self.last_clicked_item:
-                circle.translate(dx, -dy)
+            dancers = self.parent_window.get_dancers()
+            [dancer.translate(dx, -dy) for dancer in dancers if dancer.is_selected()]
                 
     def on_mouse_press(self, x, y, button, modifier) -> None:
-        circles = self.parent_window.get_dancers()
-        for circle in circles:
-            if (x-self.x_origin-circle.x)**2 + (y - self.y_origin-circle.y)**2 < circle.radius**2:
-                circle.set_is_clicked = True
-            else:
-                circle.set_is_clicked = False
-                
+        if self.is_picked(x, y):
+            dancers = self.parent_window.get_dancers()
+            for dancer in dancers:
+                stage_x = x - (self.x_origin + self.xsize_box/2)
+                stage_y = y - (self.y_origin + self.ysize_box/2),
+                if dancer.is_picked(stage_x, stage_y):
+                    dancer.set_is_clicked = True
+                else:
+                    dancer.set_is_clicked = False
+                    
     def update_ui(self, is_animate, frame) -> None:
         if is_animate:
-            circles = self.parent_window.get_dancers()
-            for circle in circles:
-                circle.animate(frame)
+            dancers = self.parent_window.get_dancers()
+            for dancer in dancers:
+                dancer.animate(frame)
     
     def is_ui_active(self):
         return imgui.is_any_item_active()

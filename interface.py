@@ -42,7 +42,7 @@ class UI:
         self.pos_idx2=0
         self.pos_list = [[0,0,0], [100,0,-50], [-100,0,-50], [200,0,-100],[-200,0,-100],[0,0,-100] ]
 
-        self.circles = []                   
+        self.dancers = []                   
 
         self.titlebar = TitleBar(self)
 
@@ -74,7 +74,7 @@ class UI:
         return imgui.is_any_item_active()
     
     def add_dancer(self, character)->None:
-        self.circles.append(Dancer(character, position_scale=0.5, radius = 25))
+        self.dancers.append(Dancer(character, position_scale=0.5, radius = 25))
         self.Sequencer.add_sequence(character)
         self.scene.add_character(character)
         
@@ -82,10 +82,10 @@ class UI:
         return self.scene.get_character(idx)
 
     def get_dancers(self):
-        return self.circles
+        return self.dancers
     
     def get_num_dancers(self):
-        return len(self.circles)
+        return len(self.dancers)
 
     def render_file_dialog(self, file_descriptions,file_ext):
         file_types = [(file_descriptions, file_ext)]
@@ -142,7 +142,8 @@ class UI:
 
     def on_mouse_press(self, x, y, button, modifier) -> None:
         new_y = self.window.height - y
-        self.DancerFormation.on_mouse_press(x, new_y, button, modifier)
+        if button == 1:  # rotation
+            self.DancerFormation.on_mouse_press(x, new_y, button, modifier)
         self.Sequencer.on_mouse_press(x, new_y, button, modifier)
 
     def on_mouse_release(self, x, y, button, modifier) -> None:

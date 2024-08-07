@@ -5,6 +5,7 @@ import loader
 
 from fonts import Fonts
 from box_item import BoxItem
+from enum_list import Boundary
 
 class Sequence(BoxItem):
     def __init__(self, name, target,sequence_pos_start,sequence_height):
@@ -28,7 +29,7 @@ class Sequence(BoxItem):
                 frame_end = anim_layer.frame_original_region_end
                 self.children.append(SequenceTrack(self, target.name, frame_start, frame_end, height = self.sequence_height))
     
-    def render(self, idx, is_picked):
+    def render(self, idx):
         draw_list = imgui.get_window_draw_list()
         canvas_pos = imgui.get_window_position()  # Get the position of the canvas window
         layout_padding = [10,10]
@@ -36,7 +37,7 @@ class Sequence(BoxItem):
         # To make scroll bar and shift the sequence following scroll.
         scroll_y = imgui.get_scroll_y()
         
-        if is_picked:
+        if self.target is not None and self.target.is_selected():
             draw_list.add_rect_filled(canvas_pos.x+layout_padding[0], self.y_origin, 
                         self.x_origin+self.xsize_box, self.y_origin+self.ysize_box, 
                         self.background_color, rounding=4)
