@@ -41,9 +41,10 @@ class UI:
         self.pos_list = [[0,0,0], [100,0,-50], [-100,0,-50], [200,0,-100],[-200,0,-100],[0,0,-100] ]
 
         self.titlebar = TitleBar(self)
-        self.DancerFormation = DancerFormation(self)
-        self.Sequencer = Sequencer(self)
-        self.custom_browser = CustomBrowser(self,self.scene)
+
+        self.DancerFormation = DancerFormation(self,640/2560, 0/1440, 1920/2560, 960/1440)
+        self.Sequencer = Sequencer(self, 640/2560, 960/1440, 1920/2560, 480/1440)
+        self.custom_browser = CustomBrowser(self,0/2560,0/1440,640/2560,1440/1440, self.scene)
         
         self.impl.refresh_font_texture()
         

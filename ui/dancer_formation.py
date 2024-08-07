@@ -9,25 +9,36 @@ from dancer_circle import DancerCircle
 from keyframe_viewer import KeyframeViewer
 from box_item import BoxItem
 class DancerFormation(BoxItem):
-    def __init__(self, parent_window):
+    def __init__(self, parent_window,x_pos, y_pos, x_size, y_size):
         super().__init__()
-        self.circles = []                   
         self.last_clicked_item = []
         
         self.parent_window = parent_window
+        self.x_pos = x_pos
+        self.y_pos = y_pos
+        self.x_size = x_size
+        self.y_size = y_size
         self.keyframe_viewer = KeyframeViewer(self)
                     
     def render(self, x, y):
+        x_scale, y_scale = imgui.get_io().display_size 
+        x_pos = self.x_pos * x_scale
+        y_pos = self.y_pos * y_scale
+        x_size = self.x_size * x_scale
+        y_size = self.y_size * y_scale
+        imgui.set_next_window_position(x_pos,y_pos, imgui.ALWAYS)
+        imgui.set_next_window_size(x_size, y_size, imgui.ALWAYS)
         if imgui.begin("Drawing Interface", True, flags=imgui.WINDOW_NO_MOVE):
             draw_list = imgui.get_window_draw_list()
-            canvas_pos = imgui.get_cursor_screen_pos()  # Get the position of the canvas window
+            canvas_pos = imgui.get_window_position()  # Get the position of the canvas window
+            window_size = imgui.get_window_size()
 
-            layout_padding = [10,10]
+            layout_padding = [10,30]
             self.update_position(x = canvas_pos.x+layout_padding[0],
                                  y = canvas_pos.y+layout_padding[1],
-                                 xsize_box = 500,
-                                 ysize_box = 500)
-            self.draw_box(draw_list, color=imgui.get_color_u32_rgba(1,0,0,1), rounding=5, thickness=3)
+                                 xsize_box = window_size.x - 2*layout_padding[0],
+                                 ysize_box = window_size.y - 2*layout_padding[1])
+            self.draw_box(draw_list, color=imgui.get_color_u32_rgba(1,1,1,1), rounding=5, thickness=3)
             
             # Draw a dot
             frame = self.parent_window.get_frame()

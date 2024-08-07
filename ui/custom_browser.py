@@ -19,8 +19,13 @@ from enum_list import FileType
 from dancer_custom_condition import CustomCondition
 
 class CustomBrowser:
-    def __init__(self, parent_window, scene):
+    def __init__(self, parent_window, x_pos, y_pos, x_size, y_size, scene):
         self.parent_window = parent_window
+        self.x_pos = x_pos
+        self.y_pos = y_pos
+        self.x_size = x_size
+        self.y_size = y_size
+        
         self.scene = scene
         self.new_font = imgui.get_io().fonts.add_font_from_file_ttf("pyglet_render/data/PublicSans-SemiBold.ttf", 20)
         
@@ -37,6 +42,14 @@ class CustomBrowser:
         
         
     def render(self):
+        x_scale, y_scale = imgui.get_io().display_size 
+        x_pos = self.x_pos * x_scale
+        y_pos = self.y_pos * y_scale
+        x_size = self.x_size * x_scale
+        y_size = self.y_size * y_scale
+        imgui.set_next_window_position(x_pos, y_pos, imgui.ALWAYS)
+        imgui.set_next_window_size(x_size, y_size, imgui.ALWAYS)
+        
         imgui.begin("Custom Editor", flags=imgui.WINDOW_NO_MOVE)
         # clicked, value = imgui.input_text("Text Input", "")
         if imgui.begin_tab_bar("Tab Browser", imgui.TAB_BAR_FITTING_POLICY_DEFAULT):

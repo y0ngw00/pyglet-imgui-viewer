@@ -10,13 +10,17 @@ from sequencer_menu import SequencerMenu
 from box_item import BoxItem
 from enum_list import Boundary
 class Sequencer(BoxItem):
-    def __init__(self, parent_window):
+    def __init__(self, parent_window, x_pos, y_pos, x_size, y_size):
         super().__init__()
-        self.children=[]
+        self.motion_sequences=[]
         self.sequence_pos_start = 150
         self.sequence_height = 110
         
         self.parent_window = parent_window
+        self.x_pos = x_pos
+        self.y_pos = y_pos
+        self.x_size = x_size
+        self.y_size = y_size
         
         self.show_popup = False
         self.picked = None
@@ -25,14 +29,20 @@ class Sequencer(BoxItem):
         self.popup_menu = SequencerMenu(self)  
     
     def render(self, x, y):
-        
+        x_scale, y_scale = imgui.get_io().display_size 
+        x_pos = self.x_pos * x_scale
+        y_pos = self.y_pos * y_scale
+        x_size = self.x_size * x_scale
+        y_size = self.y_size * y_scale
+        imgui.set_next_window_position(x_pos, y_pos, imgui.ALWAYS)
+        imgui.set_next_window_size(x_size, y_size, imgui.ALWAYS)
         window_flags = 0
         # if self.picked is not None:
         window_flags = imgui.WINDOW_NO_MOVE | imgui.WINDOW_ALWAYS_VERTICAL_SCROLLBAR
         if imgui.begin("Sequencer", True, flags = window_flags):
             draw_list = imgui.get_window_draw_list()
-            canvas_pos = imgui.get_cursor_screen_pos()  # Get the position of the canvas window
-            layout_padding = [10,10]
+            canvas_pos = imgui.get_window_position()  # Get the position of the canvas window
+            layout_padding = [10,45]
             
             self.update_position(x = canvas_pos.x+layout_padding[0], 
                                     y = canvas_pos.y+layout_padding[1],
@@ -62,7 +72,7 @@ class Sequencer(BoxItem):
     
     def add_sequence(self,character):
         seq = Sequence(character, self.sequence_pos_start, self.sequence_height)
-        self.children.append(seq)
+        self.motion_sequences.append(seq)
         self.select(seq)
         
     def select(self, selected):
@@ -107,7 +117,7 @@ class Sequencer(BoxItem):
     
     def on_mouse_release(self, x, y, button, modifier):
         if self.is_picked(x,y):
-            for seq in self.children:
+            for seq in self.motion_sequences:
                 if seq.is_picked(x,y):
                     self.select(seq)
                     break
@@ -125,7 +135,7 @@ class Sequencer(BoxItem):
         if self.show_popup and button != 4:
             return
           
-        for seq in self.children:
+        for seq in self.motion_sequences:
             seq.on_mouse_release(x,y,button,modifier)
             
     def on_mouse_press(self, x, y, button, modifier) -> None:
@@ -133,7 +143,7 @@ class Sequencer(BoxItem):
             return
         
         if self.is_picked(x,y):
-            for seq in self.children:
+            for seq in self.motion_sequences:
                 seq.on_mouse_press(x,y,button,modifier)
             
     def on_mouse_drag(self, x, y, dx, dy):
@@ -145,7 +155,7 @@ class Sequencer(BoxItem):
             self.parent_window.set_frame(frame+dx)
             self.frame_bar_picked = True
             
-        for seq in self.children:
+        for seq in self.motion_sequences:
             seq.on_mouse_drag(x,y,dx,dy)
 class Sequence(BoxItem):
     def __init__(self, target,sequence_pos_start,sequence_height):
@@ -154,7 +164,7 @@ class Sequence(BoxItem):
         self.children=[]
 
         self.padding_x = 0
-        self.padding_y = 10
+        self.padding_y = 45
         self.sequence_pos_start = sequence_pos_start
         self.sequence_height = sequence_height - self.padding_y
         
@@ -170,21 +180,24 @@ class Sequence(BoxItem):
     
     def render(self, idx, is_picked):
         draw_list = imgui.get_window_draw_list()
-        canvas_pos = imgui.get_cursor_screen_pos()  # Get the position of the canvas window
+        canvas_pos = imgui.get_window_position()  # Get the position of the canvas window
         layout_padding = [10,10]
+        
+        # To make scroll bar and shift the sequence following scroll.
+        scroll_y = imgui.get_scroll_y()
         
         if is_picked:
             draw_list.add_rect_filled(canvas_pos.x+layout_padding[0], self.y_origin, 
                         self.x_origin+self.xsize_box, self.y_origin+self.ysize_box, 
                         self.background_color, rounding=4)
         self.update_position(x = canvas_pos.x+layout_padding[0]+self.sequence_pos_start, 
-                                y = canvas_pos.y+layout_padding[1] + idx * self.sequence_height + self.padding_y,
-                                xsize_box = imgui.get_window_width()- self.sequence_pos_start -50 , 
-                                ysize_box = self.sequence_height)
+                            y = canvas_pos.y+layout_padding[1] + idx * self.sequence_height + self.padding_y - scroll_y,
+                            xsize_box = imgui.get_window_width()- self.sequence_pos_start -50 , 
+                            ysize_box = self.sequence_height)
         self.draw_box(draw_list, color = self.sequence_color, rounding=4, thickness=2)
         
         draw_list.add_text(canvas_pos.x + layout_padding[0], self.y_origin+layout_padding[1], self.text_color, self.target.name)
-   
+
         for track in self.children:
             track.render(self.x_origin, self.y_origin)
         
