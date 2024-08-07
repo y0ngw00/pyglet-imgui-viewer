@@ -21,6 +21,7 @@ class GroupingStatus:
             imgui.push_item_width(200)
             imgui.text("Dancer Name")
             imgui.table_next_column()
+            imgui.push_item_width(200)
             imgui.text("Group")
             
             circles = self.parent_window.get_dancers()
@@ -31,8 +32,7 @@ class GroupingStatus:
                 imgui.push_item_width(200) 
                 changed, circle.set_name = imgui.input_text("##{}".format(idx), circle.get_name, buffer_length = 200)
                 imgui.table_next_column()
-                imgui.spacing() 
-                imgui.text(str(circle.get_group_index))
+                changed, circle.set_group_index = imgui.input_int("##Dancer's group{}".format(idx), circle.get_group_index)
                 # imgui.table_next_column()
                 # imgui.text(str(pair_info[3]))
             
@@ -49,8 +49,8 @@ class GroupingStatus:
 
             imgui.end_table()
             
-        # if imgui.button("Add pair"):
-            
+        
+ 
         #     if self.new_pair_input["dancer1"]!="" and self.new_pair_input["dancer2"]!="" and self.new_pair_input["start"]!="" and self.new_pair_input["last"]!="":
         #         print("Add pair")
         #         print(self.new_pair_input)

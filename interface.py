@@ -46,14 +46,13 @@ class UI:
 
         self.titlebar = TitleBar(self)
 
-        self.DancerFormation = DancerFormation(self,640/2560, 0/1440, 1920/2560, 960/1440)
-        self.Sequencer = Sequencer(self, 640/2560, 960/1440, 1920/2560, 480/1440)
-        self.custom_browser = CustomBrowser(self,0/2560,0/1440,640/2560,1440/1440, self.scene)
+        self.DancerFormation = DancerFormation(self,660/2560, 0/1440, 1920/2560, 960/1440)
+        self.Sequencer = Sequencer(self, 660/2560, 960/1440, 1920/2560, 480/1440)
+        self.custom_browser = CustomBrowser(self,0/2560,0/1440,660/2560,1440/1440, self.scene)
                         
         self.impl.refresh_font_texture()
         
     def render(self):
-    
         imgui.render()
         self.impl.render(imgui.get_draw_data())
         imgui.new_frame()
@@ -129,6 +128,15 @@ class UI:
     
     def get_frame(self):
         return self.window.frame
+    
+    def get_framerate(self):
+        return self.window.framerate
+    
+    def get_play_time(self):
+        total_seconds = self.window.frame / self.window.framerate
+        minutes, seconds = divmod(total_seconds, 60)
+        seconds, milliseconds = divmod(seconds, 1)
+        return f"{int(minutes):02d}:{int(seconds):02d}:{int(milliseconds*1000):03d}"
     
     def set_frame(self, new_frame):
         self.window.set_frame = new_frame

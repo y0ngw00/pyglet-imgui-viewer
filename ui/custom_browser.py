@@ -52,11 +52,45 @@ class CustomBrowser:
         imgui.set_next_window_size(x_size, y_size, imgui.ALWAYS)
         
         imgui.begin("Custom Editor", flags=imgui.WINDOW_NO_MOVE)
+
+        window_size = imgui.get_window_size()
+        child_size = (window_size[0] - 30, 80/1440 * y_scale)  # 10 pixels smaller on each side
+        # Begin the child window
+        imgui.begin_child("Child Window1", child_size[0], child_size[1], border=False)
+    
+        with imgui.font(self.button_font_bold):
+            if imgui.button("Create Dancer"):
+                self.parent_window.open_file(self.motion_library_dir + self.character_path, FileType.Character, load_anim = False)
+
+            imgui.same_line()
+
+            if imgui.button("Select audio file"):
+                file_descriptions = "Audio files (.wav)"
+                file_ext = "*.wav"
+                selected_audio_file = self.parent_window.render_file_dialog(file_descriptions, file_ext)
+ 
+                self.selected_audio_file = str(selected_audio_file)
+                self.parent_window.initialize_audio(selected_audio_file)
+        
+        imgui.end_child()
+        imgui.separator()
+
+        # Begin Tab bar widget
+        imgui.begin_child("Child Window2", window_size[0] - 30, 880/1440*y_scale, border=True)
+    
         # clicked, value = imgui.input_text("Text Input", "")
         if imgui.begin_tab_bar("Tab Browser", imgui.TAB_BAR_FITTING_POLICY_DEFAULT):
             imgui.set_next_item_width(100)
             if imgui.begin_tab_item("Grouping Status").selected:
+                imgui.begin_child("Grouping widget", window_size[0] - 50, 720/1440*y_scale, border=False)
                 self.grouping_status.render()
+                imgui.end_child()
+                
+                with imgui.font(self.button_font_bold):
+                    if imgui.button("Save Current Formation", width = window_size[0] - 50):
+                        pass                     
+                    if imgui.button("Save Current Grouping", width = window_size[0] - 50):
+                        pass 
                 imgui.end_tab_item()
                 
             if imgui.begin_tab_item("Motion Library").selected:
@@ -68,9 +102,16 @@ class CustomBrowser:
                 imgui.end_tab_item()
                 
             imgui.end_tab_bar()
+        imgui.end_child()
+        
+        # Begin current status viewer
+        imgui.begin_child("Child Window3", window_size[0] - 30, 480/1440*y_scale, border=True)        
+        imgui.text("Current frame: {}".format(self.parent_window.get_frame()))
+        imgui.text("Current time: {}".format(self.parent_window.get_play_time()))
+        imgui.end_child()
 
         imgui.end()
-        
+
     def render_motion_library(self):               
         # if imgui.tree_node("Checkpoint"):
             imgui.text("Number of Dancers: "+ str(self.parent_window.get_num_dancers()))
