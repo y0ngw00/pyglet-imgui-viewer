@@ -18,6 +18,7 @@ from tkinter import filedialog
 
 import fonts
 from enum_list import FileType
+
 import loader
 from ui import DancerCircle, KeyFrame, Sequencer, Sequence, SequenceTrack, DancerFormation, TitleBar,CustomBrowser
 class UI:
@@ -41,12 +42,14 @@ class UI:
         self.pos_idx2=0
         self.pos_list = [[0,0,0], [100,0,-50], [-100,0,-50], [200,0,-100],[-200,0,-100],[0,0,-100] ]
 
+        self.circles = []                   
+
         self.titlebar = TitleBar(self)
 
         self.DancerFormation = DancerFormation(self,640/2560, 0/1440, 1920/2560, 960/1440)
         self.Sequencer = Sequencer(self, 640/2560, 960/1440, 1920/2560, 480/1440)
         self.custom_browser = CustomBrowser(self,0/2560,0/1440,640/2560,1440/1440, self.scene)
-        
+                        
         self.impl.refresh_font_texture()
         
     def render(self):
@@ -71,12 +74,18 @@ class UI:
         return imgui.is_any_item_active()
     
     def add_dancer(self, character)->None:
-        self.DancerFormation.add_dancer(character)
+        self.circles.append(DancerCircle(character, position_scale=0.5, radius = 25))
         self.Sequencer.add_sequence(character)
+        self.scene.add_character(character)
+        
+    def get_character(self, idx):
+        return self.scene.get_character(idx)
 
+    def get_dancer_circles(self):
+        return self.circles
     
     def get_num_dancers(self):
-        return self.DancerFormation.get_num_dancers()
+        return len(self.circles)
 
     def render_file_dialog(self, file_descriptions,file_ext):
         file_types = [(file_descriptions, file_ext)]
@@ -97,13 +106,11 @@ class UI:
             if ext == "bvh":
                 character = loader.load_bvh(file_path)
                 character.translate(self.pos_list[self.pos_idx])
-                self.add_dancer(character)
                 self.pos_idx+=1
 
             elif ext == "gltf" or ext == "glb":
                 character = loader.load_gltf(file_path)
                 character.translate(self.pos_list[self.pos_idx2])
-                self.add_dancer(character)
                 self.pos_idx2+=1
             
             elif ext == "fbx":
@@ -111,12 +118,10 @@ class UI:
                 character = loader.load_fbx(file_path, load_anim)
                 character.translate(self.pos_list[self.pos_idx2])
                 
-                if character.joints is not None:
-                    self.add_dancer(character)
                 self.pos_idx2+=1
                     
             if character is not None:
-                self.scene.add_character(character)
+                self.add_dancer(character)
         return
     
     def is_playing(self):

@@ -17,6 +17,11 @@ Fonts = {
         "path": "pyglet_render/data/PublicSans-SemiBold.ttf",
         "size": 20
     },
+    "sequence_name":{
+        "font": None,
+        "path": "pyglet_render/data/PublicSans-SemiBold.ttf",
+        "size": 20
+    },
 }
 
 def initialize_imgui_fonts():    

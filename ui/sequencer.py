@@ -6,6 +6,7 @@ import imgui
 import imgui.core
 import loader
 
+from fonts import Fonts
 from sequencer_menu import SequencerMenu
 from box_item import BoxItem
 from enum_list import Boundary
@@ -71,7 +72,7 @@ class Sequencer(BoxItem):
         return
     
     def add_sequence(self,character):
-        seq = Sequence(character, self.sequence_pos_start, self.sequence_height)
+        seq = Sequence(character.get_name, character, self.sequence_pos_start, self.sequence_height)
         self.motion_sequences.append(seq)
         self.select(seq)
         
@@ -158,8 +159,9 @@ class Sequencer(BoxItem):
         for seq in self.motion_sequences:
             seq.on_mouse_drag(x,y,dx,dy)
 class Sequence(BoxItem):
-    def __init__(self, target,sequence_pos_start,sequence_height):
+    def __init__(self, name, target,sequence_pos_start,sequence_height):
         super().__init__()
+        self.name = name
         self.target = target
         self.children=[]
 
@@ -172,7 +174,7 @@ class Sequence(BoxItem):
         self.sequence_color = imgui.get_color_u32_rgba(1,0.7,0,1)   
         self.background_color = imgui.get_color_u32_rgba(1,1,1,0.3)     
 
-        if len(target.joints) > 0 and len(target.joints[0].anim_layers)>0:
+        if target is not None and len(target.joints) > 0 and len(target.joints[0].anim_layers)>0:
             for anim_layer in target.joints[0].anim_layers:
                 frame_start = anim_layer.frame_original_region_start
                 frame_end = anim_layer.frame_original_region_end
@@ -196,7 +198,13 @@ class Sequence(BoxItem):
                             ysize_box = self.sequence_height)
         self.draw_box(draw_list, color = self.sequence_color, rounding=4, thickness=2)
         
-        draw_list.add_text(canvas_pos.x + layout_padding[0], self.y_origin+layout_padding[1], self.text_color, self.target.name)
+        with imgui.font(Fonts["sequence_name"]["font"]):
+            text_size = imgui.calc_text_size(self.name)
+            name = self.name if self.target is None else self.target.get_name
+            draw_list.add_text(canvas_pos.x + (self.sequence_pos_start-text_size.x)/2, 
+                               self.y_origin + (self.sequence_height-text_size.y)/2, 
+                               self.text_color, 
+                               name)
 
         for track in self.children:
             track.render(self.x_origin, self.y_origin)

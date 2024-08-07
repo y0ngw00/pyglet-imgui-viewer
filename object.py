@@ -88,7 +88,7 @@ class Object:
 class Character(Object):
     def __init__(self, name, meshes = None, joints = None, scale = [1.0,1.0,1.0], scale_link = 1.0):
         super().__init__(mesh_type=MeshType.Sphere,mesh_info={"stack":30, "slice":30, "scale":0.1})
-        self.name = name
+        self.__name = name
         self.joints = joints
         self.scale = np.array([1.0,1.0,1.0])
         self.meshes = []
@@ -139,8 +139,13 @@ class Character(Object):
         self.skinning()
         return
     
+    @property
     def get_name(self):
-        return self.name
+        return self.__name
+    
+    @get_name.setter
+    def set_name(self, name):
+        self.__name = name
         
     def get_position(self):
         # if self.root is not None:
