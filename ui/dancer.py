@@ -2,14 +2,15 @@ from fonts import Fonts
 from keyframe import KeyFrameAnimation, KeyFrame
 import imgui
 
-class DancerCircle:
+class Dancer:
     def __init__(self, character, position_scale = 1, radius = 10):
         self.target = character
         self.radius = radius
         self.position_scale = position_scale
         self.__clicked = False
         self.pose_keyframe = KeyFrameAnimation()
-        self.sync_keyframe = KeyFrameAnimation()
+        
+        self.group_keyframe = KeyFrameAnimation()
         
         self.thick = 5
         self.x = 0 
@@ -57,9 +58,9 @@ class DancerCircle:
         keyframe = KeyFrame(frame, self.get_character_pos())
         self.pose_keyframe.add_keyframe(keyframe)
         
-    def add_sync_keyframe(self, frame) -> None:
+    def add_group_keyframe(self, frame) -> None:
         keyframe = KeyFrame(frame, self.get_character_pos())
-        self.sync_keyframe.add_keyframe(keyframe)
+        self.group_keyframe.add_keyframe(keyframe)
         
     def animate(self, frame):
         if len(self.pose_keyframe.keyframes) > 0 and self.target is not None:
@@ -70,8 +71,8 @@ class DancerCircle:
         
     def render(self,draw_list, x, y, frame):
         color =  imgui.get_color_u32_rgba(1,1,1,1)
-        if len(self.sync_keyframe.keyframes) > 1:
-            left, right = self.sync_keyframe.get_nearest_keyframe(frame)
+        if len(self.group_keyframe.keyframes) > 1:
+            left, right = self.group_keyframe.get_nearest_keyframe(frame)
             if left %2 ==0 and right %2 ==1:
                 color = imgui.get_color_u32_rgba(1,0.7,0,1)                     
         if self.target.is_selected():

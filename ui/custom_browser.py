@@ -143,7 +143,7 @@ class CustomBrowser:
     def generate_motion(self):
         output_path = os.path.dirname(self.selected_audio_file)+"/" + self.selected_audio_file.split("/")[-1].split(".")[0] + "_output"
         traj = None
-        if len(self.circles) > 0:
+        circles = self.parent_window.get_dancers()
             for circle in self.circles:
                 pos_traj,vel_traj = self.generate_trajectory(circle, 300)
                 pos_traj += self.pos_list[self.pos_idx]

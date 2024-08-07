@@ -20,7 +20,7 @@ import fonts
 from enum_list import FileType
 
 import loader
-from ui import DancerCircle, KeyFrame, Sequencer, Sequence, SequenceTrack, DancerFormation, TitleBar,CustomBrowser
+from ui import Dancer, KeyFrame, Sequencer, Sequence, SequenceTrack, DancerFormation, TitleBar,CustomBrowser
 class UI:
     def __init__(self, window):
         imgui.create_context()
@@ -74,14 +74,14 @@ class UI:
         return imgui.is_any_item_active()
     
     def add_dancer(self, character)->None:
-        self.circles.append(DancerCircle(character, position_scale=0.5, radius = 25))
+        self.circles.append(Dancer(character, position_scale=0.5, radius = 25))
         self.Sequencer.add_sequence(character)
         self.scene.add_character(character)
         
     def get_character(self, idx):
         return self.scene.get_character(idx)
 
-    def get_dancer_circles(self):
+    def get_dancers(self):
         return self.circles
     
     def get_num_dancers(self):

@@ -43,7 +43,7 @@ class DancerFormation(BoxItem):
             
             # Draw a dot
             frame = self.parent_window.get_frame()
-            for circle in self.parent_window.get_dancer_circles():
+            for circle in self.parent_window.get_dancers():
                 circle.render(draw_list, self.x_origin + self.xsize_box/2, self.y_origin + self.ysize_box/2, frame)
                 
             imgui.end()
@@ -60,7 +60,7 @@ class DancerFormation(BoxItem):
     def on_key_release(self, symbol, modifiers, frame) -> None:
         if symbol == pyglet.window.key.F:
             if modifiers == pyglet.window.key.MOD_CTRL:
-                for circle in self.parent_window.get_dancer_circles():
+                for circle in self.parent_window.get_dancers():
                     circle.add_keyframe(frame)
             else:
                 if len(self.last_clicked_item) >0:
@@ -69,12 +69,12 @@ class DancerFormation(BoxItem):
                     
         if symbol == pyglet.window.key.G:
             if modifiers == pyglet.window.key.MOD_CTRL:
-                for circle in self.parent_window.get_dancer_circles():
-                    circle.add_sync_keyframe(frame)
+                for circle in self.parent_window.get_dancers():
+                    circle.add_group_keyframe(frame)
             else:
                 if len(self.last_clicked_item) >0:
                     for circle in self.last_clicked_item:
-                        circle.add_sync_keyframe(frame)
+                        circle.add_group_keyframe(frame)
         
         dx = 5 if symbol==pyglet.window.key.D else -5 if symbol==pyglet.window.key.A else 0
         dy = 5 if symbol==pyglet.window.key.S else -5 if symbol==pyglet.window.key.W else 0
@@ -83,7 +83,7 @@ class DancerFormation(BoxItem):
                 circle.translate(dx, dy)
     
     def on_mouse_release(self, x, y, button, modifier) -> None:
-        circles = self.parent_window.get_dancer_circles()
+        circles = self.parent_window.get_dancers()
         for circle in circles:
             if circle.get_is_clicked:
                 if modifier is not pyglet.window.key.MOD_SHIFT and modifier != 17:
@@ -100,7 +100,7 @@ class DancerFormation(BoxItem):
                 circle.translate(dx, -dy)
                 
     def on_mouse_press(self, x, y, button, modifier) -> None:
-        circles = self.parent_window.get_dancer_circles()
+        circles = self.parent_window.get_dancers()
         for circle in circles:
             if (x-self.x_origin-circle.x)**2 + (y - self.y_origin-circle.y)**2 < circle.radius**2:
                 circle.set_is_clicked = True
@@ -109,7 +109,7 @@ class DancerFormation(BoxItem):
                 
     def update_ui(self, is_animate, frame) -> None:
         if is_animate:
-            circles = self.parent_window.get_dancer_circles()
+            circles = self.parent_window.get_dancers()
             for circle in circles:
                 circle.animate(frame)
     

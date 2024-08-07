@@ -49,11 +49,11 @@ class KeyframeViewer:
 
                 canvas_y += 30
                 draw_list.add_rect(canvas_x, canvas_y, canvas_x+300, canvas_y+20, imgui.get_color_u32_rgba(1,1,1,1), rounding=5, thickness=3)
-                for idx, keyframe in enumerate(circle.sync_keyframe.keyframes):
+                for idx, keyframe in enumerate(circle.group_keyframe.keyframes):
                     x = canvas_x +  self.xsize_box * keyframe.frame / self.max_frame
                     
                     if idx > 0 and idx %2 ==1:
-                        prev_x = canvas_x +  self.xsize_box * circle.sync_keyframe.keyframes[idx-1].frame / self.max_frame
+                        prev_x = canvas_x +  self.xsize_box * circle.group_keyframe.keyframes[idx-1].frame / self.max_frame
                         draw_list.add_rect_filled(prev_x, canvas_y, x, canvas_y+20, imgui.get_color_u32_rgba(1, 0.6, 0, 1))
                     else:
                         draw_list.add_line(x, canvas_y, x, canvas_y+20, imgui.get_color_u32_rgba(1, 0.6, 0, 1))
