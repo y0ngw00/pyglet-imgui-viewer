@@ -17,7 +17,7 @@ import pickle as pkl
 from test import synthesize
 from fonts import Fonts
 from enum_list import FileType
-from dancer_custom_condition import CustomCondition
+from group_status import GroupingStatus
 
 class CustomBrowser:
     def __init__(self, parent_window, x_pos, y_pos, x_size, y_size, scene):
@@ -36,7 +36,7 @@ class CustomBrowser:
         self.selected_file_idx = 0
         self.motion_library_dir = "./data/mixamo_library/"
         self.character_path = "X_Bot.fbx"
-        self.custom_condition_viewer = CustomCondition()
+        self.grouping_status = GroupingStatus(parent_window)
         
         files = glob.glob(self.motion_library_dir + '*.fbx')
         self.motion_files = [os.path.splitext(os.path.basename(file))[0] for file in files]
@@ -55,16 +55,16 @@ class CustomBrowser:
         # clicked, value = imgui.input_text("Text Input", "")
         if imgui.begin_tab_bar("Tab Browser", imgui.TAB_BAR_FITTING_POLICY_DEFAULT):
             imgui.set_next_item_width(100)
+            if imgui.begin_tab_item("Grouping Status").selected:
+                self.grouping_status.render()
+                imgui.end_tab_item()
+                
             if imgui.begin_tab_item("Motion Library").selected:
                 self.render_motion_library()
                 imgui.end_tab_item()
 
             if imgui.begin_tab_item("Model Connector").selected:
                 self.render_model_connector()
-                imgui.end_tab_item()
-
-            if imgui.begin_tab_item("Custom Condition").selected:
-                self.custom_condition_viewer.render()
                 imgui.end_tab_item()
                 
             imgui.end_tab_bar()
