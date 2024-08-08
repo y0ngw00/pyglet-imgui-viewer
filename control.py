@@ -38,6 +38,7 @@ class Control:
             pyglet.window.key.ESCAPE: self.window.quit,
             pyglet.window.key.SPACE: self.window.play,
             pyglet.window.key.R: self.window.reset,
+            pyglet.window.key.O: self.window.show,
         }
         if symbol in key_interact:
             key_interact[symbol]()

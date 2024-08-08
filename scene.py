@@ -69,6 +69,13 @@ class Scene:
         ## Just for debugging. Character reset.
         # self.characters = []
         return
+    
+    def show(self, is_show):
+        for character in self.characters:
+            character.show(is_show)
+
+        for object in self.objects:
+            object.show(is_show)
 
     def animate(self, frame):
         for character in self.characters:

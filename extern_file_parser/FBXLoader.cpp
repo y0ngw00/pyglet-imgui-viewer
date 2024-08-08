@@ -234,7 +234,6 @@ loadMesh(FbxNode* _pNode)
         // force to triangulate quad meshes (limitation of the current implementation)
         if (lMesh->GetPolygonSize(i) == 4)
         {
-            std::cout<<"This is Quad"<<"\n";
             unsigned int index_four = polygonindex[3];
             unsigned int index_two = polygonindex[1];
             polygonindex.insert(polygonindex.begin()+2, index_two);

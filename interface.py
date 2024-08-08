@@ -157,9 +157,6 @@ class UI:
     def on_key_release(self, symbol, modifiers) -> None:
         self.DancerFormation.on_key_release(symbol, modifiers,self.window.frame)
         self.Sequencer.on_key_release(symbol, modifiers,self.window.frame)
-        
-        if symbol == pyglet.window.key.O:
-            self.window.show_scene = not self.window.show_scene
 
     def on_mouse_press(self, x, y, button, modifier) -> None:
         new_y = self.window.height - y

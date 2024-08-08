@@ -86,7 +86,11 @@ class RenderWindow(pyglet.window.Window):
             self.audio_manager.play()
         else:
             self.audio_manager.pause()
-        
+            
+    def show(self) -> None:
+        self.show_scene = not self.show_scene
+        self.scene.show(self.show_scene)
+         
     def setup(self) -> None:
         self.set_minimum_size(width = 400, height = 300)
         self.set_mouse_visible(True)

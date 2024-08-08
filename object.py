@@ -35,7 +35,12 @@ class Object:
         self.texture = None
         
         self.selected = False
+        
+        self.is_show = True
 
+    def show(self, is_show):
+        self.is_show = is_show
+        
     def set_parent(self, parent):
         self.parent = parent
         parent.add_child(self)
@@ -133,10 +138,10 @@ class Character(Object):
         # if self.root is not None:
         #     self.root.transform[3,0:3] = pos
         # else:
-        self.transform[3,0:3] = pos
-    
-        self.update_world_transform()
-        self.skinning()
+        if  np.allclose(pos, self.transform[3,0:3], atol=0.001) is not True:
+            self.transform[3,0:3] = pos
+            self.update_world_transform()
+            self.skinning()
         return
     
     @property
@@ -202,6 +207,9 @@ class Character(Object):
         return links
     
     def skinning(self):
+        if self.is_show is not True:
+            return
+        
         transform = np.array([j.get_init_transform_inverse() @ j.get_world_transform() for j in self.joints], dtype=np.float32)
         self.joint_bind_matrices = torch.from_numpy(transform).to(self.device) 
         for m in self.meshes:
