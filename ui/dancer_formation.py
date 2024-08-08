@@ -57,6 +57,18 @@ class DancerFormation(BoxItem):
     def get_frame(self):
         return self.parent_window.get_frame()
     
+    def select(self, selected, modifier = None):
+        dancers = self.parent_window.get_dancers()
+        if modifier is imgui.KEY_MOD_SHIFT: # Multi-select
+            if hasattr(selected, 'set_is_clicked'):
+                selected.set_is_clicked = True
+
+        else: # Single select
+            for dancer in dancers:
+                dancer.set_is_clicked = False
+            if hasattr(selected, 'set_is_clicked'):
+                selected.set_is_clicked = True
+
     def on_key_release(self, symbol, modifiers, frame) -> None:
         dancers = self.parent_window.get_dancers()
         
@@ -67,7 +79,7 @@ class DancerFormation(BoxItem):
         #         dancer.translate(dx, dy)
 
     def on_mouse_release(self, x, y, button, modifier) -> None:
-        dancers = self.parent_window.get_dancers()
+        pass
             
     def on_mouse_drag(self,x, y, dx, dy):
         if self.is_picked(x, y):
@@ -75,14 +87,19 @@ class DancerFormation(BoxItem):
             [dancer.translate(dx, -dy) for dancer in dancers if dancer.is_selected()]
                 
     def on_mouse_press(self, x, y, button, modifier) -> None:
+        selected = False
         if self.is_picked(x, y):
             dancers = self.parent_window.get_dancers()
             for dancer in dancers:
                 stage_x = x - (self.x_origin + self.xsize_box/2)
                 stage_y = y - (self.y_origin + self.ysize_box/2),
                 if dancer.is_picked(stage_x, stage_y):
-                    dancer.set_is_clicked = True
-                else:
+                    self.select(dancer, modifier)
+                    selected = True
+                    break
+                
+            if not selected:
+                for dancer in dancers:
                     dancer.set_is_clicked = False
                     
     def update_ui(self, is_animate, frame) -> None:

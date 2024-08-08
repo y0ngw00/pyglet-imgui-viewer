@@ -84,7 +84,7 @@ class Sequence(BoxItem):
         
     def delete_motion_track(self):
         for idx, track in enumerate(self.children):
-            if track.picked is True:
+            if track.selected is True:
                 self.target.remove_animation(idx)
                 self.children.remove(track)
                 break
@@ -96,14 +96,14 @@ class Sequence(BoxItem):
             
     def get_track_speed(self):
         for idx, track in enumerate(self.children):
-            if track.picked is True:
+            if track.selected is True:
                 return track.track_speed
             
         return -1
                 
     def set_track_speed(self, speed):
         for idx, track in enumerate(self.children):
-            if track.picked is True:
+            if track.selected is True:
                 track.track_speed = speed
                 self.target.set_animation_speed(idx, speed)
                         
@@ -148,7 +148,7 @@ class SequenceTrack(BoxItem):
         self.track_color = imgui.get_color_u32_rgba(1,1,0.7,1)
         self.text_color = imgui.get_color_u32_rgba(0,0,0,1)
         
-        self.picked = False
+        self.selected = False
         self.boundary_picked= None
         self.translated = 0
     
@@ -162,7 +162,7 @@ class SequenceTrack(BoxItem):
         draw_list = imgui.get_window_draw_list()
         self.draw_box_filled(draw_list, color = self.track_color, rounding=4)
         
-        if self.picked is True:
+        if self.selected is True:
             self.draw_box(draw_list, color = imgui.get_color_u32_rgba(1,0,0,1), rounding=4, thickness=2)
         draw_list.add_text(self.x_origin+self.layout_padding[0], self.y_origin+self.layout_padding[1], self.text_color,self.name)
             
@@ -171,9 +171,9 @@ class SequenceTrack(BoxItem):
         
     def on_mouse_release(self, x, y, button, modifier):
         if self.is_picked(x,y):
-            self.picked = True
+            self.selected = True
         else:
-            self.picked = False
+            self.selected = False
             
         if self.boundary_picked is not None:
             self.parent.update_animation_layer(self, self.frame_start, self.frame_end)
@@ -184,7 +184,7 @@ class SequenceTrack(BoxItem):
             self.translated = 0
             
     def on_mouse_drag(self, x, y, dx, dy):
-        if self.picked is True:
+        if self.selected is True:
             if self.boundary_picked == Boundary.Left:
                 self.frame_start += dx
             elif self.boundary_picked == Boundary.Right:

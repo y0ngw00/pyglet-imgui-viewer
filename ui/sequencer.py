@@ -25,7 +25,7 @@ class Sequencer(BoxItem):
         self.y_size = y_size
         
         self.show_popup = False
-        self.picked = None
+        self.selected_elements = []
         self.frame_bar_picked = False
         self.highlighted_color = imgui.get_color_u32_rgba(1,0.7,0,1)
         self.popup_menu = SequencerMenu(self)
@@ -43,8 +43,6 @@ class Sequencer(BoxItem):
         imgui.set_next_window_position(x_pos, y_pos, imgui.ALWAYS)
         imgui.set_next_window_size(x_size, y_size, imgui.ALWAYS)
 
-        window_flags = 0
-        # if self.picked is not None:
         window_flags = imgui.WINDOW_ALWAYS_HORIZONTAL_SCROLLBAR | imgui.WINDOW_ALWAYS_VERTICAL_SCROLLBAR
         if imgui.begin("Sequencer", True, flags = window_flags):           
             draw_list = imgui.get_window_draw_list()
@@ -79,8 +77,6 @@ class Sequencer(BoxItem):
             # Draw a play line
             frame = self.parent_window.get_frame()
             frame_bar_color = imgui.get_color_u32_rgba(1,0,0,1)
-            if self.picked == "frame bar":
-                frame_bar_color = self.highlighted_color
             draw_list.add_line(self.x_origin+self.sequence_pos_start+frame, self.y_origin, self.x_origin+self.sequence_pos_start+frame, self.y_origin+400, imgui.get_color_u32_rgba(1,0,0,1), 2)
             draw_list.add_triangle_filled(self.x_origin+self.sequence_pos_start+frame, self.y_origin,
                                           self.x_origin+self.sequence_pos_start+frame-10, self.y_origin-10,
@@ -98,33 +94,46 @@ class Sequencer(BoxItem):
         self.motion_sequences.append(seq)
         self.select(seq)
         
-    def select(self, selected):
-        if selected is None and hasattr(self.picked, 'target'):
-            self.picked.target.select(False)
-        elif hasattr(selected, 'target'): # If there is already a picked item
-            selected.target.select(True)
-            if self.picked is not None and self.picked != selected:
-                self.picked.target.select(False)
-            
-        self.picked = selected
+    def select(self, selected, modifier = None):
+        if selected != "frame bar" and modifier is imgui.KEY_MOD_SHIFT: # Multi-select
+            if selected in self.selected_elements:
+                self.selected_elements.remove(selected)
+                if hasattr(selected, 'target'):
+                    selected.target.select(False)
+            else:
+                self.selected_elements.append(selected)
+                if hasattr(selected, 'target'):
+                    selected.target.select(True) 
+        else: # Single select
+            for elem in self.selected_elements:
+                if hasattr(elem, 'target'):
+                    elem.target.select(False)
+            if hasattr(selected, 'target'):
+                    selected.target.select(True)        
+                
+            self.selected_elements = [selected]
+
         return
 
     def open_motion_library(self):
         pass
     
     def delete_motion(self):
-        if self.picked is not None and isinstance(self.picked, Sequence):
-            self.picked.delete_motion_track()
+        for elem in self.selected_elements:
+            if isinstance(elem, Sequence):
+                elem.delete_motion_track()
         self.show_popup = False
     
     def insert_motion(self, file_path):
-        if self.picked is not None and isinstance(self.picked, Sequence):
-            self.picked.insert_motion_track(file_path, self.parent_window.get_frame())
+        for elem in self.selected_elements:
+            if isinstance(elem, Sequence):
+                elem.insert_motion_track(file_path, self.parent_window.get_frame())
         self.show_popup = False
         
     def clear_all_track(self):
-        if self.picked is not None and isinstance(self.picked, Sequence):
-            self.picked.clear_all_track()
+        for elem in self.selected_elements:
+            if isinstance(elem, Sequence):
+                elem.clear_all_track()
         self.show_popup = False
         
     def insert_formation_keyframe(self):
@@ -183,19 +192,12 @@ class Sequencer(BoxItem):
             
     def on_mouse_press(self, x, y, button, modifier) -> None:
         if self.show_popup:
-            return
-        
+            return        
         if self.is_picked(x,y):
-            # if self.formation_sequence.is_picked(x,y):
-            #     self.formation_sequence.on_mouse_press(x,y,button,modifier)
-            #     self.select(self.formation_sequence)
-            # elif self.group_sequence.is_picked(x,y):
-            #     self.group_sequence.on_mouse_press(x,y,button,modifier)
-            #     self.select(self.group_sequence)
             for seq in self.motion_sequences:
                 if seq.is_picked(x,y):
                     seq.on_mouse_press(x,y,button,modifier)
-                    self.select(seq)
+                    self.select(seq,modifier)
                     break
             
     def on_mouse_drag(self, x, y, dx, dy):
