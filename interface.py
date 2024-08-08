@@ -142,6 +142,10 @@ class UI:
         minutes, seconds = divmod(total_seconds, 60)
         seconds, milliseconds = divmod(seconds, 1)
         return f"{int(minutes):02d}:{int(seconds):02d}:{int(milliseconds*1000):03d}"
+
+    def get_fps(self):
+        fps = self.window.fps
+        return fps
     
     def set_frame(self, new_frame):
         self.window.set_frame = new_frame

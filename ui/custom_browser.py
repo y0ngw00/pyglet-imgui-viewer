@@ -108,6 +108,7 @@ class CustomBrowser:
         imgui.begin_child("Child Window3", window_size[0] - 30, 400/1440*y_scale, border=True)        
         imgui.text("Current frame: {}".format(self.parent_window.get_frame()))
         imgui.text("Current time: {}".format(self.parent_window.get_play_time()))
+        imgui.text("Current FPS: {:02f}".format(self.parent_window.get_fps()))
         imgui.end_child()
 
         imgui.end()

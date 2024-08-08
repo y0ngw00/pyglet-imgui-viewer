@@ -58,6 +58,7 @@ class RenderWindow(pyglet.window.Window):
         self.frame = 0
         self.max_frame = 300
         self.framerate = 30.0
+        self.fps = 1.0/self.framerate
         self.animate = False
         self.show_scene = True
         self.show_ui = True
@@ -100,6 +101,7 @@ class RenderWindow(pyglet.window.Window):
             self.GUI.render()
 
     def update(self,dt) -> None:
+        self.fps = 1.0/dt
         # 1. Create a view matrix
         if self.animate is True:
             self.frame += 1
@@ -183,7 +185,7 @@ class RenderWindow(pyglet.window.Window):
             aspect = width/height, z_near=self.z_near, z_far=self.z_far, fov = self.__fov)
         return pyglet.event.EVENT_HANDLED
          
-    def run(self):
+    def run(self):                
         pyglet.clock.schedule_interval(self.update, 1/self.framerate)
         pyglet.app.run()
 
