@@ -47,7 +47,7 @@ class Sequencer(BoxItem):
         if imgui.begin("Sequencer", True, flags = window_flags):           
             draw_list = imgui.get_window_draw_list()
             canvas_pos = imgui.get_window_position()  # Get the position of the canvas window
-            layout_padding = [10,55]
+            layout_padding = [10,65]
             
             self.update_position(x = canvas_pos.x+layout_padding[0], 
                                     y = canvas_pos.y+layout_padding[1],
@@ -70,6 +70,8 @@ class Sequencer(BoxItem):
                         
                 imgui.end_tab_bar()
             
+            # Time line
+            self.draw_time_line(draw_list, -15)
                 
             # Scroll bar
             imgui.set_cursor_pos((canvas_pos.x, self.sequence_height * len(self.motion_sequences) -  imgui.get_window_height()))
@@ -88,6 +90,28 @@ class Sequencer(BoxItem):
                 
             imgui.end()
         return
+    
+    def draw_time_line(self, draw_list, offset):
+        framerate = self.parent_window.get_framerate()
+        short_line = 10
+        long_line = 15
+        draw_list.add_line(self.x_origin+self.sequence_pos_start, 
+                                self.y_origin + offset + 25, 
+                                self.x_origin+self.sequence_pos_start+3000, 
+                                self.y_origin + offset + 25, imgui.get_color_u32_rgba(1,1,1,1), 1)
+        for sec in range(0, 300):
+            draw_list.add_text(self.x_origin+self.sequence_pos_start+sec*framerate, self.y_origin + offset, imgui.get_color_u32_rgba(1,1,1,1), "{}".format(sec))
+            if sec % 5 == 0:
+                draw_list.add_line(self.x_origin+self.sequence_pos_start+sec*framerate, 
+                                self.y_origin + offset + 25, 
+                                self.x_origin+self.sequence_pos_start+sec*framerate, 
+                                self.y_origin + offset + short_line, imgui.get_color_u32_rgba(1,1,1,1), 1)
+            else :
+                draw_list.add_line(self.x_origin+self.sequence_pos_start+sec*framerate, 
+                                self.y_origin + offset + 25, 
+                                self.x_origin+self.sequence_pos_start+sec*framerate, 
+                                self.y_origin + offset + long_line, imgui.get_color_u32_rgba(1,1,1,1), 1)
+
     
     def add_sequence(self,character):
         seq = Sequence(character.get_name, character, self.sequence_pos_start, self.sequence_height)

@@ -15,7 +15,7 @@ class Sequence(BoxItem):
         self.children=[]
 
         self.padding_x = 0
-        self.padding_y = 45
+        self.padding_y = 70
         self.sequence_pos_start = sequence_pos_start
         self.sequence_height = sequence_height - self.padding_y
         
