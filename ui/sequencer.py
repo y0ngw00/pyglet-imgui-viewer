@@ -143,21 +143,21 @@ class Sequencer(BoxItem):
         pass
     
     def delete_motion(self):
-        for elem in self.selected_elements:
-            if isinstance(elem, Sequence):
-                elem.delete_motion_track()
+        for seq in self.motion_sequences:
+            if hasattr(seq, 'target') and seq.target.is_selected():
+                seq.delete_motion_track()
         self.show_popup = False
     
     def insert_motion(self, file_path):
-        for elem in self.selected_elements:
-            if isinstance(elem, Sequence):
-                elem.insert_motion_track(file_path, self.parent_window.get_frame())
+        for seq in self.motion_sequences:
+            if hasattr(seq, 'target') and seq.target.is_selected():
+                seq.insert_motion_track(file_path, self.parent_window.get_frame())
         self.show_popup = False
         
     def clear_all_track(self):
-        for elem in self.selected_elements:
-            if isinstance(elem, Sequence):
-                elem.clear_all_track()
+        for seq in self.motion_sequences:
+            if hasattr(seq, 'target') and seq.target.is_selected():
+                seq.clear_all_track()
         self.show_popup = False
         
     def insert_formation_keyframe(self):
@@ -198,7 +198,6 @@ class Sequencer(BoxItem):
                 dancer.clear_group_keyframe()
                 
     def on_mouse_release(self, x, y, button, modifier):
-        
         self.show_popup = False
         if self.is_picked(x,y):                
             if button == 4:

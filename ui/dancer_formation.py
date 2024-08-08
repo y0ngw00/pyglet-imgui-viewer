@@ -68,7 +68,7 @@ class DancerFormation(BoxItem):
                 dancer.set_is_clicked = False
             if hasattr(selected, 'set_is_clicked'):
                 selected.set_is_clicked = True
-
+                
     def on_key_release(self, symbol, modifiers, frame) -> None:
         dancers = self.parent_window.get_dancers()
         
