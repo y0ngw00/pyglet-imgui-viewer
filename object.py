@@ -245,6 +245,10 @@ class Character(Object):
             anim = joint.anim_layers[idx]
             joint.anim_layers.remove(anim)
             
+    def clear_all_animation(self):
+        for joint in self.joints:
+            joint.anim_layers = []
+            
     def set_animation_speed(self, idx, speed):
         for joint in self.joints:
             anim = joint.anim_layers[idx]

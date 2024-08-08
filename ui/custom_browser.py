@@ -88,9 +88,9 @@ class CustomBrowser:
                 
                 with imgui.font(self.button_font_bold):
                     if imgui.button("Save Current Formation", width = window_size[0] - 50):
-                        pass                     
+                        self.save_current_formation()                     
                     if imgui.button("Save Current Grouping", width = window_size[0] - 50):
-                        pass 
+                        self.save_current_grouping()
                 imgui.end_tab_item()
                 
             if imgui.begin_tab_item("Motion Library").selected:
@@ -105,12 +105,20 @@ class CustomBrowser:
         imgui.end_child()
         
         # Begin current status viewer
-        imgui.begin_child("Child Window3", window_size[0] - 30, 480/1440*y_scale, border=True)        
+        imgui.begin_child("Child Window3", window_size[0] - 30, 400/1440*y_scale, border=True)        
         imgui.text("Current frame: {}".format(self.parent_window.get_frame()))
         imgui.text("Current time: {}".format(self.parent_window.get_play_time()))
         imgui.end_child()
 
         imgui.end()
+        
+    def save_current_formation(self):
+        self.parent_window.get_sequencer().insert_formation_keyframe()
+        return
+        
+    def save_current_grouping(self):
+        self.parent_window.get_sequencer().insert_group_keyframe()
+        return
 
     def render_motion_library(self):               
         # if imgui.tree_node("Checkpoint"):

@@ -40,14 +40,15 @@ class UI:
         # Window variables
         self.pos_idx=0
         self.pos_idx2=0
-        self.pos_list = [[0,0,0], [100,0,-50], [-100,0,-50], [200,0,-100],[-200,0,-100],[0,0,-100] ]
+        self.pos_list = [[0,0,0], [100,0,-50], [-100,0,-50], [200,0,0],[-200,0,0],[0,0,-100],
+                         [-200,0,-100], [200,0,-100], [300,0,-50], [-300,0,50],[400,0,0],[-400,0,0]]
 
         self.dancers = []                   
 
         self.titlebar = TitleBar(self)
 
-        self.DancerFormation = DancerFormation(self,660/2560, 0/1440, 1920/2560, 960/1440)
-        self.Sequencer = Sequencer(self, 660/2560, 960/1440, 1920/2560, 480/1440)
+        self.DancerFormation = DancerFormation(self,660/2560, 0/1440, 1900/2560, 960/1440)
+        self.Sequencer = Sequencer(self, 660/2560, 960/1440, 1900/2560, 480/1440)
         self.custom_browser = CustomBrowser(self,0/2560,0/1440,660/2560,1440/1440, self.scene)
                         
         self.impl.refresh_font_texture()
@@ -72,8 +73,11 @@ class UI:
     def is_ui_active(self):
         return imgui.is_any_item_active()
     
+    def get_sequencer(self):
+        return self.Sequencer
+    
     def add_dancer(self, character)->None:
-        self.dancers.append(Dancer(character, position_scale=0.5, radius = 25))
+        self.dancers.append(Dancer(character, position_scale=1.0, radius = 30))
         self.Sequencer.add_sequence(character)
         self.scene.add_character(character)
         
@@ -93,6 +97,7 @@ class UI:
     
     def initialize_audio(self, file_path):
         self.window.initialize_audio(file_path)
+        self.Sequencer.insert_music_sequence()
     
     def insert_motion(self, file_path):
         self.Sequencer.insert_motion(file_path)

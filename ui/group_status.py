@@ -15,7 +15,7 @@ class GroupingStatus:
         self.pairs = np.zeros([0,4], dtype = np.int32)        
         
     def render(self):
-        if imgui.begin_table("Dancer pairing", 4):  
+        if imgui.begin_table("Dancer pairing", 2):  
             imgui.table_next_row()
             imgui.table_next_column()
             imgui.push_item_width(200)

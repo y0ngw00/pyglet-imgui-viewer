@@ -34,6 +34,8 @@ class SequencerMenu:
                 if clicked and speed_changed != speed and speed_changed > 0:
                     self.parent_window.set_track_speed(speed_changed)
                 imgui.end_menu()
+            if imgui.menu_item("Clear All")[0]:
+                self.parent_window.clear_all_track()
 
             imgui.end_popup()
 

@@ -1,8 +1,18 @@
 
 import copy
+
+class InterpolationType:
+    """
+    Represents the type of interpolation for keyframe animation.
+    """
+    LINEAR = 0
+    STEP = 1
+    CUBIC = 2
+    BEZIER = 3
 class KeyFrameAnimation:
-    def __init__(self):
+    def __init__(self, interpolation_type=InterpolationType.LINEAR):
         self.keyframes = []
+        self.interpolation_type = interpolation_type
 
     def add_keyframe(self, keyframe):
         if len(self.keyframes) == 0:
@@ -19,6 +29,9 @@ class KeyFrameAnimation:
         
         self.keyframes.append(keyframe)
         return
+    
+    def clear_keyframe(self):
+        self.keyframes = []
     
     def get_nearest_keyframe(self, frame):
         if frame <= self.keyframes[0].frame:
@@ -40,16 +53,23 @@ class KeyFrameAnimation:
         elif frame >= self.keyframes[-1].frame:
             position = self.keyframes[-1].position
         else:
-            # Find the two keyframes that the frame is between
+             # Find the two keyframes that the frame is between
             for i in range(len(self.keyframes) - 1):
                 if self.keyframes[i].frame <= frame < self.keyframes[i + 1].frame:
                     break
             else:
                 raise ValueError("Frame is not valid")
 
-            # Interpolate the position
-            t = (frame - self.keyframes[i].frame) / (self.keyframes[i + 1].frame - self.keyframes[i].frame)
-            position = [self_pos * (1 - t) + other_pos * t for self_pos, other_pos in zip(self.keyframes[i].position, self.keyframes[i + 1].position)]
+            match self.interpolation_type:
+                case InterpolationType.LINEAR:
+                    # Interpolate the position
+                    t = (frame - self.keyframes[i].frame) / (self.keyframes[i + 1].frame - self.keyframes[i].frame)
+                    position = [self_pos * (1 - t) + other_pos * t for self_pos, other_pos in zip(self.keyframes[i].position, self.keyframes[i + 1].position)]
+
+                case InterpolationType.STEP:
+                    position = self.keyframes[i].position
+                case _:
+                    raise ValueError("Interpolation type not supported")
 
         return position
 

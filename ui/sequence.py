@@ -27,7 +27,7 @@ class Sequence(BoxItem):
             for anim_layer in target.joints[0].anim_layers:
                 frame_start = anim_layer.frame_original_region_start
                 frame_end = anim_layer.frame_original_region_end
-                self.children.append(SequenceTrack(self, target.name, frame_start, frame_end, height = self.sequence_height))
+                self.children.append(SequenceTrack(self, target.name, frame_start, frame_end))
     
     def render(self, idx):
         draw_list = imgui.get_window_draw_list()
@@ -65,7 +65,22 @@ class Sequence(BoxItem):
                                            name = name, 
                                            frame_start = start_frame,
                                            frame_end = start_frame + len(joints[0].anim_layers[-1].rotations) -1,
-                                           height = self.ysize_box)) 
+                                           )) 
+        
+    def insert_key_frame(self, frame):
+        self.children.append(SequenceTrack(parent = self, 
+                                           frame_start = frame,
+                                           frame_end = frame + 1,
+                                           )) 
+        
+    def fill_sequence(self, start=0, end=None):
+        if end is None:
+            end = self.xsize_box
+        self.children.append(SequenceTrack(parent = self, 
+                                           name = "Music",
+                                           frame_start = start,
+                                           frame_end = end,
+                                           )) 
         
     def delete_motion_track(self):
         for idx, track in enumerate(self.children):
@@ -73,8 +88,12 @@ class Sequence(BoxItem):
                 self.target.remove_animation(idx)
                 self.children.remove(track)
                 break
+    
+    def clear_all_track(self):
+        self.children.clear()
+        if self.target is not None:
+            self.target.clear_all_animation()
             
-        
     def get_track_speed(self):
         for idx, track in enumerate(self.children):
             if track.picked is True:
@@ -115,7 +134,7 @@ class Sequence(BoxItem):
     
 
 class SequenceTrack(BoxItem):
-    def __init__(self, parent, name, frame_start, frame_end, height, frame_speed = 1.0):
+    def __init__(self, parent, name="", frame_start=0, frame_end=0, frame_speed = 1.0):
         super().__init__()
         self.parent = parent
         self.name = name
@@ -123,7 +142,7 @@ class SequenceTrack(BoxItem):
         self.frame_end = frame_end
         self.frame_speed = frame_speed
         self.track_speed = 1.0
-        self.height = height
+        self.height = parent.ysize_box
         self.layout_padding = [10,10]
         
         self.track_color = imgui.get_color_u32_rgba(1,1,0.7,1)

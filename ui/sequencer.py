@@ -4,6 +4,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 
 import imgui
 import imgui.core
+import pyglet
 
 from fonts import Fonts
 from sequencer_menu import SequencerMenu
@@ -29,6 +30,7 @@ class Sequencer(BoxItem):
         self.highlighted_color = imgui.get_color_u32_rgba(1,0.7,0,1)
         self.popup_menu = SequencerMenu(self)
         
+        self.music_sequence = Sequence("Music", None, self.sequence_pos_start, self.sequence_height)
         self.formation_sequence = Sequence("Formation", None, self.sequence_pos_start, self.sequence_height)
         self.group_sequence =  Sequence("Grouping", None, self.sequence_pos_start, self.sequence_height)
         
@@ -47,7 +49,7 @@ class Sequencer(BoxItem):
         if imgui.begin("Sequencer", True, flags = window_flags):           
             draw_list = imgui.get_window_draw_list()
             canvas_pos = imgui.get_window_position()  # Get the position of the canvas window
-            layout_padding = [10,45]
+            layout_padding = [10,55]
             
             self.update_position(x = canvas_pos.x+layout_padding[0], 
                                     y = canvas_pos.y+layout_padding[1],
@@ -58,8 +60,9 @@ class Sequencer(BoxItem):
             if imgui.begin_tab_bar("Sequncer Tab", imgui.TAB_BAR_FITTING_POLICY_DEFAULT):
                 imgui.set_next_item_width(100)
                 if imgui.begin_tab_item("Grouping&Formation").selected:
-                    self.formation_sequence.render(0)
-                    self.group_sequence.render(1)
+                    self.music_sequence.render(0)
+                    self.formation_sequence.render(1)
+                    self.group_sequence.render(2)
                     imgui.end_tab_item()
 
                 if imgui.begin_tab_item("Motion Sequence").selected:
@@ -118,6 +121,24 @@ class Sequencer(BoxItem):
         if self.picked is not None and isinstance(self.picked, Sequence):
             self.picked.insert_motion_track(file_path, self.parent_window.get_frame())
         self.show_popup = False
+        
+    def clear_all_track(self):
+        if self.picked is not None and isinstance(self.picked, Sequence):
+            self.picked.clear_all_track()
+        self.show_popup = False
+        
+    def insert_formation_keyframe(self):
+        self.formation_sequence.insert_key_frame(self.parent_window.get_frame())
+        for dancer in self.parent_window.get_dancers():
+            dancer.add_root_keyframe(self.parent_window.get_frame())
+    
+    def insert_group_keyframe(self):
+        self.group_sequence.insert_key_frame(self.parent_window.get_frame())
+        for dancer in self.parent_window.get_dancers():
+            dancer.add_group_keyframe(self.parent_window.get_frame())
+            
+    def insert_music_sequence(self):
+        self.music_sequence.fill_sequence()
     
     def get_track_speed(self):
         if self.picked is not None and isinstance(self.picked, Sequence):
@@ -135,6 +156,14 @@ class Sequencer(BoxItem):
                 return True
         return False
     
+    def on_key_release(self, symbol, modifiers, frame):
+        if symbol==pyglet.window.key.P:
+            self.formation_sequence.clear_all_track()
+            self.group_sequence.clear_all_track()
+            for dancer in self.parent_window.get_dancers():
+                dancer.clear_root_keyframe()
+                dancer.clear_group_keyframe()
+                
     def on_mouse_release(self, x, y, button, modifier):
         
         self.show_popup = False
@@ -157,6 +186,12 @@ class Sequencer(BoxItem):
             return
         
         if self.is_picked(x,y):
+            # if self.formation_sequence.is_picked(x,y):
+            #     self.formation_sequence.on_mouse_press(x,y,button,modifier)
+            #     self.select(self.formation_sequence)
+            # elif self.group_sequence.is_picked(x,y):
+            #     self.group_sequence.on_mouse_press(x,y,button,modifier)
+            #     self.select(self.group_sequence)
             for seq in self.motion_sequences:
                 if seq.is_picked(x,y):
                     seq.on_mouse_press(x,y,button,modifier)

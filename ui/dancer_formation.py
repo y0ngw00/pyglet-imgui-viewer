@@ -59,31 +59,12 @@ class DancerFormation(BoxItem):
     
     def on_key_release(self, symbol, modifiers, frame) -> None:
         dancers = self.parent_window.get_dancers()
-        if symbol == pyglet.window.key.F:
-            pass
-            # if modifiers == pyglet.window.key.MOD_CTRL:
-            #     for dancer in self.parent_window.get_dancers():
-            #         dancer.add_keyframe(frame)
-            # else:
-            #     dancers = self.parent_window.get_dancers()
-            #     for dancer in self.dancers:
-            #         dancer.add_keyframe(frame)
-                
-        if symbol == pyglet.window.key.G:
-            pass
-            # if modifiers == pyglet.window.key.MOD_CTRL:
-            #     for dancer in self.parent_window.get_dancers():
-            #         dancer.add_group_keyframe(frame)
-            # else:
-            #     if len(self.last_clicked_item) >0:
-            #         for dancer in self.last_clicked_item:
-            #             dancer.add_group_keyframe(frame)
         
-        dx = 5 if symbol==pyglet.window.key.D else -5 if symbol==pyglet.window.key.A else 0
-        dy = 5 if symbol==pyglet.window.key.S else -5 if symbol==pyglet.window.key.W else 0
-        for dancer in dancers:
-            if dancer.is_selected():
-                dancer.translate(dx, dy)
+        # dx = 5 if symbol==pyglet.window.key.D else -5 if symbol==pyglet.window.key.A else 0
+        # dy = 5 if symbol==pyglet.window.key.S else -5 if symbol==pyglet.window.key.W else 0
+        # for dancer in dancers:
+        #     if dancer.is_selected():
+        #         dancer.translate(dx, dy)
 
     def on_mouse_release(self, x, y, button, modifier) -> None:
         dancers = self.parent_window.get_dancers()
