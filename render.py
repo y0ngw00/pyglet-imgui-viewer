@@ -101,7 +101,8 @@ class RenderWindow(pyglet.window.Window):
 
     def update(self,dt) -> None:
         # 1. Create a view matrix
-        
+        if self.animate is True:
+            self.frame += 1
         if self.show_scene is True:
             self.__view_mat = Mat4.look_at(
                 self.__cam_eye, target=self.__cam_target, up=self.__cam_vup)
@@ -116,7 +117,6 @@ class RenderWindow(pyglet.window.Window):
             view_proj = self.proj_mat @ self.__view_mat
 
             if self.animate is True:
-                self.frame += 1
                 self.scene.animate(self.frame)
             self.scene.update()
             self.update_shape()
