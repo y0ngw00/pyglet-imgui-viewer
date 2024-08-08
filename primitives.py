@@ -106,8 +106,8 @@ class CustomMesh(Mesh):
             
         if "skin_data" in mesh_info:
             skin_data = mesh_info["skin_data"]
-            self.skin_joints = torch.zeros((len(skin_data), 4), dtype=torch.int32, device = self.device)
-            self.skin_weights = torch.zeros((len(skin_data), 4), dtype=torch.float32, device= self.device)
+            self.skin_joints = torch.zeros((len(skin_data), 10), dtype=torch.int32, device = self.device)
+            self.skin_weights = torch.zeros((len(skin_data), 10), dtype=torch.float32, device= self.device)
             for idx,data in enumerate(skin_data):
                 num_joint = len(data.skin_joints)
                 self.skin_joints[idx, 0:num_joint] = torch.tensor(data.skin_joints, dtype=torch.int32,device = self.device)
