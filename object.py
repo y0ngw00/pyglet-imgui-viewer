@@ -151,10 +151,22 @@ class Character(Object):
         # if self.root is not None:
         #     return self.root.transform_gbl[3,0:3]
         # else:
-            return self.transform_gbl[3,0:3]
+        return self.transform[3,0:3]
+    
+    def get_root_position(self):
+        if self.root is not None:
+            return self.root.transform_gbl[3,0:3]
+        else:
+            return self.transform[3,0:3]
 
     def set_rotation(self, rot):
         pass
+    
+    def get_rotation(self, frame):
+        return np.concatenate([j.get_rotation(frame) for j in self.joints])
+    
+    def get_num_joints(self):
+        return len(self.joints)
 
     def set_joint_color(self, color):
         for j in self.joints:
@@ -335,6 +347,15 @@ class Joint(Object):
     #                 self.positions.append(self.positions[-1])
     #             self.rotations.append(self.rotations[-1])
     #     return
+    
+    def get_rotation(self, frame):
+        for anim_layer in self.anim_layers:
+            rot_quat = anim_layer.get_rotation_quaternion(frame)
+            if rot_quat is not None:
+                angle, axis = rot_quat.angle_axis()
+                return angle * axis
+            
+        return [1,0,0]
     
     def translate(self, pos):
         self.transform[3,0:3] += pos

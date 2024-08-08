@@ -166,43 +166,49 @@ class CustomBrowser:
             if imgui.button("Select model checkpoint"):
                 file_descriptions = "checkpoint file (.ckpt)"
                 file_ext = "*.ckpt"
-                self.selected_network_file = self.render_file_dialog(file_descriptions, file_ext)
+                self.selected_network_file = self.parent_window.render_file_dialog(file_descriptions, file_ext)
             imgui.text(self.selected_network_file)
             imgui.spacing()
             
-            if imgui.button("Draw random trajectoris from gcd"):
-                data_root = "./data/gdance/"
-                path = "train_split_sequence_names.txt"
-                pos_traj_list, vel_traj_list = self.generate_random_trajectory_from_gcd(data_root, path)
-                idx=0
-                endframe = pos_traj_list.shape[1]
-                for pos_traj,vel_traj in zip(pos_traj_list, vel_traj_list):
-                    output_path = "/home/imo/Downloads/gcd_output_" + str(idx)
-                    idx+=1 
+            # if imgui.button("Draw random trajectoris from gcd"):
+            #     data_root = "./data/gdance/"
+            #     path = "train_split_sequence_names.txt"
+            #     pos_traj_list, vel_traj_list = self.generate_random_trajectory_from_gcd(data_root, path)
+            #     idx=0
+            #     endframe = pos_traj_list.shape[1]
+            #     for pos_traj,vel_traj in zip(pos_traj_list, vel_traj_list):
+            #         output_path = "/home/imo/Downloads/gcd_output_" + str(idx)
+            #         idx+=1 
                     
-                    # pos_traj += self.pos_list[self.pos_idx]
-                    self.scene.draw_trajectory(pos_traj)
-                    synthesize(vel_traj,self.selected_audio_file, self.selected_network_file, output_path, endframe)
-                    self.parent_window.open_file(output_path + ".bvh", FileType.Character)
-            imgui.spacing()
+            #         # pos_traj += self.pos_list[self.pos_idx]
+            #         self.scene.draw_trajectory(pos_traj)
+            #         synthesize(vel_traj,self.selected_audio_file, self.selected_network_file, output_path, endframe)
+            #         self.parent_window.open_file(output_path + ".bvh", FileType.Character)
+            # imgui.spacing()
             
             if imgui.button("Generate!"):
-                self.generate_motion()
+                self.generate_motion(300)
 
-    def generate_motion(self):
+    def generate_motion(self, nframe):
         output_path = os.path.dirname(self.selected_audio_file)+"/" + self.selected_audio_file.split("/")[-1].split(".")[0] + "_output"
         traj = None
         circles = self.parent_window.get_dancers()
-            for circle in self.circles:
-                pos_traj,vel_traj = self.generate_trajectory(circle, 300)
-                pos_traj += self.pos_list[self.pos_idx]
-                self.scene.draw_trajectory(pos_traj)
-                synthesize(vel_traj,self.selected_audio_file, self.selected_network_file, output_path)
+        if len(circles) > 0:
+            for circle in circles:
+                pos_traj,vel_traj = self.extract_root_positions(circle, nframe)
+                rot_traj = self.extract_rotations(circle, nframe)
+                # pos_traj += self.pos_list[self.pos_idx]
+                # self.scene.draw_trajectory(pos_traj)
+                
+                condition={"pos_traj":pos_traj, "vel_traj":vel_traj, "rot_traj":rot_traj}
+                synthesize(condition, self.selected_audio_file, self.selected_network_file, output_path)
                 self.parent_window.open_file(output_path + ".bvh", FileType.Character)
                  
-        else:
-            synthesize(vel_traj,self.selected_audio_file, self.selected_network_file, output_path)   
-            self.parent_window.open_file(output_path + ".bvh", FileType.Character)
+        # else:
+        #     rot_traj = self.extract_rotations(nframe)
+        #     condition={"rot_traj":rot_traj}
+        #     synthesize(vel_traj,self.selected_audio_file, self.selected_network_file, output_path)   
+        #     self.parent_window.open_file(output_path + ".bvh", FileType.Character)
         
     def generate_trajectory(self, circle, nframe: int) -> Tuple[np.ndarray, np.ndarray]:
         pos_traj = np.zeros([nframe,3], dtype = np.float32)
@@ -216,6 +222,32 @@ class CustomBrowser:
             vel_traj[i,2] = 0
             
         return pos_traj,vel_traj
+    
+    def extract_root_positions(self, circle, nframe: int) -> Tuple[np.ndarray, np.ndarray]:
+        pos_traj = np.zeros([nframe,3], dtype = np.float32)
+        vel_traj = np.zeros([nframe,3], dtype = np.float32)
+        
+        for i in range(nframe):
+            character = circle.target
+            character.animate(i)
+        
+            pos_traj[i] = circle.get_character_pos()
+            
+            vel_traj[i,0] = pos_traj[i,0] - pos_traj[i-1,0] if i>0 else 0
+            vel_traj[i,1] = pos_traj[i,2] - pos_traj[i-1,2] if i>0 else 0
+            vel_traj[i,2] = 0
+            
+        return pos_traj,vel_traj
+    
+    def extract_rotations(self, circle, nframe: int) -> np.ndarray:
+        num_joints = character = self.parent_window.get_character(0).get_num_joints()
+        rotations = np.zeros([nframe, num_joints * 3], dtype = np.float32)
+        
+        for f in range(nframe):
+            character = circle.target
+            character.animate(f)
+            rotations[f,:] = character.get_rotation(f).flatten()
+        return rotations
     
     def generate_random_trajectory_from_gcd(self, data_root, path) -> Tuple[np.ndarray, np.ndarray]:
         with open(data_root+path, encoding='utf-8') as f:

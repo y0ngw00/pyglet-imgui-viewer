@@ -85,6 +85,15 @@ class Scene:
         # for object in self.objects:
         #     object.update_world_transform()
         
+    def get_num_characters(self):
+        return len(self.characters)
+    
+    def get_character(self, idx):
+        if idx < len(self.characters):
+            return self.characters[idx]
+        else:
+            return None
+        
     def add_character(self, character):
                 
         if len(character.meshes) > 0:
