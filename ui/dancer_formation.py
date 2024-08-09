@@ -79,21 +79,13 @@ class DancerFormation(BoxItem):
         #         dancer.translate(dx, dy)
 
     def on_mouse_release(self, x, y, button, modifier) -> None:
-        pass
-            
-    def on_mouse_drag(self,x, y, dx, dy):
-        if self.is_picked(x, y):
-            dancers = self.parent_window.get_dancers()
-            [dancer.translate(dx, -dy) for dancer in dancers if dancer.is_selected()]
-                
-    def on_mouse_press(self, x, y, button, modifier) -> None:
         selected = False
         if self.is_picked(x, y):
             dancers = self.parent_window.get_dancers()
             for dancer in dancers:
                 stage_x = x - (self.x_origin + self.xsize_box/2)
-                stage_y = y - (self.y_origin + self.ysize_box/2),
-                if dancer.is_picked(stage_x, stage_y):
+                stage_y = y - (self.y_origin + self.ysize_box/2)
+                if dancer.is_picked(stage_x, stage_y) and dancer.is_selected() is False:
                     self.select(dancer, modifier)
                     selected = True
                     break
@@ -101,6 +93,29 @@ class DancerFormation(BoxItem):
             if not selected:
                 for dancer in dancers:
                     dancer.set_is_clicked = False
+            
+    def on_mouse_drag(self,x, y, dx, dy):
+        if self.is_picked(x, y):
+            new_picked = None
+            prev_picked = []
+            dancers = self.parent_window.get_dancers()
+            stage_x = x - (self.x_origin + self.xsize_box/2)
+            stage_y = y - (self.y_origin + self.ysize_box/2)
+            for dancer in dancers:
+                if dancer.is_selected():
+                    prev_picked.append(dancer)
+                if dancer.is_picked(stage_x, stage_y):
+                    new_picked = dancer
+                    
+            # If new object is clicked and dragged.
+            if new_picked is not None and new_picked not in prev_picked:
+                self.select(new_picked)
+            # If already selected object is clicked and dragged.
+            else: 
+                [dancer.translate(dx, -dy) for dancer in prev_picked]
+                                
+    def on_mouse_press(self, x, y, button, modifier) -> None:
+        pass
                     
     def update_ui(self, is_animate, frame) -> None:
         if is_animate:
