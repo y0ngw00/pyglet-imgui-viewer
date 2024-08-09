@@ -49,7 +49,10 @@ class Sequencer(BoxItem):
             canvas_pos = imgui.get_window_position()  # Get the position of the canvas window
             layout_padding = [10,65]
             
-            self.update_position(x = canvas_pos.x+layout_padding[0], 
+            # To make scroll bar and shift the sequence following scroll.
+            scroll_x = imgui.get_scroll_x()
+            
+            self.update_position(x = canvas_pos.x+layout_padding[0] - scroll_x, 
                                     y = canvas_pos.y+layout_padding[1],
                                     xsize_box = imgui.get_window_width()-40, 
                                     ysize_box = imgui.get_window_height()-40)
@@ -70,14 +73,13 @@ class Sequencer(BoxItem):
                         
                 imgui.end_tab_bar()
             
+            
+            frame = self.parent_window.get_frame()
+
             # Time line
             self.draw_time_line(draw_list, -15)
                 
-            # Scroll bar
-            imgui.set_cursor_pos((canvas_pos.x, self.sequence_height * len(self.motion_sequences) -  imgui.get_window_height()))
-                
             # Draw a play line
-            frame = self.parent_window.get_frame()
             frame_bar_color = imgui.get_color_u32_rgba(1,0,0,1)
             draw_list.add_line(self.x_origin+self.sequence_pos_start+frame, self.y_origin, self.x_origin+self.sequence_pos_start+frame, self.y_origin+400, imgui.get_color_u32_rgba(1,0,0,1), 2)
             draw_list.add_triangle_filled(self.x_origin+self.sequence_pos_start+frame, self.y_origin,
@@ -87,7 +89,10 @@ class Sequencer(BoxItem):
                 
             if self.show_popup:
                 self.popup_menu.render(x,y)
-                
+            
+            # Scroll bar
+            imgui.set_cursor_pos((self.x_origin+self.xsize_box+frame, self.sequence_height * len(self.motion_sequences) -  imgui.get_window_height()))
+                    
             imgui.end()
         return
     

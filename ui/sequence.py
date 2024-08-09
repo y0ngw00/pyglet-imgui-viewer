@@ -35,13 +35,14 @@ class Sequence(BoxItem):
         layout_padding = [10,10]
         
         # To make scroll bar and shift the sequence following scroll.
+        scroll_x = imgui.get_scroll_x()
         scroll_y = imgui.get_scroll_y()
         
         if self.target is not None and self.target.is_selected():
             draw_list.add_rect_filled(canvas_pos.x+layout_padding[0], self.y_origin, 
                         self.x_origin+self.xsize_box, self.y_origin+self.ysize_box, 
                         self.background_color, rounding=4)
-        self.update_position(x = canvas_pos.x+layout_padding[0]+self.sequence_pos_start, 
+        self.update_position(x = canvas_pos.x+layout_padding[0]+self.sequence_pos_start - scroll_x, 
                             y = canvas_pos.y+layout_padding[1] + idx * self.sequence_height + self.padding_y - scroll_y,
                             xsize_box = imgui.get_window_width()- self.sequence_pos_start -50 , 
                             ysize_box = self.sequence_height)
