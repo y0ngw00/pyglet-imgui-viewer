@@ -35,7 +35,7 @@ class CustomBrowser:
         
         self.selected_file_idx = 0
         self.motion_library_dir = "./data/mixamo_library/"
-        self.character_path = "X_Bot.fbx"
+        self.default_character_path = "idle.fbx"
         self.grouping_status = GroupingStatus(parent_window)
         
         files = glob.glob(self.motion_library_dir + '*.fbx')
@@ -60,7 +60,7 @@ class CustomBrowser:
     
         with imgui.font(self.button_font_bold):
             if imgui.button("Create Dancer"):
-                self.parent_window.open_file(self.motion_library_dir + self.character_path, FileType.Character, load_anim = False)
+                self.parent_window.open_file(self.motion_library_dir + self.default_character_path, FileType.Character, load_anim = False)
 
             imgui.same_line()
 
@@ -126,7 +126,7 @@ class CustomBrowser:
             imgui.text("Number of Dancers: "+ str(self.parent_window.get_num_dancers()))
             imgui.same_line()
             if imgui.button("Create Dancer"):
-                self.parent_window.open_file(self.motion_library_dir + self.character_path, FileType.Character, load_anim = False)
+                self.parent_window.open_file(self.motion_library_dir + self.default_character_path, FileType.Character, load_anim = False)
 
             imgui.text("Current: "+ self.motion_files[self.selected_file_idx])
             imgui.same_line()

@@ -301,7 +301,7 @@ loadJoint(FbxScene* _scene, FbxNode* _node)
             }
         }
         FbxAMatrix geometryOffset = GetGeometry(_node);
-		FbxAMatrix localMatrix = _node->EvaluateLocalTransform();
+		FbxAMatrix localMatrix = _node->EvaluateLocalTransform(0.0);
 
 		Eigen::MatrixXd m= FbxToEigenMatrix(localMatrix, 1.0f);
 
