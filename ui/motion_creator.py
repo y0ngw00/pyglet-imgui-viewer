@@ -28,6 +28,7 @@ class MotionCreator(BoxItem):
         # self.update = False
         self.is_show = False
         
+        self.control_frame = 0
         self.video_timestep = 0.5
         
         self.player = pyglet.media.Player()
@@ -112,12 +113,15 @@ class MotionCreator(BoxItem):
                             self.player.pause()
                     else:                
                         if imgui.button("Play"):
-                            start_frame = self.video_sequence.children[0].frame_start
-                            end_frame = self.video_sequence.children[0].frame_end
-                            if self.player.time < start_frame * self.time_length_scale:
-                                self.player.seek(start_frame * self.time_length_scale)
-                            if self.player.time <= end_frame * self.time_length_scale:
-                                self.player.play()
+                            if len(self.video_sequence.children) > 0:
+                                start_frame = self.video_sequence.children[0].frame_start
+                                end_frame = self.video_sequence.children[0].frame_end
+                                if self.control_frame < start_frame:
+                                    self.control_frame = start_frame
+                                if self.control_frame <= end_frame:
+                                    time = self.control_frame * self.time_length_scale
+                                    self.player.seek(time)
+                                    self.player.play()
                             
                     imgui.same_line()      
                     if imgui.button("Next"):
@@ -128,15 +132,22 @@ class MotionCreator(BoxItem):
                         self.goto_end()
                         self.player.pause()
                         
+                    imgui.text("Player time : {:0.2f}".format(self.player.time))
+
+                if self.player.playing is True:
+                    self.control_frame = self.player.time / (self.time_length_scale + 1e-6)
                 
+                draw_list = imgui.get_window_draw_list()
+
                 #Sequencer render
                 self.video_sequence.render(0, 0)
                 
-                draw_list = imgui.get_window_draw_list()
-                bar_pos = (self.player.time/ (self.video_length+1e-6))* self.sequence_width
                 x, y = imgui.get_cursor_screen_pos()
+                # Time line
+                self.draw_time_line(draw_list, x, y-5)
+                # Frame bar
                 self.frame_bar.update_position(x, y)
-                self.frame_bar.render(draw_list, bar_pos)
+                self.frame_bar.render(draw_list, self.control_frame)
                 imgui.end_child()
 
 
@@ -149,22 +160,26 @@ class MotionCreator(BoxItem):
         self.is_show = is_show
         
     def prev(self):
-        curr_time = self.player.time
-        self.player.seek(curr_time - self.video_timestep)
+        # curr_time = self.player.time
+        self.control_frame -=1
+        # self.player.seek(curr_time - self.video_timestep)
         
     def next(self):
         if self.player.time < self.player.source.duration:
-            curr_time = self.player.time
-            self.player.seek(curr_time + self.video_timestep)
+            self.control_frame +=1
+            # curr_time = self.player.time
+            # self.player.seek(curr_time + self.video_timestep)
         return
         
     def goto_first(self):
-        time = self.video_sequence.children[0].frame_start * self.time_length_scale
-        self.player.seek(time)
+        self.control_frame = self.video_sequence.children[0].frame_start
+        # time = self.video_sequence.children[0].frame_start * self.time_length_scale
+        # self.player.seek(time)
         
     def goto_end(self):
-        time = self.video_sequence.children[0].frame_end * self.time_length_scale
-        self.player.seek(time)
+        self.control_frame = self.video_sequence.children[0].frame_end
+        # time = self.video_sequence.children[0].frame_end * self.time_length_scale
+        # self.player.seek(time)
         
     def on_eos(self):
         print("The player has finished playing its current source.")
@@ -218,12 +233,33 @@ class MotionCreator(BoxItem):
         cap.release()
         out.release()
         return
+    
+    def draw_time_line(self, draw_list, x,y):
+        time_length_scale = self.time_length_scale if self.time_length_scale > 0 else 0.1
+        short_line = 10
+        long_line = 15
+        draw_list.add_line(x, 
+                            y + 25, 
+                            x + 3000, 
+                            y + 25, imgui.get_color_u32_rgba(1,1,1,1), 1)
+        for sec in range(0, 300):
+            if sec % 5 == 0:
+                draw_list.add_text(x+sec/time_length_scale, y, imgui.get_color_u32_rgba(1,1,1,1), "{}".format(sec))
+                draw_list.add_line(x + sec/time_length_scale, 
+                                y + 25, 
+                                x + sec/time_length_scale, 
+                                y + short_line, imgui.get_color_u32_rgba(1,1,1,1), 1)
+            else :
+                draw_list.add_line(x + sec/time_length_scale, 
+                                y + 25, 
+                                x + sec/time_length_scale, 
+                                y + long_line, imgui.get_color_u32_rgba(1,1,1,1), 1)
+
         
-    def on_mouse_release(self, x, y, button, modifier):
-        
-        # if self.is_picked(x,y):                
-        #     if self.frame_bar.selected is True:
-        #         self.frame_bar.select(False)
+    def on_mouse_release(self, x, y, button, modifier):        
+        if self.is_picked(x,y):                
+            if self.frame_bar.selected is True:
+                self.frame_bar.select(False)
         self.video_sequence.on_mouse_release(x, y, button, modifier)
         return
     
@@ -235,10 +271,9 @@ class MotionCreator(BoxItem):
         
     def on_mouse_drag(self, x, y, dx, dy):
         
-        # if self.frame_bar.is_picked(x,y) or self.frame_bar.selected is True:
-        #     dt = dx * (self.video_length+1e-6) / self.sequence_width
-        #     self.player.seek(self.player.time + dt)
-        #     self.frame_bar.select(True)
+        if self.frame_bar.is_picked(x,y) or self.frame_bar.selected is True:
+            self.control_frame += dx
+            self.frame_bar.select(True)
         self.video_sequence.on_mouse_drag(x, y, dx, dy)
         
         return
