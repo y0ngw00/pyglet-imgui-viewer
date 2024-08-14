@@ -9,3 +9,4 @@ from dancer_formation import DancerFormation
 from sequencer import Sequencer, Sequence, SequenceTrack
 from titlebar import TitleBar
 from custom_browser import CustomBrowser
+from motion_creator import MotionCreator

@@ -72,7 +72,11 @@ class CustomBrowser:
                 self.selected_audio_file = str(selected_audio_file)
                 self.parent_window.initialize_audio(selected_audio_file)
         
+        imgui.text("Number of Dancers: "+ str(self.parent_window.get_num_dancers()))
+
         imgui.end_child()
+        
+
         imgui.separator()
 
         # Begin Tab bar widget
@@ -122,22 +126,24 @@ class CustomBrowser:
         return
 
     def render_motion_library(self):               
-        # if imgui.tree_node("Checkpoint"):
-            imgui.text("Number of Dancers: "+ str(self.parent_window.get_num_dancers()))
-            imgui.same_line()
-            if imgui.button("Create Dancer"):
-                self.parent_window.open_file(self.motion_library_dir + self.default_character_path, FileType.Character, load_anim = False)
+        imgui.text("Current: "+ self.motion_files[self.selected_file_idx])
+        imgui.same_line()
+        if imgui.button("Insert Motion"):
+            file_path = self.motion_library_dir + self.motion_files[self.selected_file_idx] + ".fbx"
+            self.parent_window.insert_motion(file_path)
 
-            imgui.text("Current: "+ self.motion_files[self.selected_file_idx])
-            imgui.same_line()
-            if imgui.button("Insert Motion"):
+        window_size = imgui.get_window_size()
+        imgui.push_item_width(window_size[0] * 0.8)
+        clicked, self.selected_file_idx = imgui.listbox('', self.selected_file_idx, self.motion_files, height_in_items = 25)
+        imgui.pop_item_width()
+
+        with imgui.font(self.button_font_bold):
+            if imgui.button("Insert Current Motion", width = window_size[0] - 50):
                 file_path = self.motion_library_dir + self.motion_files[self.selected_file_idx] + ".fbx"
                 self.parent_window.insert_motion(file_path)
-
-            imgui.push_item_width(imgui.get_window_width() * 0.8)
-            clicked, self.selected_file_idx = imgui.listbox('', self.selected_file_idx, self.motion_files, height_in_items = 30)
-            imgui.pop_item_width()
-        
+            if imgui.button("Create New Motion", width = window_size[0] - 50):
+                self.parent_window.show_motion_creator(True)
+                        
     def render_model_connector(self):
         with imgui.font(self.button_font_bold):
             imgui.text("Current number of characters: {}".format(self.parent_window.get_num_dancers()))

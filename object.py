@@ -31,7 +31,6 @@ class Object:
             MeshType.Cylinder: Cylinder
         }
         self.mesh = mesh_creator[mesh_type](mesh_info)
-        self.texture_id = None
         self.texture = None
         
         self.selected = False

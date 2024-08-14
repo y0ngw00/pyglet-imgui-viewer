@@ -20,7 +20,7 @@ import fonts
 from enum_list import FileType
 
 import loader
-from ui import Dancer, KeyFrame, Sequencer, Sequence, SequenceTrack, DancerFormation, TitleBar,CustomBrowser
+from ui import Dancer, KeyFrame, Sequencer, Sequence, SequenceTrack, DancerFormation, TitleBar,CustomBrowser,MotionCreator
 class UI:
     def __init__(self, window):
         imgui.create_context()
@@ -50,7 +50,7 @@ class UI:
         self.DancerFormation = DancerFormation(self,660/2560, 0/1440, 1900/2560, 960/1440)
         self.Sequencer = Sequencer(self, 660/2560, 960/1440, 1900/2560, 480/1440)
         self.custom_browser = CustomBrowser(self,0/2560,0/1440,660/2560,1440/1440, self.scene)
-                        
+        self.motion_creator = MotionCreator(self)
         self.impl.refresh_font_texture()
         
     def render(self):
@@ -69,6 +69,7 @@ class UI:
         self.DancerFormation.render(x,y)
         self.custom_browser.render()
         self.Sequencer.render(x,self.window.height - y)
+        self.motion_creator.render()
 
     def is_ui_active(self):
         return imgui.is_any_item_active()
@@ -130,6 +131,9 @@ class UI:
     
     def is_playing(self):
         return self.window.animate
+    
+    def show_motion_creator(self, is_show):
+        self.motion_creator.show(is_show)
     
     def get_frame(self):
         return self.window.frame

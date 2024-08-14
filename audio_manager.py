@@ -7,10 +7,11 @@ class AudioManager:
         self.player = pyglet.media.Player()
         
     def open_audio_file(self, audio_file):
-        self.audio_file = audio_file
-        music = pyglet.media.load(self.audio_file, streaming=False)
-        self.player.queue(music)
-        self.window.set_update_audio_flag(True)
+        if len(audio_file) > 0:
+            self.audio_file = audio_file
+            music = pyglet.media.load(self.audio_file, streaming=False)
+            self.player.queue(music)
+            self.window.set_update_audio_flag(True)
         
     def play(self):
         if self.player.source is None:
