@@ -35,6 +35,33 @@ class BoxItem:
                                   rounding = rounding)
         return
     
+    def draw_trimming_bar(self, draw_list, color):
+        draw_list.add_triangle_filled(self.__x_origin,
+                                      self.__y_origin,
+                                    self.__x_origin, 
+                                    self.__y_origin+10,
+                                    self.__x_origin+10,
+                                    self.__y_origin,
+                                    color)
+        draw_list.add_triangle_filled(self.__x_origin+self.__xsize_box,
+                                      self.__y_origin,
+                                    self.__x_origin+self.__xsize_box-10, 
+                                    self.__y_origin,
+                                    self.__x_origin+self.__xsize_box,
+                                    self.__y_origin+10,
+                                    color)
+        draw_list.add_line(self.__x_origin, 
+                                self.__y_origin,
+                                self.__x_origin,
+                                self.__y_origin+self.__ysize_box, 
+                                color, 1)
+        draw_list.add_line(self.__x_origin+self.__xsize_box, 
+                                self.__y_origin,
+                                self.__x_origin+self.__xsize_box,
+                                self.__y_origin+self.__ysize_box, 
+                                color, 1)
+        return
+    
     def is_picked(self,x,y)->bool:
         if self.__x_origin<=x<=self.__x_origin+self.__xsize_box and self.__y_origin<=y<=self.__y_origin+self.__ysize_box:
             return True

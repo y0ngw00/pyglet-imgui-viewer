@@ -109,12 +109,18 @@ class Sequence(BoxItem):
                 self.target.set_animation_speed(idx, speed)
                         
     def update_animation_layer(self, _track, frame_start, frame_end):
+        if self.target is None:
+            return
+        
         for idx, track in enumerate(self.children):
             if track == _track:
                 self.target.update_animation_layer(idx, frame_start, frame_end)
                 break
             
     def translate_animation_layer(self, _track, dx):
+        if self.target is None:
+            return
+        
         for idx, track in enumerate(self.children):
             if track == _track:
                 self.target.translate_animation_layer(idx, dx)
@@ -145,6 +151,7 @@ class SequenceTrack(BoxItem):
         self.track_speed = 1.0
         self.height = parent.ysize_box
         self.layout_padding = [10,10]
+        self.__lock_translate = False
         
         self.track_color = imgui.get_color_u32_rgba(1,1,0.7,1)
         self.text_color = imgui.get_color_u32_rgba(0,0,0,1)
@@ -162,11 +169,17 @@ class SequenceTrack(BoxItem):
             self.frame_end = self.frame_start
         draw_list = imgui.get_window_draw_list()
         self.draw_box_filled(draw_list, color = self.track_color, rounding=4)
-        
+
         if self.selected is True:
             self.draw_box(draw_list, color = imgui.get_color_u32_rgba(1,0,0,1), rounding=4, thickness=2)
         draw_list.add_text(self.x_origin+self.layout_padding[0], self.y_origin+self.layout_padding[1], self.text_color,self.name)
-            
+        
+        #Left/Right boundary for trimming
+        self.draw_trimming_bar(draw_list, color = imgui.get_color_u32_rgba(84/255,87/255,114/255,1))
+    
+    def lock_translate(self, lock):
+        self.__lock_translate = lock
+                
     def on_mouse_press(self, x, y, button, modifier):
         self.boundary_picked = self.is_boundary_picked(x)
         
@@ -190,7 +203,7 @@ class SequenceTrack(BoxItem):
                 self.frame_start += dx
             elif self.boundary_picked == Boundary.Right:
                 self.frame_end += dx
-            else:
+            elif self.__lock_translate is not True:
                 self.frame_start += dx
                 self.frame_end += dx   
                 self.translated += dx
