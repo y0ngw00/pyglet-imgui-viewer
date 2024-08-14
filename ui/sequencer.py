@@ -9,6 +9,7 @@ import pyglet
 from fonts import Fonts
 from sequencer_menu import SequencerMenu
 from sequence import Sequence, SequenceTrack
+from frame_bar import FrameBar
 from box_item import BoxItem
 from enum_list import Boundary
 class Sequencer(BoxItem):
@@ -26,9 +27,13 @@ class Sequencer(BoxItem):
         
         self.show_popup = False
         self.selected_elements = []
-        self.frame_bar_picked = False
         self.highlighted_color = imgui.get_color_u32_rgba(1,0.7,0,1)
         self.popup_menu = SequencerMenu(self)
+        
+        self.frame_bar = FrameBar(self, length = 400,
+                                  x_offset= self.sequence_pos_start, 
+                                  y_offset = 0, 
+                                  color = imgui.get_color_u32_rgba(1,0,0,1))
         
         self.music_sequence = Sequence("Music", None, self.sequence_pos_start, self.sequence_height)
         self.formation_sequence = Sequence("Formation", None, self.sequence_pos_start, self.sequence_height)
@@ -40,6 +45,7 @@ class Sequencer(BoxItem):
         y_pos = self.y_pos * y_scale
         x_size = self.x_size * x_scale
         y_size = self.y_size * y_scale
+        frame = self.parent_window.get_frame()
         imgui.set_next_window_position(x_pos, y_pos, imgui.ALWAYS)
         imgui.set_next_window_size(x_size, y_size, imgui.ALWAYS)
 
@@ -61,31 +67,23 @@ class Sequencer(BoxItem):
             if imgui.begin_tab_bar("Sequncer Tab", imgui.TAB_BAR_FITTING_POLICY_DEFAULT):
                 imgui.set_next_item_width(100)
                 if imgui.begin_tab_item("Grouping&Formation").selected:
-                    self.music_sequence.render(0)
-                    self.formation_sequence.render(1)
-                    self.group_sequence.render(2)
+                    self.music_sequence.render(0, frame)
+                    self.formation_sequence.render(1,frame)
+                    self.group_sequence.render(2,frame)
                     imgui.end_tab_item()
 
                 if imgui.begin_tab_item("Motion Sequence").selected:
                     for idx, seq in enumerate(self.motion_sequences):
-                        seq.render(idx)
+                        seq.render(idx, frame)
                     imgui.end_tab_item()
                         
                 imgui.end_tab_bar()
             
-            
-            frame = self.parent_window.get_frame()
-
             # Time line
             self.draw_time_line(draw_list, -15)
                 
             # Draw a play line
-            frame_bar_color = imgui.get_color_u32_rgba(1,0,0,1)
-            draw_list.add_line(self.x_origin+self.sequence_pos_start+frame, self.y_origin, self.x_origin+self.sequence_pos_start+frame, self.y_origin+400, imgui.get_color_u32_rgba(1,0,0,1), 2)
-            draw_list.add_triangle_filled(self.x_origin+self.sequence_pos_start+frame, self.y_origin,
-                                          self.x_origin+self.sequence_pos_start+frame-10, self.y_origin-10,
-                                          self.x_origin+self.sequence_pos_start+frame+10, self.y_origin-10,
-                                          frame_bar_color)
+            self.frame_bar.render(draw_list, frame)
                 
             if self.show_popup:
                 self.popup_menu.render(x,y)
@@ -209,8 +207,9 @@ class Sequencer(BoxItem):
                 self.popup_menu.update_position()
                 self.show_popup = True                
         else :
-            if self.frame_bar_picked is True:
-                self.frame_bar_picked = False
+            pass
+            if self.frame_bar.selected is True:
+                self.frame_bar.select(False)
 
         if self.show_popup and button != 4:
             return
@@ -232,10 +231,10 @@ class Sequencer(BoxItem):
         if self.show_popup:
             return
         
-        if self.is_mouse_in_frame_bar(x,y) or self.frame_bar_picked is True:
-            frame = self.parent_window.get_frame()
+        frame = self.parent_window.get_frame()
+        if self.frame_bar.is_picked(x,y,frame) or self.frame_bar.selected is True:
             self.parent_window.set_frame(frame+dx)
-            self.frame_bar_picked = True
+            self.frame_bar.select(True)
             
         for seq in self.motion_sequences:
             seq.on_mouse_drag(x,y,dx,dy)
