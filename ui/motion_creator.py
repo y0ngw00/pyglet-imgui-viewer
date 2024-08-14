@@ -14,32 +14,38 @@ import imgui
 import imgui.core
 
 from fonts import Fonts
+from frame_bar import FrameBar
 from box_item import BoxItem
 from sequencer import Sequencer
 from sequence import Sequence
 
 class MotionCreator(BoxItem):
     def __init__(self, parent_window):
-        self.parent_window = parent_window
-
-        self.x_origin = 0
-        self.y_origin = 0
-        
+        super().__init__()
+        self.parent_window = parent_window        
         # self.update = False
         self.is_show = False
         
         self.video_timestep = 0.5
         
         self.player = pyglet.media.Player()
-        self.texture_id = None
+        self.video_length = 0
+        self.sequence_width = 0
+        self.sequence_pos_start = 0
+        self.sequence_height = 200
         
         self.button_font_medium = Fonts["button_font_medium"]["font"]
         
-        self.sequence_pos_start = 150
-        self.sequence_height = 110
-        self.video_sequence = Sequence("Video", None, self.sequence_pos_start, self.sequence_height)
-        # self.img = pyglet.image.load("/home/imo/Downloads/colorcode.jpeg")
-        # self.texture = self.img.get_texture()
+        self.padding_x = 30
+        self.video_sequence = Sequence("", 
+                                       None, 
+                                       self.sequence_pos_start, 
+                                       self.sequence_height)
+        
+        self.frame_bar = FrameBar(self, length = 400,
+                                x_offset= self.sequence_pos_start, 
+                                y_offset = 500, 
+                                color = imgui.get_color_u32_rgba(1,0,0,1))
             
     def render(self):
         # if self.update:
@@ -48,6 +54,14 @@ class MotionCreator(BoxItem):
             
         if self.is_show is True:
             expanded, self.is_show = imgui.begin("Motion Creator", True)
+            
+            canvas_pos = imgui.get_window_position()
+            self.update_position(x = canvas_pos.x, 
+                                    y = canvas_pos.y,
+                                    xsize_box = imgui.get_window_width()-40, 
+                                    ysize_box = imgui.get_window_height()-40)
+            
+            self.sequence_width = self.xsize_box
 
             if self.is_show:
                 if imgui.button("Upload video"):
@@ -68,14 +82,14 @@ class MotionCreator(BoxItem):
                     imgui.end_child()
                 else:
                     video_viewer_width,video_viewer_height = imgui.get_window_size()
-                    imgui.begin_child("Video Window", video_viewer_width-30, video_viewer_height-500, border=True)   
+                    imgui.begin_child("Video Window", self.sequence_width, video_viewer_height-500, border=True)   
                     imgui.end_child()
         
                 # imgui.image(self.texture.id, 300, 300)
                 # if self.player.source and self.player.source.video_format:
                     # self.player.get_texture().blit(0,0)
                     
-                imgui.begin_child("Video Sequencer", imgui.get_window_size()[0] - 30, 300, border=True)   
+                imgui.begin_child("Video Sequencer", self.sequence_width, 300, border=True)   
                 imgui.same_line(spacing=imgui.get_window_size()[0]/2 - 120)
                 with imgui.font(self.button_font_medium):
                     if imgui.button("|<"):
@@ -102,6 +116,12 @@ class MotionCreator(BoxItem):
                         self.player.pause()
                         
                 self.video_sequence.render(0, 0)
+                
+                draw_list = imgui.get_window_draw_list()
+                bar_pos = (self.player.time/ (self.video_length+1e-6))* self.sequence_width
+                x, y = imgui.get_cursor_screen_pos()
+                self.frame_bar.update_position(x, y)
+                self.frame_bar.render(draw_list, bar_pos)
                 imgui.end_child()
 
 
@@ -138,6 +158,23 @@ class MotionCreator(BoxItem):
         self.player.queue(video)
         self.player.seek(0)
         self.player.on_eos = self.on_eos
+        
+        self.video_length = video.duration
+        self.video_sequence.fill_sequence(0,  imgui.get_window_size()[0] - self.padding_x-10)
 
     def clear(self):
         self.player.delete()
+        
+    def on_mouse_release(self, x, y, button, modifier):
+        pass
+        # if self.is_picked(x,y):                
+        #     if self.frame_bar.selected is True:
+        #         self.frame_bar.select(False)
+
+        
+    def on_mouse_drag(self, x, y, dx, dy):
+        pass
+        # if self.frame_bar.is_picked(x,y) or self.frame_bar.selected is True:
+        #     dt = dx * (self.video_length+1e-6) / self.sequence_width
+        #     self.player.seek(self.player.time + dt)
+        #     self.frame_bar.select(True)

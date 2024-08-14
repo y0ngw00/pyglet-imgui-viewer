@@ -10,32 +10,37 @@ class FrameBar:
         
         self.x_offset = x_offset
         self.y_offset = y_offset
-        self.x_origin = 0
-        self.y_origin = 0
+        self.__bar_pos = 0
+        self.__x_origin = 0
+        self.__y_origin = 0
         
         if color is None:
             self.color = imgui.get_color_u32_rgba(1,0,0,1)
     
-    def render(self, draw_list, frame):
-        self.x_origin = self.parent_window.x_origin + self.x_offset
-        self.y_origin = self.parent_window.y_origin
-        draw_list.add_line(self.x_origin+frame, 
-                           self.y_origin, 
-                           self.x_origin+frame, 
-                           self.y_origin+self.length, 
+    def render(self, draw_list, pos):
+        self.__bar_pos = pos
+        draw_list.add_line(self.__x_origin+self.__bar_pos, 
+                           self.__y_origin, 
+                           self.__x_origin+self.__bar_pos, 
+                           self.__y_origin+self.length, 
                            self.color, 
                            2)
-        draw_list.add_triangle_filled(self.x_origin+frame,
-                                      self.y_origin,
-                                    self.x_origin+frame-10, 
-                                    self.y_origin-10,
-                                    self.x_origin+frame+10,
-                                    self.y_origin-10,
+        draw_list.add_triangle_filled(self.__x_origin+self.__bar_pos,
+                                      self.__y_origin,
+                                    self.__x_origin+self.__bar_pos-10, 
+                                    self.__y_origin-10,
+                                    self.__x_origin+self.__bar_pos+10,
+                                    self.__y_origin-10,
                                     self.color)
         
-    def is_picked(self,x,y,frame)->bool:
-        if self.x_origin+frame-10<=x<=self.x_origin+frame+10:
-            if self.y_origin-10<=y<=self.y_origin:
+    def update_position(self,x,y):
+        self.__x_origin = x
+        self.__y_origin = y
+        return
+        
+    def is_picked(self,x,y)->bool:
+        if self.__x_origin+self.__bar_pos-10<=x<=self.__x_origin+self.__bar_pos+10:
+            if self.__y_origin-10<=y<=self.__y_origin:
                 return True
         return False
     

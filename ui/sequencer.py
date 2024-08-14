@@ -83,6 +83,7 @@ class Sequencer(BoxItem):
             self.draw_time_line(draw_list, -15)
                 
             # Draw a play line
+            self.frame_bar.update_position(self.x_origin + self.sequence_pos_start, self.y_origin)
             self.frame_bar.render(draw_list, frame)
                 
             if self.show_popup:
@@ -207,7 +208,6 @@ class Sequencer(BoxItem):
                 self.popup_menu.update_position()
                 self.show_popup = True                
         else :
-            pass
             if self.frame_bar.selected is True:
                 self.frame_bar.select(False)
 
@@ -232,7 +232,7 @@ class Sequencer(BoxItem):
             return
         
         frame = self.parent_window.get_frame()
-        if self.frame_bar.is_picked(x,y,frame) or self.frame_bar.selected is True:
+        if self.frame_bar.is_picked(x,y) or self.frame_bar.selected is True:
             self.parent_window.set_frame(frame+dx)
             self.frame_bar.select(True)
             

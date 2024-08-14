@@ -171,10 +171,12 @@ class UI:
     def on_mouse_release(self, x, y, button, modifier) -> None:
         self.DancerFormation.on_mouse_release(x, self.window.height - y, button, modifier)
         self.Sequencer.on_mouse_release(x, self.window.height - y, button, modifier)
+        self.motion_creator.on_mouse_release(x, self.window.height - y, button, modifier)
 
     def on_mouse_drag(self, x, y, dx, dy, button, modifier) -> None:
         self.DancerFormation.on_mouse_drag(x, self.window.height - y, dx, dy)
         self.Sequencer.on_mouse_drag(x, self.window.height - y, dx, dy)
+        self.motion_creator.on_mouse_drag(x, self.window.height - y, dx, dy)    
                 
     def update_ui(self, is_animate) -> None:
         self.DancerFormation.update_ui(is_animate, self.window.frame)

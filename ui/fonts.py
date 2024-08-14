@@ -12,6 +12,11 @@ Fonts = {
         "path": "pyglet_render/data/PublicSans-SemiBold.ttf",
         "size": 15
     },
+    "button_font_medium":{
+        "font": None,
+        "path": "pyglet_render/data/PublicSans-SemiBold.ttf",
+        "size": 20
+    },
     "button_font_bold":{
         "font": None,
         "path": "pyglet_render/data/PublicSans-SemiBold.ttf",
