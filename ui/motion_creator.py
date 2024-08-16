@@ -247,11 +247,14 @@ class MotionCreator(BoxItem):
         name, ext = os.path.splitext(self.current_filepath)
         file_path = f"{name}_trim{ext}"
         self.save_video(file_path)
+        output_dir = os.path.dirname(file_path)
         
         from third_party.WHAM.wham_api import WHAM_API
         wham_model = WHAM_API()
-        results, tracking_results, slam_results = wham_model(file_path)
+        results, tracking_results, slam_results = wham_model(video = file_path, output_dir = output_dir)
         
+        self.clear()
+        self.load_video(output_dir + "/output.mp4")
     
     def draw_time_line(self, draw_list, x,y):
         time_length_scale = self.time_length_scale if self.time_length_scale > 0 else 0.1
