@@ -20,7 +20,6 @@ from frame_bar import FrameBar
 from box_item import BoxItem
 from sequencer import Sequencer
 from sequence import Sequence
-
 class MotionCreator(BoxItem):
     def __init__(self, parent_window):
         super().__init__()
@@ -34,7 +33,6 @@ class MotionCreator(BoxItem):
         self.player = pyglet.media.Player()
         self.current_filepath = ""
         self.time_length_scale = 0
-        self.video_length = 0
         self.sequence_width = 0
         self.sequence_pos_start = 0
         self.sequence_height = 200
@@ -192,15 +190,16 @@ class MotionCreator(BoxItem):
         self.player.seek(0)
         self.player.on_eos = self.on_eos
         
-        self.video_length = video.duration
-        self.time_length_scale = self.video_length / self.sequence_width  # time seconds per 1 pixel
+        self.time_length_scale = video.duration / self.sequence_width  # time seconds per 1 pixel
         self.video_sequence.fill_sequence(0, self.sequence_width)
         self.video_sequence.children[0].lock_translate(True)
 
     def clear(self):
         self.player.delete()
+        self.player = pyglet.media.Player()
         self.video_sequence.clear_all_track()
-        self.current_filepath = ""
+        self.current_filepath = ""        
+        self.time_length_scale = 0        
         
     def save_video(self):
         # Could not find a way to save the video using pyglet. Used OpenCV instead.
