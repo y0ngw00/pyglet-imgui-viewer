@@ -67,19 +67,26 @@ class MotionCreator(BoxItem):
             self.sequence_width = self.xsize_box - 30
 
             if self.is_show:
-                if imgui.button("Upload video"):
-                    file_path = self.parent_window.render_file_dialog("Video Files", ["*.mp4", "*.avi", "*.wav"])
-                    if file_path:
-                        self.load_video(file_path)
-                imgui.same_line()
-                if imgui.button("Clear"):
-                    self.clear()
-                imgui.same_line()
-                if imgui.button("Save video"):
-                    self.save_video()
+                with imgui.font(self.button_font_medium):
+                    if imgui.button("Upload video"):
+                        file_path = self.parent_window.render_file_dialog("Video Files", ["*.mp4", "*.avi","*.mov" ,"*.wav"])
+                        if file_path:
+                            self.load_video(file_path)
+                    imgui.same_line()
+                    if imgui.button("Clear"):
+                        self.clear()
+                    imgui.same_line()
+                    if imgui.button("Save video"):
+                        if self.current_filepath:
+                            name, ext = os.path.splitext(self.current_filepath)
+                            file_path = f"{name}_trim{ext}"
+                            self.save_video(file_path)
+                    imgui.same_line()
+                    if imgui.button("Extract motion"):
+                        self.extract_motion()
                 
-                if self.player.get_texture() is not None:
-                    texture = self.player.get_texture()
+                if self.player.texture is not None:
+                    texture = self.player.texture
                     aspect_ratio = texture.height /texture.width 
                     video_viewer_width = imgui.get_window_size()[0] - 30
                     video_viewer_height = video_viewer_width * aspect_ratio
@@ -130,7 +137,7 @@ class MotionCreator(BoxItem):
                         self.goto_end()
                         self.player.pause()
                         
-                    imgui.text("Player time : {:0.2f}".format(self.player.time))
+                    imgui.text("Current : {:0.2f}".format(self.player.time))
 
                 if self.player.playing is True:
                     self.control_frame = self.player.time / (self.time_length_scale + 1e-6)
@@ -201,7 +208,7 @@ class MotionCreator(BoxItem):
         self.current_filepath = ""        
         self.time_length_scale = 0        
         
-    def save_video(self):
+    def save_video(self, file_path):
         # Could not find a way to save the video using pyglet. Used OpenCV instead.
         start_time = self.video_sequence.children[0].frame_start * self.time_length_scale
         end_time = self.video_sequence.children[0].frame_end * self.time_length_scale
@@ -213,7 +220,7 @@ class MotionCreator(BoxItem):
         
         # Create a VideoWriter object
         fourcc = cv2.VideoWriter_fourcc(*'mp4v')  # or use 'XVID'
-        out = cv2.VideoWriter('/home/imo/Downloads/output.mp4', fourcc, fps, (int(cap.get(3)), int(cap.get(4))))
+        out = cv2.VideoWriter(file_path, fourcc, fps, (int(cap.get(3)), int(cap.get(4))))
 
         # Read frames from the video
         frame_number = 0
@@ -232,6 +239,19 @@ class MotionCreator(BoxItem):
         cap.release()
         out.release()
         return
+    
+    def extract_motion(self):
+        if self.current_filepath == "":
+            return
+        
+        name, ext = os.path.splitext(self.current_filepath)
+        file_path = f"{name}_trim{ext}"
+        self.save_video(file_path)
+        
+        from third_party.WHAM.wham_api import WHAM_API
+        wham_model = WHAM_API()
+        results, tracking_results, slam_results = wham_model(file_path)
+        
     
     def draw_time_line(self, draw_list, x,y):
         time_length_scale = self.time_length_scale if self.time_length_scale > 0 else 0.1
@@ -269,7 +289,6 @@ class MotionCreator(BoxItem):
 
         
     def on_mouse_drag(self, x, y, dx, dy):
-        
         if self.frame_bar.is_picked(x,y) or self.frame_bar.selected is True:
             self.control_frame += dx
             self.frame_bar.select(True)
