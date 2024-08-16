@@ -5,6 +5,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 import imgui
 import imgui.core
 import pyglet
+import numpy as np
 
 from fonts import Fonts
 from sequencer_menu import SequencerMenu
@@ -12,6 +13,8 @@ from sequence import Sequence, SequenceTrack
 from frame_bar import FrameBar
 from box_item import BoxItem
 from enum_list import Boundary
+
+from ops import CollisionHandler
 class Sequencer(BoxItem):
     def __init__(self, parent_window, x_pos, y_pos, x_size, y_size):
         super().__init__()
@@ -57,7 +60,13 @@ class Sequencer(BoxItem):
             
             # To make scroll bar and shift the sequence following scroll.
             scroll_x = imgui.get_scroll_x()
-            
+            # Separator between label and sequences
+            draw_list.add_line(canvas_pos.x+layout_padding[0]+self.sequence_pos_start, 
+                               canvas_pos.y+layout_padding[1] + 10, 
+                               canvas_pos.x+layout_padding[0]+self.sequence_pos_start, 
+                               canvas_pos.y+1500, 
+                               imgui.get_color_u32_rgba(1,1,1,1), 2)
+
             self.update_position(x = canvas_pos.x+layout_padding[0] - scroll_x, 
                                     y = canvas_pos.y+layout_padding[1],
                                     xsize_box = imgui.get_window_width()-40, 
@@ -99,13 +108,13 @@ class Sequencer(BoxItem):
         framerate = self.parent_window.get_framerate()
         short_line = 10
         long_line = 15
-        draw_list.add_line(self.x_origin+self.sequence_pos_start, 
+        draw_list.add_line(self.x_origin, 
                                 self.y_origin + offset + 25, 
                                 self.x_origin+self.sequence_pos_start+3000, 
                                 self.y_origin + offset + 25, imgui.get_color_u32_rgba(1,1,1,1), 1)
         for sec in range(0, 300):
-            draw_list.add_text(self.x_origin+self.sequence_pos_start+sec*framerate, self.y_origin + offset, imgui.get_color_u32_rgba(1,1,1,1), "{}".format(sec))
             if sec % 5 == 0:
+                draw_list.add_text(self.x_origin+self.sequence_pos_start+sec*framerate, self.y_origin + offset, imgui.get_color_u32_rgba(1,1,1,1), "{}".format(sec))
                 draw_list.add_line(self.x_origin+self.sequence_pos_start+sec*framerate, 
                                 self.y_origin + offset + 25, 
                                 self.x_origin+self.sequence_pos_start+sec*framerate, 
@@ -165,9 +174,12 @@ class Sequencer(BoxItem):
         self.show_popup = False
         
     def insert_formation_keyframe(self):
-        self.formation_sequence.insert_key_frame(self.parent_window.get_frame())
+        curr_frame = self.parent_window.get_frame()
+        self.formation_sequence.insert_key_frame(curr_frame)
         for dancer in self.parent_window.get_dancers():
-            dancer.add_root_keyframe(self.parent_window.get_frame())
+            dancer.add_root_keyframe(curr_frame)
+            
+        self.keyframe_post_processing(curr_frame)
     
     def insert_group_keyframe(self):
         self.group_sequence.insert_key_frame(self.parent_window.get_frame())
@@ -178,20 +190,61 @@ class Sequencer(BoxItem):
         self.music_sequence.fill_sequence()
     
     def get_track_speed(self):
-        if self.picked is not None and isinstance(self.picked, Sequence):
-            return self.picked.get_track_speed()
-        return -1
+        for seq in self.motion_sequences:
+            if hasattr(seq, 'target') and seq.target.is_selected():
+                return seq.get_track_speed()
         
     def set_track_speed(self, speed):
-        if self.picked is not None and isinstance(self.picked, Sequence):
-            self.picked.set_track_speed(speed)
-           
-    def is_mouse_in_frame_bar(self,x,y)->bool:
-        frame = self.parent_window.get_frame()
-        if self.x_origin+self.sequence_pos_start+frame-10<=x<=self.x_origin+self.sequence_pos_start+frame+10:
-            if self.y_origin-10<=y<=self.y_origin:
-                return True
-        return False
+        for seq in self.motion_sequences:
+            if hasattr(seq, 'target') and seq.target.is_selected():
+                return seq.set_track_speed(speed)
+            
+    def keyframe_post_processing(self, curr_frame):
+        keyframes = np.zeros((len(self.parent_window.get_dancers()), 2), dtype = np.int32)
+        for i, dancer in enumerate(self.parent_window.get_dancers()):
+            f_1, f_2 = dancer.root_keyframe.get_nearest_keyframe(curr_frame)
+            keyframes[i] = [dancer.root_keyframe.keyframes[f_1].frame, dancer.root_keyframe.keyframes[f_2].frame]
+            
+        min_frame = np.min(keyframes[:,0])
+        max_frame = np.max(keyframes[:,1])
+        
+        if min_frame == max_frame:
+            return
+        
+        n_knot = 1
+        col_handler = CollisionHandler(radius = 10)
+        pos_diffs = np.zeros((max_frame-min_frame+1, len(self.parent_window.get_dancers()), 3), dtype = np.float32)
+        for frame in range(min_frame, max_frame+1):
+            positions = []
+            for i, dancer in enumerate(self.parent_window.get_dancers()):
+                position = dancer.root_keyframe.interpolate_position(frame)
+                positions.append(position)
+            pos_diff = col_handler.handle_collision(np.array(positions))
+            pos_diffs[frame] = pos_diff
+        
+        for i, dancer in enumerate(self.parent_window.get_dancers()):
+            pos_diff = pos_diffs[:,i,:]
+            pos_norm = np.linalg.norm(pos_diff, axis = 1)
+
+            non_zero_indices = np.nonzero(pos_norm)[0]
+            non_zero_values = pos_norm[non_zero_indices]
+
+            min_indices = non_zero_indices[np.argpartition(non_zero_values, n_knot)[:n_knot]]
+            # max_indices = np.argpartition(pos_norm, kth=-n_knot)[-n_knot:]
+            
+            
+            if np.all(pos_diff == 0):
+                continue
+            
+            
+            positions=[]
+            for idx in min_indices:
+                position = dancer.root_keyframe.interpolate_position(idx+min_frame)
+                positions.append(position)
+            for j, idx in enumerate(min_indices):
+                diff = pos_diff[idx]
+                diff *= 30 / np.linalg.norm(diff)
+                dancer.add_root_keyframe(idx+min_frame, pos = positions[j] + diff)            
     
     def on_key_release(self, symbol, modifiers, frame):
         if symbol==pyglet.window.key.P:

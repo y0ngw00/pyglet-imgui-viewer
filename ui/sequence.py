@@ -20,6 +20,7 @@ class Sequence(BoxItem):
         self.sequence_height = sequence_height - self.padding_y
         
         self.text_color = imgui.get_color_u32_rgba(1,1,1,1)
+        self.line_color = imgui.get_color_u32_rgba(0.7,0.7,0.7,1)
         self.sequence_color = imgui.get_color_u32_rgba(1,0.7,0,1)   
         self.background_color = imgui.get_color_u32_rgba(1,1,1,0.3)     
 
@@ -27,9 +28,9 @@ class Sequence(BoxItem):
             for anim_layer in target.joints[0].anim_layers:
                 frame_start = anim_layer.frame_original_region_start
                 frame_end = anim_layer.frame_original_region_end
-                self.children.append(SequenceTrack(self, target.name, frame_start, frame_end))
+                self.children.append(SequenceTrack(self, target.get_name, frame_start, frame_end))
     
-    def render(self, idx):
+    def render(self, idx, current_frame=0):
         draw_list = imgui.get_window_draw_list()
         canvas_pos = imgui.get_window_position()  # Get the position of the canvas window
         layout_padding = [10,10]
@@ -38,15 +39,24 @@ class Sequence(BoxItem):
         scroll_x = imgui.get_scroll_x()
         scroll_y = imgui.get_scroll_y()
         
+        # highlight when selected
         if self.target is not None and self.target.is_selected():
             draw_list.add_rect_filled(canvas_pos.x+layout_padding[0], self.y_origin, 
                         self.x_origin+self.xsize_box, self.y_origin+self.ysize_box, 
                         self.background_color, rounding=4)
+            
+        # separator
+        draw_list.add_line(canvas_pos.x+layout_padding[0], self.y_origin+self.ysize_box, 
+                           canvas_pos.x+layout_padding[0]+self.xsize_box+current_frame, self.y_origin+self.ysize_box, self.line_color, 2)
+
+            
         self.update_position(x = canvas_pos.x+layout_padding[0]+self.sequence_pos_start - scroll_x, 
                             y = canvas_pos.y+layout_padding[1] + idx * self.sequence_height + self.padding_y - scroll_y,
-                            xsize_box = imgui.get_window_width()- self.sequence_pos_start -50 , 
+                            xsize_box = imgui.get_window_width(), 
                             ysize_box = self.sequence_height)
-        self.draw_box(draw_list, color = self.sequence_color, rounding=4, thickness=2)
+        
+        # self.draw_box(draw_list, color = self.sequence_color, rounding=4, thickness=2)
+        
         
         with imgui.font(Fonts["sequence_name"]["font"]):
             text_size = imgui.calc_text_size(self.name)
