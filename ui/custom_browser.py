@@ -29,6 +29,7 @@ class CustomBrowser:
         
         self.scene = scene
         self.button_font_bold = Fonts["button_font_bold"]["font"]
+        self.status_font = Fonts["dancer_label"]["font"]   
         
         self.selected_audio_file = ""
         self.selected_network_file = ""
@@ -52,7 +53,6 @@ class CustomBrowser:
         imgui.set_next_window_size(x_size, y_size, imgui.ALWAYS)
         
         imgui.begin("Custom Editor", flags=imgui.WINDOW_NO_MOVE)
-
         window_size = imgui.get_window_size()
         child_size = (window_size[0] - 30, 80/1440 * y_scale)  # 10 pixels smaller on each side
         # Begin the child window
@@ -110,9 +110,10 @@ class CustomBrowser:
         
         # Begin current status viewer
         imgui.begin_child("Child Window3", window_size[0] - 30, 400/1440*y_scale, border=True)        
-        imgui.text("Current frame: {}".format(self.parent_window.get_frame()))
-        imgui.text("Current time: {}".format(self.parent_window.get_play_time()))
-        imgui.text("Current FPS: {:02f}".format(self.parent_window.get_fps()))
+        with imgui.font(self.status_font):
+            imgui.text("Current frame: {}".format(self.parent_window.get_frame()))
+            imgui.text("Current time: {}".format(self.parent_window.get_play_time()))
+            imgui.text("Current FPS: {:02f}".format(self.parent_window.get_fps()))
         imgui.end_child()
 
         imgui.end()
