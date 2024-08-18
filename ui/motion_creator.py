@@ -247,12 +247,15 @@ class MotionCreator(BoxItem):
         name, ext = os.path.splitext(self.current_filepath)
         file_path = f"{name}_trim{ext}"
         self.save_video(file_path)
-        output_dir = os.path.dirname(file_path)
+        
+        output_dir = name
+        os.makedirs(output_dir, exist_ok=True)
         
         from third_party.WHAM.wham_api import WHAM_API
         wham_model = WHAM_API()
         results, tracking_results, slam_results = wham_model(video = file_path, output_dir = output_dir)
         
+        loader.load_smpl_animation(results)
         self.clear()
         self.load_video(output_dir + "/output.mp4")
     
