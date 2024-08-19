@@ -84,7 +84,7 @@ void main()
     vec3 lightDir = normalize(lightPos - fragPos);
     vec3 normal = normalize(fragNormal);
 
-    float diff = max(dot(lightDir, normal), 1.0);
+    float diff = max(dot(lightDir, normal), 0.0);
     vec3 diffuse = k_d * diff * color;
 
     // specular
