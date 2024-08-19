@@ -167,7 +167,7 @@ class SequenceTrack(BoxItem):
         self.frame_end = frame_end
         self.frame_speed = frame_speed
         self.track_speed = 1.0
-        self.height = parent.ysize_box
+        self.height = parent.sequence_height
         self.layout_padding = [10,10]
         self.__lock_translate = False
         
