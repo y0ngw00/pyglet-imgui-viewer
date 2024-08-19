@@ -5,6 +5,15 @@ from pyglet.math import Mat4, Vec3, Vec4
 
 EPS = 1e-6
 
+def Rodrigues(rotvec):
+    theta = np.linalg.norm(rotvec)
+    r = (rotvec/theta).reshape(3,) if theta > 0. else rotvec
+    cost = np.cos(theta)
+    mat = np.asarray([[0, -r[2], r[1]],
+                      [r[2], 0, -r[0]],
+                      [-r[1], r[0], 0]])
+    return(cost*np.eye(3) + (1-cost)*r.dot(r.T) + np.sin(theta)*mat)
+
 def normalize(x):
     x_normed = x / (np.linalg.norm(x) + 1e-6)
     return x_normed

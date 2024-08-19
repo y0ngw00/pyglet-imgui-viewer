@@ -14,6 +14,8 @@ from frame_bar import FrameBar
 from box_item import BoxItem
 from enum_list import Boundary
 
+import loader
+
 from ops import CollisionHandler
 class Sequencer(BoxItem):
     def __init__(self, parent_window, x_pos, y_pos, x_size, y_size):
@@ -162,10 +164,16 @@ class Sequencer(BoxItem):
         self.show_popup = False
     
     def insert_motion(self, file_path):
+        name, joints = loader.load_fbx_animation(file_path)
         for seq in self.motion_sequences:
             if hasattr(seq, 'target') and seq.target.is_selected():
-                seq.insert_motion_track(file_path, self.parent_window.get_frame())
+                seq.insert_motion_track(name, joints, self.parent_window.get_frame())
         self.show_popup = False
+    
+    def insert_smpl_motion(self, idx, data):
+        seq = self.motion_sequences[idx]
+        if hasattr(seq, 'target') and seq.target.is_selected():
+            seq.insert_smpl_motion_track(data, self.parent_window.get_frame())
         
     def clear_all_track(self):
         for seq in self.motion_sequences:

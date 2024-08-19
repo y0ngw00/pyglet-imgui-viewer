@@ -36,7 +36,7 @@ class CustomGroup(pyglet.graphics.Group):
         self.shader_program.use()
         
         # Default material properties
-        self.K_ambient = Vec3(0.1, 0.1, 0.1)
+        self.K_ambient = Vec3(0.3, 0.3, 0.3)
         self.K_diffuse = Vec3(1.0, 1.0, 1.0)
         self.K_specular = Vec3(0.1, 0.1, 0.1)
 

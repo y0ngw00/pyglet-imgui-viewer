@@ -2,6 +2,7 @@ import base64
 import os
 import random
 import json
+import time
 
 import numpy as np
 from pygltflib import GLTF2, Node, Skin, Accessor, BufferView, BufferFormat
@@ -11,8 +12,8 @@ from motionutils.Quaternions import Quaternions
 from object import Object,MeshType,Character,Joint,Link
 from animation_layer import AnimationLayer
 from extern_file_parser import pycomcon
-
 import mathutil
+from utils import process_poses, export_animated_mesh
 
 def load_gltf(filename):
     gltf = GLTF2().load(filename)
@@ -198,18 +199,19 @@ def load_fbx_mesh(fbx_loader):
                                 "skin_data" : skin_data,
                                 })
             
-        # diffuse_map = fbx_mesh.diffuseTexture
+        diffuse_map = fbx_mesh.diffuseTexture
         # diffuse_map = "/home/imo/Downloads/colorcode.jpeg"
         # diffuse_map = "/home/imo/Project/DanceTransfer/data/mixamo_library/Amy.fbm/Ch46_1001_Diffuse.png"
-        # if diffuse_map != '':
-            # mesh.set_texture(diffuse_map)
+        if diffuse_map != '':
+            mesh.set_texture(diffuse_map)
         
         mesh.mesh.stride = 3 # set to triangular mesh            
         meshes.append(mesh)
         
     # if diffuse_map == '':
-    meshes[1].set_color((200, 200, 200, 255))
-    meshes[0].set_color((0, 4, 47, 255))
+    if len(meshes) >= 2:
+        meshes[1].set_color((200, 200, 200, 255))
+        meshes[0].set_color((0, 4, 47, 255))
     
     return meshes
 
@@ -238,7 +240,7 @@ def load_fbx_joint(fbx_loader, load_anim):
             animation_data = fbx_joint.animList
             animation_data = np.array(animation_data)
 
-            if animation_data is not None:
+            if animation_data is not None and len(animation_data) > 0:
                 rot_mat = animation_data[:,:3,:3]
                 rot_quat = Quaternions.from_transforms(rot_mat).qs
                 
@@ -299,7 +301,32 @@ def load_bvh_animation(filepath):
     
     print("BVH load success.")
 
-    return name, joints
+    return name, joints    
+
+def save_smpl_fbx(pkl_path, fbx_path):
+    startTime = time.perf_counter()
+
+    if pkl_path.endswith('.pkl'):
+        if not os.path.isfile(pkl_path):
+            print('ERROR: Invalid input file')
+            return
+
+        poses_processed = process_poses(
+            input_path=pkl_path,
+            gender='male',
+            fps_source=30,
+            fps_target=30,
+            start_origin=0,
+            person_id=0
+        )
+        export_animated_mesh(fbx_path)
+
+    print('--------------------------------------------------')
+    print('Animation export finished.')
+    print(f'Poses processed: {str(poses_processed)}')
+    print(f'Processing time : {time.perf_counter() - startTime:.2f} s')
+    print('--------------------------------------------------')
+    return
 
 def create_bvh_joint(data,names,scale_joint):
     joints = []
@@ -354,3 +381,5 @@ def get_buffer_data(file_path, gltf,buffer_view, glb_data=None):
 
     else:
         return None
+    
+

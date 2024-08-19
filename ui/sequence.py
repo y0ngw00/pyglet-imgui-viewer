@@ -1,7 +1,6 @@
 
 import imgui
 import imgui.core
-import loader
 
 from fonts import Fonts
 from box_item import BoxItem
@@ -69,14 +68,23 @@ class Sequence(BoxItem):
         for track in self.children:
             track.render(self.x_origin, self.y_origin)
         
-    def insert_motion_track(self, file_path, start_frame):
-        name, joints = loader.load_fbx_animation(file_path)
+    def insert_motion_track(self,name, joints, start_frame):
         self.target.add_animation(joints, start_frame, initialize_position= True)
         self.children.append(SequenceTrack(parent = self, 
                                            name = name, 
                                            frame_start = start_frame,
                                            frame_end = start_frame + len(joints[0].anim_layers[-1].rotations) -1,
                                            )) 
+        
+    def insert_smpl_motion_track(self, data, start_frame):
+        pass
+        # name, joints = loader.load_smpl_animation(data,0)
+        # self.target.add_animation(joints, start_frame, initialize_position= True)
+        # self.children.append(SequenceTrack(parent = self,
+        #                                      name = name,
+        #                                      frame_start = start_frame,
+        #                                      frame_end = start_frame + len(joints[0].anim_layers[-1].rotations) -1,
+        #                                      ))
         
     def insert_key_frame(self, frame):
         self.children.append(SequenceTrack(parent = self, 
