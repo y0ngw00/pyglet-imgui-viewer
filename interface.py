@@ -47,9 +47,9 @@ class UI:
 
         self.titlebar = TitleBar(self)
 
-        self.DancerFormation = DancerFormation(self,660/2560, 0/1440, 1900/2560, 960/1440)
+        self.DancerFormation = DancerFormation(self,660/2560, 30/1440, 1900/2560, 960/1440)
         self.Sequencer = Sequencer(self, 660/2560, 960/1440, 1900/2560, 480/1440)
-        self.custom_browser = CustomBrowser(self,0/2560,0/1440,660/2560,1440/1440, self.scene)
+        self.custom_browser = CustomBrowser(self,0/2560,30/1440,660/2560,1440/1440, self.scene)
         self.motion_creator = MotionCreator(self)
         self.impl.refresh_font_texture()
         
@@ -78,7 +78,7 @@ class UI:
         return self.Sequencer
     
     def add_dancer(self, character)->None:
-        self.dancers.append(Dancer(character, position_scale=1.0, radius = 30))
+        self.dancers.append(Dancer(character, position_scale=2.0, radius = 30))
         self.Sequencer.add_sequence(character)
         self.scene.add_character(character)
         
