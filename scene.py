@@ -21,6 +21,22 @@ class Scene:
         plane.set_transform(mat4_identity)
         self.add_object(plane)
         
+        wall = Object(MeshType.Cube, {"scale":[10000.0, 10000.0, 1.0]})
+        # wall.set_transform(mat4_identity)
+        self.add_object(wall)
+        wall.set_position([0,50,-2000])
+        wall.update_world_transform()
+        
+        wall_r = Object(MeshType.Cube, {"scale":[1.0, 10000.0, 10000.0]})
+        self.add_object(wall_r)
+        wall_r.set_position([5000,50,0])
+        wall_r.update_world_transform()
+        
+        wall_l = Object(MeshType.Cube, {"scale":[1.0, 10000.0, 10000.0]})
+        self.add_object(wall_l)
+        wall_l.set_position([-5000,50,0])
+        wall_l.update_world_transform()
+        
       
     def draw_root_trajectory(self):
         '''
