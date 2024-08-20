@@ -52,8 +52,9 @@ class MotionCreator(BoxItem):
                                 y_offset = 500, 
                                 color = imgui.get_color_u32_rgba(1,0,0,1))
         
+        # Apply Motion popup
         self.checkbox_applied_dancers = [False for i in range(self.parent_window.get_num_dancers())]
-        
+        self.start_frame_applied = 0
         self.output_dir = ""
             
     def render(self):
@@ -201,7 +202,7 @@ class MotionCreator(BoxItem):
             if imgui.button("Apply motion"):
                 imgui.open_popup("Message: Apply motion")
             if imgui.begin_popup_modal("Message: Apply motion").opened:
-                if self.output_dir == "":
+                if self.output_dir == "" or len(self.video_sequence.children) == 0:
                     imgui.text("No motion is generated.")
                     imgui.text("Please create motion first.")
                     imgui.dummy(0, imgui.get_content_region_available()[1] - imgui.get_text_line_height_with_spacing())
@@ -210,6 +211,7 @@ class MotionCreator(BoxItem):
                     imgui.selectable("OK", width = 30)
                     imgui.end_popup()
                 else:
+                    _, self.start_frame_applied = imgui.input_int("Start frame", self.start_frame_applied)
                     imgui.text("Select dancers:")
                     imgui.separator()
                     dancers = self.parent_window.get_dancers()
@@ -223,7 +225,7 @@ class MotionCreator(BoxItem):
                     imgui.same_line()
                     clicked, _ = imgui.selectable("Apply", width = 50)
                     if clicked:
-                        self.apply_motion()
+                        self.apply_motion(self.start_frame_applied)
                     imgui.same_line()
                     imgui.selectable("Close", width = 50)
                     imgui.end_popup()
@@ -305,7 +307,7 @@ class MotionCreator(BoxItem):
 
         self.load_video(self.output_dir + "/output.mp4")
         
-    def apply_motion(self):           
+    def apply_motion(self, start_frame):           
         file_path = self.output_dir + "/output.fbx"
                 
         # Check dancers to apply motion
@@ -315,7 +317,7 @@ class MotionCreator(BoxItem):
             if self.checkbox_applied_dancers[idx]:
                 dancer.target.select(True)
                 
-        self.parent_window.insert_motion(file_path)
+        self.parent_window.insert_motion(file_path, start_frame)
             
     def draw_time_line(self, draw_list, x,y):
         time_length_scale = self.time_length_scale if self.time_length_scale > 0 else 0.1

@@ -63,8 +63,10 @@ class Dancer:
         self.x = self.position_scale * position[0]
         self.y = self.position_scale * position[2]
 
-    def add_root_keyframe(self, frame) -> None:
-        keyframe = KeyFrame(frame, self.get_character_pos())
+    def add_root_keyframe(self, frame, pos = None) -> None:
+        if pos is None:
+            pos = self.get_character_pos()
+        keyframe = KeyFrame(frame, pos)
         self.root_keyframe.add_keyframe(keyframe)
         
     def add_group_keyframe(self, frame) -> None:

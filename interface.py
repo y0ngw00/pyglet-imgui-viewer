@@ -100,8 +100,10 @@ class UI:
         self.window.initialize_audio(file_path)
         self.Sequencer.insert_music_sequence()
     
-    def insert_motion(self, file_path):
-        self.Sequencer.insert_motion(file_path)
+    def insert_motion(self, file_path, start_frame = -1):
+        if start_frame == -1:
+            start_frame = self.window.frame
+        self.Sequencer.insert_motion(file_path, start_frame)
 
     def open_file(self, file_path, file_type = FileType.Character,load_anim = True):
         ext = file_path.split('.')[-1]

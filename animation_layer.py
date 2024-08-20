@@ -27,7 +27,7 @@ class AnimationLayer:
         
         m = np.eye(4, dtype=np.float32)
         m[0:3, 0:3] = Quaternions(self.rotations[index]).transforms()[0]
-        if self.joint.is_root is True and len(self.positions) > index:
+        if len(self.positions) > index:
             m[3, 0:3] = self.positions[index]
         else:
             m[3, 0:3] = self.joint.transform[3, 0:3]
