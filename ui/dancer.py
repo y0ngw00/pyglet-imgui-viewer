@@ -1,6 +1,9 @@
 from fonts import Fonts
 from keyframe import KeyFrameAnimation, KeyFrame, InterpolationType
+from animation_layer import AnimationLayer
 import imgui
+
+from imgui_color import COLORS, ImguiColor
 
 class Dancer:
     def __init__(self, character, position_scale = 1, radius = 10):
@@ -9,19 +12,19 @@ class Dancer:
         self.position_scale = position_scale
         self.__clicked = False
         
-        self.thick = 5
+        self.thick = 3
         self.x = 0 
         self.y = 0
         self.update_circle_pos()
                 
-        self.__group_idx = 1      
+        self.__group_idx = 0      
         self.group_idx_font = Fonts["group_idx_font"]["font"]
         self.dancer_label= Fonts["dancer_label"]["font"]
         
         self.root_keyframe = KeyFrameAnimation(InterpolationType.LINEAR)
         self.group_keyframe = KeyFrameAnimation(InterpolationType.STEP)
         self.add_group_keyframe(0)
-
+        
     @property
     def get_name(self):
         return self.target.get_name
@@ -92,13 +95,16 @@ class Dancer:
         
     def render(self,draw_list, x, y, frame):
         color = imgui.get_color_u32_rgba(1,1,0,1) if self.target.is_selected() else imgui.get_color_u32_rgba(1,1,1,1)                 
-            
-        draw_list.add_circle(x+self.x, y+self.y, radius = self.radius,col = color, thickness = self.thick)
         
         # Dancer group index
-        with imgui.font(self.group_idx_font):
-            text_size = imgui.calc_text_size(str(self.__group_idx))
-            draw_list.add_text(x+self.x-text_size.x/2, y+self.y-text_size.y/2, col = color, text = str(self.__group_idx))
+        fill_color = ImguiColor.from_name(COLORS[self.__group_idx])
+        draw_list.add_circle_filled(x+self.x, y+self.y, radius = self.radius ,col = fill_color.get_color())
+        
+        draw_list.add_circle(x+self.x, y+self.y, radius = self.radius,col = color, thickness = self.thick)
+        
+        # with imgui.font(self.group_idx_font):
+            # text_size = imgui.calc_text_size(str(self.__group_idx))
+            # draw_list.add_text(x+self.x-text_size.x/2, y+self.y-text_size.y/2, col = color, text = str(self.__group_idx))
         
         # Dancer name
         with imgui.font(self.dancer_label):

@@ -4,7 +4,7 @@ import imgui
 import imgui.core
 
 import numpy as np
-
+from imgui_color import COLORS
 class GroupingStatus:
     def __init__(self, parent_window):
         self.parent_window = parent_window
@@ -12,7 +12,7 @@ class GroupingStatus:
         self.formation = parent_window.DancerFormation
         
         self.new_pair_input = dict({"dancer1": "", "dancer2": "", "start": "", "last": ""})
-        self.pairs = np.zeros([0,4], dtype = np.int32)        
+        self.pairs = np.zeros([0,4], dtype = np.int32)       
         
     def render(self):
         if imgui.begin_table("Dancer pairing", 2):  
@@ -24,15 +24,22 @@ class GroupingStatus:
             imgui.push_item_width(200)
             imgui.text("Group")
             
-            circles = self.parent_window.get_dancers()
+            dancers = self.parent_window.get_dancers()
             
-            for idx, circle in enumerate(circles):
+            for idx, dancer in enumerate(dancers):
                 imgui.table_next_row()
                 imgui.table_set_column_index(0)
                 imgui.push_item_width(200) 
-                changed, circle.set_name = imgui.input_text("##{}".format(idx), circle.get_name, buffer_length = 200)
+                changed, dancer.set_name = imgui.input_text("##{}".format(idx), dancer.get_name, buffer_length = 200)
                 imgui.table_next_column()
-                changed, circle.set_group_index = imgui.input_int("##Dancer's group{}".format(idx), circle.get_group_index)
+                group_idx = dancer.get_group_index
+                with imgui.begin_combo("##Dancer {}'s group".format(idx), f'{group_idx} ({COLORS[group_idx]})', flags = imgui.COMBO_HEIGHT_REGULAR) as combo:
+                    if combo.opened:
+                        for i, item in enumerate(COLORS):
+                            if imgui.selectable(f'{i} ({item})')[0]:
+                                dancer.set_group_index = i
+                                print(f'Selected item: {COLORS[group_idx]}')
+                               
                 # imgui.table_next_column()
                 # imgui.text(str(pair_info[3]))
             
