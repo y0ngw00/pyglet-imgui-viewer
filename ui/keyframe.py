@@ -34,15 +34,17 @@ class KeyFrameAnimation:
         self.keyframes = []
     
     def get_nearest_keyframe(self, frame):
-        if frame <= self.keyframes[0].frame:
+        if len(self.keyframes) == 1 or frame < self.keyframes[0].frame:
             return 0, 0
-        elif frame >= self.keyframes[-1].frame:
-            return len(self.keyframes) - 1, len(self.keyframes) - 1
+        elif frame > self.keyframes[-1].frame:
+            return self.keyframes[-1].frame, self.keyframes[-1].frame
         else:
+            idx = 0
             for i in range(len(self.keyframes) - 1):
-                if self.keyframes[i].frame <= frame < self.keyframes[i + 1].frame:
+                if frame >= self.keyframes[i].frame and frame <= self.keyframes[i + 1].frame:
+                    idx = i
                     break
-            return i, i+1
+            return self.keyframes[idx].frame, self.keyframes[idx+1].frame
 
     def interpolate_position(self, frame):
         if len(self.keyframes) == 0:

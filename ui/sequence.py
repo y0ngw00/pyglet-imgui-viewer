@@ -76,16 +76,6 @@ class Sequence(BoxItem):
                                            frame_end = start_frame + len(joints[0].anim_layers[-1].rotations) -1,
                                            )) 
         
-    def insert_smpl_motion_track(self, data, start_frame):
-        pass
-        # name, joints = loader.load_smpl_animation(data,0)
-        # self.target.add_animation(joints, start_frame, initialize_position= True)
-        # self.children.append(SequenceTrack(parent = self,
-        #                                      name = name,
-        #                                      frame_start = start_frame,
-        #                                      frame_end = start_frame + len(joints[0].anim_layers[-1].rotations) -1,
-        #                                      ))
-        
     def insert_key_frame(self, frame):
         self.children.append(SequenceTrack(parent = self, 
                                            frame_start = frame,

@@ -2,12 +2,51 @@ import numpy as np
 
 
 class CollisionHandler:
-    def __init__(self, radius = 20, safe_distance = 10):
-        self.rad_sq = radius ** 2
+    def __init__(self, radius = 20, n_knot = 1, safe_distance = 10):
         self.radius = radius
+        self.n_knot = n_knot
         self.safe_distance = safe_distance
+        
+    def handle_collision(self, dancers, min_frame, max_frame):
+        pos_diffs = np.zeros((max_frame-min_frame+1, len(dancers), 3), dtype = np.float32)
+        for frame in range(min_frame, max_frame+1):
+            positions = []
+            for i, dancer in enumerate(dancers):
+                position = dancer.root_keyframe.interpolate_position(frame)
+                positions.append(position)
+            positions = np.array(positions)
+            pos_diff = self.compute_resolved_position_diff(positions)
+            pos_diffs[frame-min_frame] = pos_diff
+               
+        for i, dancer in enumerate(dancers):
+            pos_diff = pos_diffs[:,i,:]
+            pos_norm = np.linalg.norm(pos_diff, axis = 1)
+
+            non_zero_indices = np.nonzero(pos_norm)[0]
+            non_zero_values = pos_norm[non_zero_indices]
+            
+            min_indices = np.zeros(self.n_knot, dtype = np.int32)
+            if len(non_zero_indices) == 0:
+                continue
+            elif len(non_zero_indices) == 1:
+                min_indices = non_zero_indices
+            else:
+                min_indices = non_zero_indices[np.argpartition(non_zero_values, self.n_knot)[:self.n_knot]]
+            
+            if np.all(pos_diff == 0):
+                continue
+            
+            positions=[]
+            for idx in min_indices:
+                position = dancer.root_keyframe.interpolate_position(idx+min_frame)
+                positions.append(position)
+            for j, idx in enumerate(min_indices):
+                diff = pos_diff[idx]
+                diff *= 30 / np.linalg.norm(diff)
+                dancer.add_root_keyframe(idx+min_frame, pos = positions[j] + diff)            
     
-    def handle_collision(self, positions):
+    
+    def compute_resolved_position_diff(self,positions):
         posdiff_matrix, col_matrix = self.collision_matrix(positions)
         col_distance_mat = posdiff_matrix * col_matrix[..., np.newaxis]
         

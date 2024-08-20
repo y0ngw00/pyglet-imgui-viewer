@@ -211,7 +211,7 @@ class Sequencer(BoxItem):
         keyframes = np.zeros((len(self.parent_window.get_dancers()), 2), dtype = np.int32)
         for i, dancer in enumerate(self.parent_window.get_dancers()):
             f_1, f_2 = dancer.root_keyframe.get_nearest_keyframe(curr_frame)
-            keyframes[i] = [dancer.root_keyframe.keyframes[f_1].frame, dancer.root_keyframe.keyframes[f_2].frame]
+            keyframes[i] = [f_1, f_2]
             
         min_frame = np.min(keyframes[:,0])
         max_frame = np.max(keyframes[:,1])
@@ -219,41 +219,9 @@ class Sequencer(BoxItem):
         if min_frame == max_frame:
             return
         
-        n_knot = 1
-        col_handler = CollisionHandler(radius = 10)
-        pos_diffs = np.zeros((max_frame-min_frame+1, len(self.parent_window.get_dancers()), 3), dtype = np.float32)
-        for frame in range(min_frame, max_frame+1):
-            positions = []
-            for i, dancer in enumerate(self.parent_window.get_dancers()):
-                position = dancer.root_keyframe.interpolate_position(frame)
-                positions.append(position)
-            pos_diff = col_handler.handle_collision(np.array(positions))
-            pos_diffs[frame] = pos_diff
+        col_handler = CollisionHandler(radius = 10, n_knot = 1)
+        col_handler.handle_collision(self.parent_window.get_dancers(), min_frame, max_frame)
         
-        for i, dancer in enumerate(self.parent_window.get_dancers()):
-            pos_diff = pos_diffs[:,i,:]
-            pos_norm = np.linalg.norm(pos_diff, axis = 1)
-
-            non_zero_indices = np.nonzero(pos_norm)[0]
-            non_zero_values = pos_norm[non_zero_indices]
-
-            min_indices = non_zero_indices[np.argpartition(non_zero_values, n_knot)[:n_knot]]
-            # max_indices = np.argpartition(pos_norm, kth=-n_knot)[-n_knot:]
-            
-            
-            if np.all(pos_diff == 0):
-                continue
-            
-            
-            positions=[]
-            for idx in min_indices:
-                position = dancer.root_keyframe.interpolate_position(idx+min_frame)
-                positions.append(position)
-            for j, idx in enumerate(min_indices):
-                diff = pos_diff[idx]
-                diff *= 30 / np.linalg.norm(diff)
-                dancer.add_root_keyframe(idx+min_frame, pos = positions[j] + diff)            
-    
     def on_key_release(self, symbol, modifiers, frame):
         if symbol==pyglet.window.key.P:
             self.formation_sequence.clear_all_track()
