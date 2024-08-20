@@ -101,7 +101,7 @@ class Sequencer(BoxItem):
                 self.popup_menu.render(x,y)
             
             # Scroll bar
-            imgui.set_cursor_pos((self.x_origin+self.xsize_box+frame, self.sequence_height * len(self.motion_sequences) -  imgui.get_window_height()))
+            imgui.set_cursor_pos((self.x_origin+self.xsize_box+2*frame, self.sequence_height * len(self.motion_sequences) -  imgui.get_window_height()))
                     
             imgui.end()
         return
@@ -112,7 +112,7 @@ class Sequencer(BoxItem):
         long_line = 15
         draw_list.add_line(self.x_origin, 
                                 self.y_origin + offset + 25, 
-                                self.x_origin+self.sequence_pos_start+3000, 
+                                self.x_origin+self.sequence_pos_start+9000, 
                                 self.y_origin + offset + 25, imgui.get_color_u32_rgba(1,1,1,1), 1)
         for sec in range(0, 300):
             if sec % 5 == 0:
