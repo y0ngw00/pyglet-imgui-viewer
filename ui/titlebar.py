@@ -11,6 +11,8 @@ class TitleBar:
         
         self.parent_window = parent_window
         self.is_open_file = False
+        self.file_ext = ""
+        self.file_descriptions = ""
         self.is_record = False
 
 
@@ -35,7 +37,7 @@ class TitleBar:
             imgui.open_popup("Open File")
 
             if imgui.begin_popup_modal("Open File", None, imgui.WINDOW_ALWAYS_AUTO_RESIZE)[0]:
-                selected_file = self.parent_window.render_file_dialog(file_descriptions, file_ext)
+                selected_file = self.parent_window.render_file_dialog(self.file_descriptions, self.file_ext)
 
             imgui.end_popup()
 
@@ -53,18 +55,18 @@ class TitleBar:
         if imgui.begin_menu("Open"):
         #     pass
             if imgui.menu_item("BVH", None)[0]:
-                file_descriptions = "BVH Files"
-                file_ext = "*.bvh"
+                self.file_descriptions = "BVH Files"
+                self.file_ext = "*.bvh"
                 self.is_open_file = True
 
             if imgui.menu_item("GLTF", None)[0]:
-                file_descriptions = "GLTF Files"
-                file_ext = ["*.gltf","*.glb"]
+                self.file_descriptions = "GLTF Files"
+                self.file_ext = ["*.gltf","*.glb"]
                 self.is_open_file = True
                 
             if imgui.menu_item("FBX", None)[0]:
-                file_descriptions = "FBX Files"
-                file_ext = ["*.fbx"]
+                self.file_descriptions = "FBX Files"
+                self.file_ext = ["*.fbx"]
                 self.is_open_file = True
 
             imgui.end_menu()
@@ -90,7 +92,7 @@ class TitleBar:
             pass
         
         if imgui.menu_item("Quit", "Alt+F4")[0]:
-            self.window.quit()
+            self.window.quit()            
             
     def render_tool_tab(self):
         record_text = "Record" if not self.is_record else "Stop"
