@@ -7,6 +7,7 @@ from pyglet.graphics.shader import Shader, ShaderProgram
 from pyglet.gl import GL_TRIANGLES
 from pyglet.math import *
 from pyglet.gl import *
+import imageio # For video recording
 
 from primitives import CustomGroup
 from scene import Scene
@@ -62,6 +63,10 @@ class RenderWindow(pyglet.window.Window):
         self.animate = False
         self.show_scene = True
         self.show_ui = True
+        
+        # Video recording
+        self.is_record = False
+        self.writer = None
 
         self.setup()
         # Keyboard/Mouse control. Not implemented yet.
@@ -103,6 +108,9 @@ class RenderWindow(pyglet.window.Window):
             self.batch.draw()
         if self.show_ui is True:
             self.GUI.render()
+            
+        if self.is_record is True and self.writer is not None:
+            self.record()
 
     def update(self,dt) -> None:
         self.fps = 1.0/dt
@@ -182,6 +190,23 @@ class RenderWindow(pyglet.window.Window):
     def update_shape(self):
         for shape in self.shapes:
             shape.indexed_vertices_list.vertices = shape.object.mesh.vertices
+            
+    def record(self):
+        """
+        Records the current frame and appends it to the video writer.
+
+        This method retrieves the color buffer from the pyglet window, converts it to an image data object,
+        and then converts the image data to a numpy array. The array is then flipped vertically to make the
+        image correctly oriented. Finally, the frame is appended to the video writer.
+        """
+        color_buffer = pyglet.image.get_buffer_manager().get_color_buffer()
+        image_data = color_buffer.get_image_data()
+        buffer = image_data.get_data("RGBA", image_data.pitch)
+
+        # convert buffer to RGBA numpy array
+        frame = np.asarray(buffer).reshape((image_data.height, image_data.width, 4))
+        frame = np.flipud(frame)  # Make image correctly oriented
+        self.writer.append_data(frame)
 
     def on_resize(self, width, height):
         glViewport(0, 0, *self.get_framebuffer_size())
@@ -198,7 +223,16 @@ class RenderWindow(pyglet.window.Window):
 
     def is_ui_active(self):
         return self.GUI.is_ui_active()
-
+    
+    def start_recording(self):
+        self.writer = imageio.get_writer('output.mp4', fps=self.framerate)
+        self.is_record = True
+        
+    def stop_recording(self):
+        if self.writer is not None:
+            self.writer.close()
+        self.writer = None
+        self.is_record = False
 
     @property
     def get_fov(self):

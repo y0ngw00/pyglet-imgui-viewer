@@ -156,6 +156,12 @@ class UI:
     def set_frame(self, new_frame):
         self.window.set_frame = new_frame
         self.window.set_update_audio_flag(True)
+        
+    def start_recording(self):
+        self.window.start_recording()
+        
+    def stop_recording(self):
+        self.window.stop_recording()
     
     def on_key_press(self, symbol, modifiers) -> None:
         pass
