@@ -1,7 +1,7 @@
 import imgui
 import imgui.core
 
-COLORS = ['white','red','green','blue','yellow','purple','orange','cyan','black']
+COLORS = ['white_grey','red','orange','yellow','green','cyan','blue','purple','white','grey','black']
 IMGUI_COLOR_RGB = {
     'white': (1,1,1,1),
     'red': (1,0,0,1),
@@ -11,7 +11,9 @@ IMGUI_COLOR_RGB = {
     'purple': (1,0,1,1),
     'orange': (1,0.5,0,1),
     'cyan': (0,1,1,1),
-    'black': (0,0,0,1)
+    'black': (0,0,0,1),
+    'grey': (0.5,0.5,0.5,1),
+    'white_grey': (0.9,0.9,0.9,1),
 }
 
 class ImguiColor:

@@ -38,7 +38,6 @@ class GroupingStatus:
                         for i, item in enumerate(COLORS):
                             if imgui.selectable(f'{i} ({item})')[0]:
                                 dancer.set_group_index = i
-                                print(f'Selected item: {COLORS[group_idx]}')
                                
                 # imgui.table_next_column()
                 # imgui.text(str(pair_info[3]))

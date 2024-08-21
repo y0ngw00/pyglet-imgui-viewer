@@ -12,7 +12,7 @@ class Dancer:
         self.position_scale = position_scale
         self.__clicked = False
         
-        self.thick = 3
+        self.thick = 8
         self.x = 0 
         self.y = 0
         self.update_circle_pos()
@@ -98,13 +98,14 @@ class Dancer:
         
         # Dancer group index
         fill_color = ImguiColor.from_name(COLORS[self.__group_idx])
-        draw_list.add_circle_filled(x+self.x, y+self.y, radius = self.radius ,col = fill_color.get_color())
+        draw_list.add_circle_filled(x+self.x, y+self.y, radius = self.radius ,col = color)
         
-        draw_list.add_circle(x+self.x, y+self.y, radius = self.radius,col = color, thickness = self.thick)
+        draw_list.add_circle(x+self.x, y+self.y, radius = self.radius,col = fill_color.get_color(), thickness = self.thick)
         
-        # with imgui.font(self.group_idx_font):
-            # text_size = imgui.calc_text_size(str(self.__group_idx))
-            # draw_list.add_text(x+self.x-text_size.x/2, y+self.y-text_size.y/2, col = color, text = str(self.__group_idx))
+        with imgui.font(self.group_idx_font):
+            text_color = imgui.get_color_u32_rgba(0,0,0,1)
+            text_size = imgui.calc_text_size(str(self.__group_idx))
+            draw_list.add_text(x+self.x-text_size.x/2, y+self.y-text_size.y/2, col = text_color, text = str(self.__group_idx))
         
         # Dancer name
         with imgui.font(self.dancer_label):
