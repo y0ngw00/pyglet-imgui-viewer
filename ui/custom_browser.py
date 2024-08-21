@@ -68,7 +68,7 @@ class CustomBrowser:
 
             if imgui.button("Select audio file"):
                 file_descriptions = "Audio files (.wav)"
-                file_ext = "*.wav"
+                file_ext = ["*.wav", "*.m4a"]
                 selected_audio_file = self.parent_window.render_file_dialog(file_descriptions, file_ext)
  
                 self.selected_audio_file = str(selected_audio_file)
@@ -162,7 +162,7 @@ class CustomBrowser:
 
             if imgui.button("Select audio file"):
                 file_descriptions = "Audio files (.wav)"
-                file_ext = "*.wav"
+                file_ext = ["*.wav", "*.m4a"]
                 selected_audio_file = self.parent_window.render_file_dialog(file_descriptions, file_ext)
                 # if selected_audio_file:
                 #     print(f"Open File: {selected_audio_file}")
