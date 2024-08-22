@@ -178,7 +178,8 @@ class UI:
         self.motion_creator.on_mouse_press(x, new_y, button, modifier)
 
     def on_mouse_release(self, x, y, button, modifier) -> None:
-        self.DancerFormation.on_mouse_release(x, self.window.height - y, button, modifier)
+        if button == 1:  # rotation
+            self.DancerFormation.on_mouse_release(x, self.window.height - y, button, modifier)
         self.Sequencer.on_mouse_release(x, self.window.height - y, button, modifier)
         self.motion_creator.on_mouse_release(x, self.window.height - y, button, modifier)
 

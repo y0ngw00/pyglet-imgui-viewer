@@ -13,7 +13,7 @@ IMGUI_COLOR_RGB = {
     'cyan': (0,1,1,1),
     'black': (0,0,0,1),
     'grey': (0.5,0.5,0.5,1),
-    'white_grey': (0.9,0.9,0.9,1),
+    'white_grey': (0.8,0.8,0.8,1),
 }
 
 class ImguiColor:
