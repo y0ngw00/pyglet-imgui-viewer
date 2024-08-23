@@ -14,6 +14,7 @@ class TitleBar:
         self.file_ext = ""
         self.file_descriptions = ""
         self.is_record = False
+        self.is_capture_screen = False
 
 
     def render(self):
@@ -95,6 +96,14 @@ class TitleBar:
             self.window.quit()            
             
     def render_tool_tab(self):
+        # Screen Capture
+        if self.is_capture_screen is True:
+            self.parent_window.capture_screen()
+            self.is_capture_screen = False
+        if imgui.menu_item("Screen Capture")[0]:
+            self.is_capture_screen = True
+        
+        # Record
         record_text = "Record" if not self.is_record else "Stop"
         if imgui.menu_item(record_text)[0]:
             self.is_record = not self.is_record

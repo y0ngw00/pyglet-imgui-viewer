@@ -1,3 +1,4 @@
+import os
 import numpy as np
 import pyglet
 from pyglet import window, app, shapes
@@ -191,6 +192,22 @@ class RenderWindow(pyglet.window.Window):
         for shape in self.shapes:
             shape.indexed_vertices_list.vertices = shape.object.mesh.vertices
             
+    def capture_screen(self):
+        """
+        Captures the current screen and saves it as a PNG image.
+
+        Returns:
+            None
+        """
+        save_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'save/')
+        if os.path.exists(save_dir) is not True:
+            os.makedirs(save_dir, exist_ok=True)
+        save_path = save_dir + "screenshot.png"
+
+        while os.path.exists(save_path):
+            save_path = save_path[:-4] + "_.png"
+        pyglet.image.get_buffer_manager().get_color_buffer().save(save_path)
+            
     def record(self):
         """
         Records the current frame and appends it to the video writer.
@@ -225,7 +242,15 @@ class RenderWindow(pyglet.window.Window):
         return self.GUI.is_ui_active()
     
     def start_recording(self):
-        self.writer = imageio.get_writer('output.mp4', fps=self.framerate)
+        save_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'save/')
+        if os.path.exists(save_dir) is not True:
+            os.makedirs(save_dir, exist_ok=True)
+            
+        save_path = save_dir + "record.mp4"
+        while os.path.exists(save_path):
+            save_path = save_path[:-4] + "_.mp4"
+        
+        self.writer = imageio.get_writer(save_path, fps=self.framerate)
         self.is_record = True
         
     def stop_recording(self):

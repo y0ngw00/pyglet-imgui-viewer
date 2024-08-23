@@ -157,6 +157,9 @@ class UI:
         self.window.set_frame = new_frame
         self.window.set_update_audio_flag(True)
         
+    def capture_screen(self):
+        self.window.capture_screen()
+        
     def start_recording(self):
         self.window.start_recording()
         
