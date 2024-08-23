@@ -35,7 +35,7 @@ class CustomBrowser:
         self.selected_network_file = ""
         
         self.selected_file_idx = 0
-        self.motion_library_dir = "./data/mixamo_library/"
+        self.motion_library_dir = "./data/smpl/"
         # self.default_character_path = "idle.fbx"
         self.default_character_path = "./data/SMPL_m_unityDoubleBlends_lbs_10_scale5_207_v1.0.0.fbx"
 
@@ -128,11 +128,15 @@ class CustomBrowser:
         self.parent_window.get_sequencer().insert_group_keyframe()
         return
 
-    def render_motion_library(self):               
-        imgui.text("Current: "+ self.motion_files[self.selected_file_idx])
+    def render_motion_library(self):
+        current_motion = ""    
+        if len(self.motion_files) > 0:
+            current_motion = self.motion_files[self.selected_file_idx]
+
+        imgui.text("Current: "+ current_motion)
         imgui.same_line()
         if imgui.button("Insert Motion"):
-            file_path = self.motion_library_dir + self.motion_files[self.selected_file_idx] + ".fbx"
+            file_path = self.motion_library_dir + current_motion + ".fbx"
             self.parent_window.insert_motion(file_path)
 
         window_size = imgui.get_window_size()
@@ -142,7 +146,7 @@ class CustomBrowser:
 
         with imgui.font(self.button_font_bold):
             if imgui.button("Insert Current Motion", width = window_size[0] - 50):
-                file_path = self.motion_library_dir + self.motion_files[self.selected_file_idx] + ".fbx"
+                file_path = self.motion_library_dir +current_motion + ".fbx"
                 self.parent_window.insert_motion(file_path)
             if imgui.button("Create New Motion", width = window_size[0] - 50):
                 self.parent_window.show_motion_creator(True)
