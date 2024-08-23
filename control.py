@@ -91,10 +91,10 @@ class Control:
         elif button == 2:  # translation
             if self.window.is_ui_active() is True:
                 return
-
+            
             v = np.array([0.0, 0.0, 0.0])
-            v[0] += dx * 0.3
-            v[1] -= dy * 0.3
+            v[0] += dx * 1.0
+            v[1] -= dy * 1.0
             v = self.window.get_camera_coordinate().dot(v)
 
             dt = Vec3(v[0], v[1], v[2])

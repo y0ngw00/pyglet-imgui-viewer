@@ -228,7 +228,11 @@ class RenderWindow(pyglet.window.Window):
         self.writer.append_data(frame)
 
     def on_resize(self, width, height):
-        glViewport(0, 0, *self.get_framebuffer_size())
+        width,height = self.get_framebuffer_size()
+        x_0, y_0 = int(width *660/2560), int(height * (1 - 960/1440))
+        x_1, y_1 = int(width *1900/2560), int(height * (1 - 30/1440))
+        glViewport(x_0, y_0, x_1, y_1)
+        # glViewport(0, 0, *self.get_framebuffer_size())
         self.proj_mat = Mat4.perspective_projection(
             aspect = width/height, z_near=self.z_near, z_far=self.z_far, fov = self.__fov)
         return pyglet.event.EVENT_HANDLED
