@@ -50,7 +50,7 @@ class UI:
         self.DancerFormation = DancerFormation(self,660/2560, 30/1440, 1900/2560, 960/1440)
         self.Sequencer = Sequencer(self, 660/2560, 960/1440, 1900/2560, 480/1440)
         self.custom_browser = CustomBrowser(self,0/2560,30/1440,660/2560,1440/1440, self.scene)
-        self.motion_creator = MotionCreator(self)
+        self.motion_creator = MotionCreator(self, 660/2560, 30/1440, 1500/2560, 1440/1440)
         self.impl.refresh_font_texture()
         
     def render(self):

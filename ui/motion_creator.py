@@ -23,9 +23,13 @@ from sequencer import Sequencer
 from sequence import Sequence
 import loader
 class MotionCreator(BoxItem):
-    def __init__(self, parent_window):
+    def __init__(self, parent_window, x_pos, y_pos, x_size, y_size):
         super().__init__()
-        self.parent_window = parent_window        
+        self.parent_window = parent_window
+        self.x_pos = x_pos
+        self.y_pos = y_pos
+        self.x_size = x_size
+        self.y_size = y_size
         # self.update = False
         self.is_show = False
         
@@ -58,12 +62,16 @@ class MotionCreator(BoxItem):
         self.output_dir = ""
             
     def render(self):
-        # if self.update:
-        #     imgui.core.set_next_window_position(*imgui.get_mouse_pos())
-        #     self.update = False
+        x_scale, y_scale = imgui.get_io().display_size 
+        x_pos = self.x_pos * x_scale
+        y_pos = self.y_pos * y_scale
+        x_size = self.x_size * x_scale
+        y_size = self.y_size * y_scale
+        imgui.set_next_window_position(x_pos, y_pos, imgui.ONCE)
+        imgui.set_next_window_size(x_size, y_size, imgui.ONCE)
             
         if self.is_show is True:
-            expanded, self.is_show = imgui.begin("Motion Creator", True,imgui.WINDOW_NO_MOVE)
+            expanded, self.is_show = imgui.begin("Motion Creator", True)
             
             canvas_pos = imgui.get_window_position()
             self.update_position(x = canvas_pos.x, 
@@ -297,9 +305,9 @@ class MotionCreator(BoxItem):
         
         from wham import WHAM_API
         wham_model = WHAM_API()
-        results, tracking_results, slam_results = wham_model(video = file_path, output_dir = output_dir, pkl_path = pkl_path)
+        results, tracking_results, slam_results = wham_model(video = file_path, output_dir = output_dir, visualize = True, pkl_path = pkl_path)
         
-        self.clear()
+        # self.clear()
         self.output_dir = output_dir
         
         fbx_path = self.output_dir +"/output.fbx"
