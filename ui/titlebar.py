@@ -10,6 +10,7 @@ class TitleBar:
     def __init__(self, parent_window):
         
         self.parent_window = parent_window
+        self.renderer = self.parent_window.window
         self.is_open_file = False
         self.file_ext = ""
         self.file_descriptions = ""
@@ -74,7 +75,8 @@ class TitleBar:
         imgui.separator()
         
         if imgui.begin_menu("Options"):
-            enabled = imgui.checkbox("Enabled", True)[1]
+            use_shadow = self.renderer.use_shadow
+            _, self.renderer.set_shadow = imgui.checkbox("Use shadow mapping", use_shadow)
             
             imgui.begin_child("child", 0, 60, True)
             for i in range(10):
@@ -98,7 +100,7 @@ class TitleBar:
     def render_tool_tab(self):
         # Screen Capture
         if self.is_capture_screen is True:
-            self.parent_window.capture_screen()
+            self.renderer.capture_screen()
             self.is_capture_screen = False
         if imgui.menu_item("Screen Capture")[0]:
             self.is_capture_screen = True
@@ -109,7 +111,7 @@ class TitleBar:
             self.is_record = not self.is_record
             if self.is_record is True:
                 print("Start recording")
-                self.parent_window.start_recording()
+                self.renderer.start_recording()
             else:
                 print("Finish recording")
-                self.parent_window.stop_recording()
+                self.renderer.stop_recording()

@@ -48,6 +48,8 @@ class RenderWindow(pyglet.window.Window):
         self.fog_start = 1000.0
         self.fog_end = 3000.0
         self.fog_color = (0.7, 0.7, 0.7, 1.0)
+        
+        self.__use_shadow = False
 
         # Light parameters
         self.light_pos = Vec3(0,10000,10000)
@@ -258,6 +260,14 @@ class RenderWindow(pyglet.window.Window):
             self.writer.close()
         self.writer = None
         self.is_record = False
+        
+    @property
+    def use_shadow(self):
+        return self.__use_shadow
+    
+    @use_shadow.setter
+    def set_shadow(self, flag):
+        self.__use_shadow = flag
 
     @property
     def get_fov(self):
