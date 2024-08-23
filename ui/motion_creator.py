@@ -59,7 +59,7 @@ class MotionCreator(BoxItem):
         # Apply Motion popup
         self.checkbox_applied_dancers = [False for i in range(self.parent_window.get_num_dancers())]
         self.start_frame_applied = 0
-        self.output_dir = ""
+        self.fbx_path = ""
             
     def render(self):
         x_scale, y_scale = imgui.get_io().display_size 
@@ -210,7 +210,7 @@ class MotionCreator(BoxItem):
             if imgui.button("Apply motion"):
                 imgui.open_popup("Message: Apply motion")
             if imgui.begin_popup_modal("Message: Apply motion").opened:
-                if self.output_dir == "" or len(self.video_sequence.children) == 0:
+                if self.fbx_path == "" or len(self.video_sequence.children) == 0:
                     imgui.text("No motion is generated.")
                     imgui.text("Please create motion first.")
                     imgui.dummy(0, imgui.get_content_region_available()[1] - imgui.get_text_line_height_with_spacing())
@@ -231,8 +231,7 @@ class MotionCreator(BoxItem):
                     imgui.dummy(0, imgui.get_content_region_available()[1] - imgui.get_text_line_height_with_spacing())
                     imgui.dummy((imgui.get_content_region_available()[0] - 100)/2,0)
                     imgui.same_line()
-                    clicked, _ = imgui.selectable("Apply", width = 50)
-                    if clicked:
+                    if imgui.selectable("Apply", width = 50)[0]:
                         self.apply_motion(self.start_frame_applied)
                     imgui.same_line()
                     imgui.selectable("Close", width = 50)
@@ -256,7 +255,7 @@ class MotionCreator(BoxItem):
         self.video_sequence.clear_all_track()
         self.current_filepath = ""        
         self.time_length_scale = 0
-        self.output_dir = ""
+        self.fbx_path = ""
         
     def save_video(self, file_path):
         # Could not find a way to save the video using pyglet. Used OpenCV instead.
@@ -307,16 +306,19 @@ class MotionCreator(BoxItem):
         wham_model = WHAM_API()
         results, tracking_results, slam_results = wham_model(video = file_path, output_dir = output_dir, visualize = True, pkl_path = pkl_path)
         
-        # self.clear()
-        self.output_dir = output_dir
+        self.clear()
         
-        fbx_path = self.output_dir +"/output.fbx"
-        loader.save_smpl_fbx(pkl_path, fbx_path)
+        save_dir = Path(__file__).resolve().parents[2]  / "data" / "smpl" #DanceTransfer/data/smpl
+        filename = os.path.basename(name)
+        if not os.path.exists(save_dir):
+            os.makedirs(save_dir, exist_ok=True)
+        self.fbx_path = str(save_dir) + f"/{filename}.fbx"
+        loader.save_smpl_fbx(pkl_path, self.fbx_path)
 
-        self.load_video(self.output_dir + "/output.mp4")
+        self.load_video(output_dir + "/output.mp4")
         
     def apply_motion(self, start_frame):           
-        file_path = self.output_dir + "/output.fbx"
+        file_path = self.fbx_path
                 
         # Check dancers to apply motion
         dancers = self.parent_window.get_dancers()
