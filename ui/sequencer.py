@@ -71,7 +71,7 @@ class Sequencer(BoxItem):
 
             self.update_position(x = canvas_pos.x+layout_padding[0] - scroll_x, 
                                     y = canvas_pos.y+layout_padding[1],
-                                    xsize_box = imgui.get_window_width()-40, 
+                                    xsize_box = imgui.get_window_width()-40 + scroll_x, 
                                     ysize_box = imgui.get_window_height()-40)
             # self.draw_box(draw_list, color = imgui.get_color_u32_rgba(1,1,1,1), rounding = 4, thickness = 2)
 

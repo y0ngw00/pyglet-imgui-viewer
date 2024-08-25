@@ -51,7 +51,7 @@ class Sequence(BoxItem):
             
         self.update_position(x = canvas_pos.x+layout_padding[0]+self.sequence_pos_start - scroll_x, 
                             y = canvas_pos.y+layout_padding[1] + idx * self.sequence_height + self.padding_y - scroll_y,
-                            xsize_box = imgui.get_window_width(), 
+                            xsize_box = imgui.get_window_width() + scroll_x, 
                             ysize_box = self.sequence_height)
         
         # self.draw_box(draw_list, color = self.sequence_color, rounding=4, thickness=2)
