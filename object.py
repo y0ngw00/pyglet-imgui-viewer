@@ -251,8 +251,8 @@ class Character(Object):
         #     curr_pos = self.root.positions[closest_frame]
         #     pos_diff = root.positions[0] - curr_pos
         #     root.positions -= pos_diff
-            
-        for idx, joint in enumerate(joints):
+        copied_joints = copy.deepcopy(joints)
+        for idx, joint in enumerate(copied_joints):
             if idx > len(self.joints):
                 self.joints.append(joint)
                 
