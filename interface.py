@@ -78,7 +78,10 @@ class UI:
         return self.Sequencer
     
     def add_dancer(self, character)->None:
-        self.dancers.append(Dancer(character, position_scale=2.0, radius = 30))
+        bound_x, bound_z = self.get_scene_bound()
+        position_scale = [2*self.DancerFormation.xsize_box / bound_x, (2* self.DancerFormation.ysize_box) / bound_z ]
+
+        self.dancers.append(Dancer(character, position_scale=position_scale, radius = 30))
         self.Sequencer.add_sequence(character)
         self.scene.add_character(character)
         
@@ -145,6 +148,9 @@ class UI:
     
     def show_motion_creator(self, is_show):
         self.motion_creator.show(is_show)
+        
+    def get_scene_bound(self):
+        return self.scene.x_bound, self.scene.z_bound
     
     def get_frame(self):
         return self.window.frame

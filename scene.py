@@ -11,30 +11,33 @@ class Scene:
         self.objects=[]
         self.characters = []
         self.window=window
+        
+        self.__x_bound = 3000
+        self.__z_bound = 3000
 
         self.draw_default_scene()
         # self.draw_root_trajectory()
         
     def draw_default_scene(self):
         mat4_identity =  np.eye(4, dtype = np.float32)
-        plane = Object(MeshType.GridPlane, {"grid_x":100, "grid_z":40, "scale":100.0})
+        plane = Object(MeshType.GridPlane, {"grid_x":60, "grid_z":60, "scale":100.0})
         plane.set_transform(mat4_identity)
         self.add_object(plane)
         
-        wall = Object(MeshType.Cube, {"scale":[10000.0, 10000.0, 1.0]})
+        wall = Object(MeshType.Cube, {"scale":[6000.0, 6000.0, 1.0]})
         # wall.set_transform(mat4_identity)
         self.add_object(wall)
-        wall.set_position([0,50,-2000])
+        wall.set_position([0,50,-self.z_bound])
         wall.update_world_transform()
         
-        wall_r = Object(MeshType.Cube, {"scale":[1.0, 10000.0, 10000.0]})
+        wall_r = Object(MeshType.Cube, {"scale":[1.0, 6000.0, 6000.0]})
         self.add_object(wall_r)
-        wall_r.set_position([5000,50,0])
+        wall_r.set_position([self.x_bound,50,0])
         wall_r.update_world_transform()
         
-        wall_l = Object(MeshType.Cube, {"scale":[1.0, 10000.0, 10000.0]})
+        wall_l = Object(MeshType.Cube, {"scale":[1.0, 6000.0, 6000.0]})
         self.add_object(wall_l)
-        wall_l.set_position([-5000,50,0])
+        wall_l.set_position([-self.x_bound,50,0])
         wall_l.update_world_transform()
         
       
@@ -140,3 +143,17 @@ class Scene:
         '''
         self.window.add_shape(object)
         self.objects.append(object)
+        
+    @property
+    def x_bound(self):
+        return self.__x_bound
+    @x_bound.setter
+    def x_bound(self, x_bound):
+        self.__x_bound = x_bound
+    @property
+    def z_bound(self):
+        return self.__z_bound
+    @z_bound.setter
+    def y_bound(self, z_bound):
+        self.__z_bound = z_bound
+    

@@ -43,7 +43,10 @@ class DancerFormation(BoxItem):
             
             # Draw a dot
             frame = self.parent_window.get_frame()
+            bound_x, bound_z = self.parent_window.get_scene_bound()
             for dancer in self.parent_window.get_dancers():
+                dancer.position_scale = [2*self.xsize_box / bound_x, (2* self.ysize_box) / bound_z]
+                dancer.update_circle_pos()
                 dancer.render(draw_list, self.x_origin + self.xsize_box/2, self.y_origin + self.ysize_box/2, frame)
                 
             imgui.end()

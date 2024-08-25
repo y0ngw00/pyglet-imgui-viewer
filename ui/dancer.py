@@ -6,7 +6,7 @@ import imgui
 from imgui_color import COLORS, ImguiColor
 
 class Dancer:
-    def __init__(self, character, position_scale = 1, radius = 10):
+    def __init__(self, character, position_scale = [1.0,1.0], radius = 10):
         self.target = character
         self.radius = radius
         self.position_scale = position_scale
@@ -63,8 +63,8 @@ class Dancer:
     
     def update_circle_pos(self):
         position = self.get_character_pos()
-        self.x = self.position_scale * position[0]
-        self.y = self.position_scale * position[2]
+        self.x = self.position_scale[0] * position[0]
+        self.y = self.position_scale[1] * position[2]
 
     def add_root_keyframe(self, frame, pos = None) -> None:
         if pos is None:
@@ -91,16 +91,13 @@ class Dancer:
             group_idx = self.group_keyframe.interpolate_position(frame)
             self.set_group_index = group_idx
         
-        self.update_circle_pos()
-        
     def render(self,draw_list, x, y, frame):
         color = imgui.get_color_u32_rgba(1,1,0,1) if self.target.is_selected() else imgui.get_color_u32_rgba(1,1,1,1)                 
-        
-        # Dancer group index
-        fill_color = ImguiColor.from_name(COLORS[self.__group_idx])
         draw_list.add_circle_filled(x+self.x, y+self.y, radius = self.radius ,col = color)
-        
-        draw_list.add_circle(x+self.x, y+self.y, radius = self.radius,col = fill_color.get_color(), thickness = self.thick)
+
+        # Dancer group index
+        boundary_color = ImguiColor.from_name(COLORS[self.__group_idx])
+        draw_list.add_circle(x+self.x, y+self.y, radius = self.radius,col = boundary_color.get_color(), thickness = self.thick)
         
         with imgui.font(self.group_idx_font):
             text_color = imgui.get_color_u32_rgba(0,0,0,1)
@@ -116,6 +113,6 @@ class Dancer:
         self.x +=dx
         self.y +=dy
         
-        pos_diff = [dx/self.position_scale, 0, dy/self.position_scale]
+        pos_diff = [dx/self.position_scale[0], 0, dy/self.position_scale[1]]
         self.target.translate(pos_diff)
 
