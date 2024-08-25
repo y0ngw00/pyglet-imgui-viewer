@@ -172,6 +172,10 @@ def load_fbx(filename, load_anim = False):
     joints = load_fbx_joint(fbx_loader, load_anim)
 
     character = Character(name, meshes = meshes,joints = joints, scale=[1,1,1])
+    
+    # Exception only for SMPL model. Set root joint to the Pelvis joint instead of root joint.
+    if "SMPL" in name or "smpl" in name: 
+        character.redefinite_root(1)
     print("Success to load FBX!")
     return character
 

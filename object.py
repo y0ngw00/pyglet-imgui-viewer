@@ -179,6 +179,12 @@ class Character(Object):
     def set_link_color(self, color):
         for l in self.links:
             l.set_color(color)
+            
+    def redefinite_root(self, idx):
+        self.root.set_root(False)
+        
+        self.root = self.joints[idx]
+        self.root.set_root(True)
     
     @property    
     def get_is_animate(self):
