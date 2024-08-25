@@ -62,7 +62,7 @@ class CustomBrowser:
     
         with imgui.font(self.button_font_bold):
             if imgui.button("Create Dancer"):
-                self.parent_window.open_file(self.default_character_path, FileType.Character, load_anim = False)
+                self.parent_window.create_dancer()
 
             imgui.same_line()
 

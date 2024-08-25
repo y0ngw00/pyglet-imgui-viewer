@@ -90,6 +90,9 @@ class UI:
     
     def get_num_dancers(self):
         return len(self.dancers)
+    
+    def get_cam_distance(self):
+        return self.window.get_cam_eye.mag
 
     def render_file_dialog(self, file_descriptions,file_ext):
         file_types = [(file_descriptions, file_ext)]
@@ -104,6 +107,12 @@ class UI:
         if start_frame == -1:
             start_frame = self.window.frame
         self.Sequencer.insert_motion(file_path, start_frame)
+        
+    def create_dancer(self):
+        character = loader.create_sample_character()
+        character.translate(self.pos_list[self.pos_idx2])
+        self.pos_idx2+=1
+        self.add_dancer(character)
 
     def open_file(self, file_path, file_type = FileType.Character,load_anim = True):
         ext = file_path.split('.')[-1]

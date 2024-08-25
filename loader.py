@@ -3,6 +3,7 @@ import os
 import random
 import json
 import time
+from copy import deepcopy
 
 import numpy as np
 from pygltflib import GLTF2, Node, Skin, Accessor, BufferView, BufferFormat
@@ -14,6 +15,9 @@ from animation_layer import AnimationLayer
 from extern_file_parser import pycomcon
 import mathutil
 from utils import process_poses, export_animated_mesh
+
+sample_character_path = "./data/SMPL_m_unityDoubleBlends_lbs_10_scale5_207_v1.0.0.fbx"
+sample_character = None
 
 def load_gltf(filename):
     gltf = GLTF2().load(filename)
@@ -199,11 +203,11 @@ def load_fbx_mesh(fbx_loader):
                                 "skin_data" : skin_data,
                                 })
             
-        diffuse_map = fbx_mesh.diffuseTexture
-        # diffuse_map = "/home/imo/Downloads/colorcode.jpeg"
+        # diffuse_map = fbx_mesh.diffuseTexture
+        # diffuse_map = "/home/imo/Downloads/SMPLitex-texture-00000.png"
         # diffuse_map = "/home/imo/Project/DanceTransfer/data/mixamo_library/Amy.fbm/Ch46_1001_Diffuse.png"
-        if diffuse_map != '':
-            mesh.set_texture(diffuse_map)
+        # if diffuse_map != '':
+            # mesh.set_texture(diffuse_map)
         
         mesh.mesh.stride = 3 # set to triangular mesh            
         meshes.append(mesh)
@@ -226,6 +230,8 @@ def load_fbx_joint(fbx_loader, load_anim):
         parent_idx = fbx_joint.parentIndex
         transform = fbx_joint.transform 
         joint.init_transform_inv = fbx_joint.invBindPose
+        if joint.init_transform_inv.shape[0] == 0:
+            joint.init_transform_inv = np.eye(4, dtype=np.float32)
 
         if parent_idx == -1:
             joint.set_root(True)
@@ -246,8 +252,8 @@ def load_fbx_joint(fbx_loader, load_anim):
                 
                 anim_layer = AnimationLayer(joint)
                 anim_layer.rotations = list(rot_quat)
-                if parent_idx ==-1:
-                    anim_layer.positions = list(animation_data[:,3,0:3])
+                # if parent_idx ==-1:
+                anim_layer.positions = list(animation_data[:,3,0:3])
                 anim_layer.initialize_region(0, len(animation_data) - 1)
                 
                 joint.anim_layers.append(anim_layer)            
@@ -301,7 +307,13 @@ def load_bvh_animation(filepath):
     
     print("BVH load success.")
 
-    return name, joints    
+    return name, joints
+
+def create_sample_character():
+    global sample_character
+    if sample_character is None:
+        sample_character = load_fbx(sample_character_path, load_anim = False)
+    return deepcopy(sample_character)   
 
 def save_smpl_fbx(pkl_path, fbx_path):
     startTime = time.perf_counter()
