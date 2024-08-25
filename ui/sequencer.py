@@ -223,7 +223,7 @@ class Sequencer(BoxItem):
         col_handler.handle_collision(self.parent_window.get_dancers(), min_frame, max_frame)
         
     def on_key_release(self, symbol, modifiers, frame):
-        if symbol==pyglet.window.key.P:
+        if symbol==pyglet.window.key.P and modifiers==pyglet.window.key.MOD_CTRL:
             self.formation_sequence.clear_all_track()
             self.group_sequence.clear_all_track()
             for dancer in self.parent_window.get_dancers():
