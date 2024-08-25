@@ -62,7 +62,7 @@ class DancerFormation(BoxItem):
     
     def select(self, selected, modifier = None):
         dancers = self.parent_window.get_dancers()
-        if modifier is imgui.KEY_MOD_SHIFT: # Multi-select
+        if modifier is pyglet.window.key.MOD_CTRL: # Multi-select
             if hasattr(selected, 'set_is_clicked'):
                 selected.set_is_clicked = True
 
@@ -74,7 +74,9 @@ class DancerFormation(BoxItem):
                 
     def on_key_release(self, symbol, modifiers, frame) -> None:
         dancers = self.parent_window.get_dancers()
-        
+        if symbol==pyglet.window.key.A and modifiers==pyglet.window.key.MOD_CTRL:
+            for dancer in dancers:
+                self.select(dancer, modifiers)
         # dx = 5 if symbol==pyglet.window.key.D else -5 if symbol==pyglet.window.key.A else 0
         # dy = 5 if symbol==pyglet.window.key.S else -5 if symbol==pyglet.window.key.W else 0
         # for dancer in dancers:
