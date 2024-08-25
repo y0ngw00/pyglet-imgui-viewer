@@ -71,7 +71,7 @@ class MotionCreator(BoxItem):
         imgui.set_next_window_size(x_size, y_size, imgui.ONCE)
             
         if self.is_show is True:
-            expanded, self.is_show = imgui.begin("Motion Creator", True)
+            expanded, self.is_show = imgui.begin("Motion Creator", True, flags=imgui.WINDOW_NO_MOVE)
             
             canvas_pos = imgui.get_window_position()
             self.update_position(x = canvas_pos.x, 
@@ -227,7 +227,7 @@ class MotionCreator(BoxItem):
                     if num_dancers > len(self.checkbox_applied_dancers):
                         self.checkbox_applied_dancers = [False for i in range(num_dancers)]
                     for idx, dancer in enumerate(dancers):
-                        _, self.checkbox_applied_dancers[idx] = imgui.checkbox(dancer.get_name, self.checkbox_applied_dancers[idx])
+                        _, self.checkbox_applied_dancers[idx] = imgui.checkbox(str(idx)+". "+dancer.get_name, self.checkbox_applied_dancers[idx])
                     imgui.dummy(0, imgui.get_content_region_available()[1] - imgui.get_text_line_height_with_spacing())
                     imgui.dummy((imgui.get_content_region_available()[0] - 100)/2,0)
                     imgui.same_line()
@@ -316,6 +316,7 @@ class MotionCreator(BoxItem):
         loader.save_smpl_fbx(pkl_path, self.fbx_path)
 
         self.load_video(output_dir + "/output.mp4")
+        self.parent_window.update_motion_library()
         
     def apply_motion(self, start_frame):           
         file_path = self.fbx_path

@@ -41,9 +41,8 @@ class CustomBrowser:
 
         self.grouping_status = GroupingStatus(parent_window)
         
-        files = glob.glob(self.motion_library_dir + '*.fbx')
-        self.motion_files = [os.path.splitext(os.path.basename(file))[0] for file in files]
-        
+        self.motion_files = []
+        self.update_motion_library()
         
     def render(self):
         x_scale, y_scale = imgui.get_io().display_size 
@@ -133,11 +132,14 @@ class CustomBrowser:
         if len(self.motion_files) > 0:
             current_motion = self.motion_files[self.selected_file_idx]
 
-        imgui.text("Current: "+ current_motion)
-        imgui.same_line()
+        # imgui.text("Current: "+ current_motion)
+        # imgui.same_line()
         if imgui.button("Insert Motion"):
             file_path = self.motion_library_dir + current_motion + ".fbx"
             self.parent_window.insert_motion(file_path)
+        imgui.same_line()
+        if imgui.button("Refresh"):
+            self.update_motion_library()
 
         window_size = imgui.get_window_size()
         imgui.push_item_width(window_size[0] * 0.8)
@@ -202,6 +204,11 @@ class CustomBrowser:
             
             if imgui.button("Generate!"):
                 self.generate_motion(300)
+                
+    def update_motion_library(self):
+        files = glob.glob(self.motion_library_dir + '*.fbx')
+        self.motion_files = [os.path.splitext(os.path.basename(file))[0] for file in files]
+        
 
     def generate_motion(self, nframe):
         output_path = os.path.dirname(self.selected_audio_file)+"/" + self.selected_audio_file.split("/")[-1].split(".")[0] + "_output"

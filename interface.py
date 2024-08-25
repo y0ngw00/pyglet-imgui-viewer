@@ -180,6 +180,9 @@ class UI:
         
     def stop_recording(self):
         self.window.stop_recording()
+        
+    def update_motion_library(self):
+        self.custom_browser.update_motion_library()
     
     def on_key_press(self, symbol, modifiers) -> None:
         pass
