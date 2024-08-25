@@ -39,8 +39,8 @@ class FrameBar:
         return
         
     def is_picked(self,x,y)->bool:
-        if self.__x_origin+self.__bar_pos-10<=x<=self.__x_origin+self.__bar_pos+10:
-            if self.__y_origin-10<=y<=self.__y_origin:
+        if x>= self.__x_origin+self.__bar_pos-10 and x <=self.__x_origin+self.__bar_pos+10:
+            if y>=self.__y_origin-10 and y<=self.__y_origin:
                 return True
         return False
     
