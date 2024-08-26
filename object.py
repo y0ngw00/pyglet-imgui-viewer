@@ -121,7 +121,8 @@ class Character(Object):
             self.root.set_scale(scale)
 
         self.update_world_transform()
-        self.skinning()
+        if joints is not None and meshes is not None:
+            self.skinning()
     
     def translate(self, pos):
         # if self.root is not None:
@@ -130,7 +131,8 @@ class Character(Object):
         self.transform[3,0:3] += pos
 
         self.update_world_transform()
-        self.skinning()
+        if self.joints is not None and self.meshes is not None:
+            self.skinning()
         return
         
     def set_position(self, pos):
@@ -153,7 +155,7 @@ class Character(Object):
         
     def get_position(self):
         # if self.root is not None:
-        #     return self.root.transform_gbl[3,0:3]
+            # return self.root.transform_gbl[3,0:3]
         # else:
         return self.transform[3,0:3]
     

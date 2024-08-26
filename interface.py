@@ -133,8 +133,7 @@ class UI:
                 self.pos_idx2+=1
             
             elif ext == "fbx":
-                loader.load_fbx(file_path, load_anim)
-                character = loader.load_fbx(file_path, load_anim)
+                character = loader.load_fbx(file_path)
                 character.translate(self.pos_list[self.pos_idx2])
                 
                 self.pos_idx2+=1
