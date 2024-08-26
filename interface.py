@@ -104,7 +104,7 @@ class UI:
     
     def initialize_audio(self, file_path):
         self.window.initialize_audio(file_path)
-        self.Sequencer.insert_music_sequence()
+        self.Sequencer.insert_music_sequence(self.window.get_audio_framelength())
     
     def insert_motion(self, file_path, start_frame = -1):
         if start_frame == -1:

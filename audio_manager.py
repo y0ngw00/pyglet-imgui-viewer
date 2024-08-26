@@ -4,6 +4,7 @@ class AudioManager:
     def __init__(self, window, framerate):
         self.window = window
         self.framerate = framerate
+        self.__duration = 0
         self.player = pyglet.media.Player()
         
     def open_audio_file(self, audio_file):
@@ -11,6 +12,7 @@ class AudioManager:
             self.audio_file = audio_file
             music = pyglet.media.load(self.audio_file, streaming=False)
             self.player.queue(music)
+            self.__duration = music.duration
             self.window.set_update_audio_flag(True)
         
     def play(self):
@@ -37,3 +39,7 @@ class AudioManager:
         if update_flag is True:
             frame_time = frame/self.framerate
             self.player.seek(frame_time)
+            
+    @property
+    def duration(self):
+        return self.__duration

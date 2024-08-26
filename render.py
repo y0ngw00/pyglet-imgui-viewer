@@ -265,6 +265,9 @@ class RenderWindow(pyglet.window.Window):
         self.writer = None
         self.is_record = False
         
+    def get_audio_framelength(self):
+        return self.audio_manager.duration * self.framerate
+        
     @property
     def use_shadow(self):
         return self.__use_shadow

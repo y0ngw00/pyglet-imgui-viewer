@@ -194,8 +194,8 @@ class Sequencer(BoxItem):
         for dancer in self.parent_window.get_dancers():
             dancer.add_group_keyframe(self.parent_window.get_frame())
             
-    def insert_music_sequence(self):
-        self.music_sequence.fill_sequence()
+    def insert_music_sequence(self, duration):
+        self.music_sequence.fill_sequence(0, duration)
     
     def get_track_speed(self):
         for seq in self.motion_sequences:
