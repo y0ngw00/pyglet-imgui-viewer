@@ -22,6 +22,8 @@ class SequencerMenu:
             self.update = False
 
         speed = self.parent_window.get_track_speed()
+        if speed is None:
+            return
         
         imgui.open_popup("my_popup")
         if imgui.begin_popup_context_window("my_popup"):
@@ -40,13 +42,13 @@ class SequencerMenu:
             imgui.end_popup()
 
     def open_motion_library(self):
-        file_types = [("motion files", "*.bvh")]
-        fileName = filedialog.askopenfilename(filetypes=file_types,initialdir = "./data/mixamo_library")
+        file_types = [("motion files", ["*.bvh", "*.fbx"])]
+        fileName = filedialog.askopenfilename(filetypes=file_types,initialdir = "./data/smpl")
         if not fileName:
             return None
         if not os.path.exists(fileName):
             return None
-        self.parent_window.insert_motion(fileName)
+        self.parent_window.insert_motion(fileName, self.parent_window.parent_window.get_frame())
 
     def update_position(self):
         self.update = True

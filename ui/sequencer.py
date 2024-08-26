@@ -231,12 +231,12 @@ class Sequencer(BoxItem):
                 dancer.clear_group_keyframe()
                 
     def on_mouse_release(self, x, y, button, modifier):
-        self.show_popup = False
-        if self.is_picked(x,y):                
+        if self.is_picked(x,y):
             if button == 4:
-                self.popup_menu.update_position()
                 self.show_popup = True                
+                self.popup_menu.update_position()                
         else :
+            self.show_popup = False
             if self.frame_bar.selected is True:
                 self.frame_bar.select(False)
 
