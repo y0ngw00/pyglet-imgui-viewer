@@ -14,7 +14,7 @@ from object import Object,MeshType,Character,Joint,Link
 from animation_layer import AnimationLayer
 from extern_file_parser import pycomcon
 import mathutil
-from utils import process_poses, export_animated_mesh
+from utils import process_poses, export_animated_mesh, process_mesh_info
 
 sample_character_path = "./data/SMPL_m_unityDoubleBlends_lbs_10_scale5_207_v1.0.0.fbx"
 sample_character = None
@@ -159,6 +159,24 @@ def load_gltf_joint(folder_path, gltf,glb_data):
 
     # return (Animation(quat_rotations, positions, orients, offsets, parents), names, frametime)
     return joints, inverse_bind_matrices
+
+def load_smpl_fbx(filename):
+    vertices, normals, uvs, indices = process_mesh_info(filename)
+    mesh = Object(mesh_type=MeshType.Custom,
+                      mesh_info={"vertices":vertices, 
+                                 "normals":normals,
+                                "uvs":uvs,
+                                "indices":indices,
+                                })
+    mesh.mesh.stride = 3 # set to triangular mesh
+    
+    fbx_loader = pycomcon.FBXLoader()
+    loadResult = fbx_loader.load_fbx(filename)
+    name = filename.split('/')[-1]
+    joints = load_fbx_joint(fbx_loader, False)
+    
+    character = Character(name, meshes = [mesh],joints = joints, scale=[1,1,1]) 
+    return character 
 
 def load_fbx(filename, load_anim = False):
     fbx_loader = pycomcon.FBXLoader()
