@@ -68,13 +68,15 @@ class Sequence(BoxItem):
         for track in self.children:
             track.render(self.x_origin, self.y_origin)
         
-    def insert_motion_track(self,name, joints, start_frame):
-        self.target.add_animation(joints, start_frame, initialize_position= True)
+    def insert_track(self,name, start_frame, end_frame):
         self.children.append(SequenceTrack(parent = self, 
                                            name = name, 
                                            frame_start = start_frame,
-                                           frame_end = start_frame + len(joints[0].anim_layers[-1].rotations) -1,
+                                           frame_end = end_frame,
                                            )) 
+        
+    def get_last_track(self):
+        return self.children[-1]
         
     def insert_key_frame(self, frame):
         self.children.append(SequenceTrack(parent = self, 
@@ -164,6 +166,8 @@ class SequenceTrack(BoxItem):
         self.track_color = imgui.get_color_u32_rgba(1,1,0.7,1)
         self.text_color = imgui.get_color_u32_rgba(0,0,0,1)
         
+        self.connected_keyframes = None # Only for root keyframing
+        
         self.selected = False
         self.boundary_picked= None
         self.translated = 0
@@ -187,8 +191,22 @@ class SequenceTrack(BoxItem):
     
     def lock_translate(self, lock):
         self.__lock_translate = lock
+        
+    def connect_keyframes(self, start_keyframes, last_keyframes):
+        '''
+        Just for root keyframing. Joint animation sequence does not need this attributes.
+        '''
+        self.connected_keyframes = {
+            "start" :start_keyframes, 
+            "last" : last_keyframes
+        }
                 
     def on_mouse_press(self, x, y, button, modifier):
+        if self.is_picked(x,y):
+            self.selected = True
+        else:
+            self.selected = False
+            
         self.boundary_picked = self.is_boundary_picked(x)
         
     def on_mouse_release(self, x, y, button, modifier):
@@ -199,10 +217,20 @@ class SequenceTrack(BoxItem):
             
         if self.boundary_picked is not None:
             self.parent.update_animation_layer(self, self.frame_start, self.frame_end)
+            if self.connected_keyframes is not None:
+                for keyframe in self.connected_keyframes["start"]:
+                    keyframe.frame = self.frame_start
+                for keyframe in self.connected_keyframes["last"]:
+                    keyframe.frame = self.frame_end
             self.boundary_picked = None
             
         if self.translated != 0:
             self.parent.translate_animation_layer(self, self.translated)
+            if self.connected_keyframes is not None:
+                for keyframe in self.connected_keyframes["start"]:
+                    keyframe.frame = keyframe.frame + self.translated
+                for keyframe in self.connected_keyframes["last"]:
+                    keyframe.frame = keyframe.frame + self.translated
             self.translated = 0
             
     def on_mouse_drag(self, x, y, dx, dy):

@@ -113,11 +113,11 @@ class DancerFormation(BoxItem):
                     new_picked = dancer
                     
             # If new object is clicked and dragged.
-            if new_picked is not None and new_picked not in prev_picked:
-                self.select(new_picked)
+            # if new_picked is not None and new_picked not in prev_picked:
+            #     self.select(new_picked)
             # If already selected object is clicked and dragged.
-            else: 
-                [dancer.translate(dx, -dy) for dancer in prev_picked]
+            # else: 
+            [dancer.translate(dx, -dy) for dancer in prev_picked]
                                 
     def on_mouse_press(self, x, y, button, modifier) -> None:
         pass

@@ -113,7 +113,7 @@ class UI:
         
     def create_dancer(self):
         character = loader.create_sample_character()
-        character.translate(self.pos_list[self.pos_idx2])
+        character.translate(self.pos_list[self.pos_idx2 % len(self.pos_list)])
         self.pos_idx2+=1
         self.add_dancer(character)
 
@@ -204,7 +204,8 @@ class UI:
         self.motion_creator.on_mouse_release(x, self.window.height - y, button, modifier)
 
     def on_mouse_drag(self, x, y, dx, dy, button, modifier) -> None:
-        self.DancerFormation.on_mouse_drag(x, self.window.height - y, dx, dy)
+        if button == 1:  # rotation
+            self.DancerFormation.on_mouse_drag(x, self.window.height - y, dx, dy)
         self.Sequencer.on_mouse_drag(x, self.window.height - y, dx, dy)
         self.motion_creator.on_mouse_drag(x, self.window.height - y, dx, dy)    
                 

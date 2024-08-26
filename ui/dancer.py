@@ -61,16 +61,26 @@ class Dancer:
     def get_character_pos(self):
         return self.target.get_position()
     
+    def get_character_root_pos(self):
+        return self.target.get_root_position()
+    
     def update_circle_pos(self):
-        position = self.get_character_pos()
+        position = self.get_character_root_pos()
         self.x = self.position_scale[0] * position[0]
         self.y = self.position_scale[1] * position[2]
 
-    def add_root_keyframe(self, frame, pos = None) -> None:
-        if pos is None:
-            pos = self.get_character_pos()
-        keyframe = KeyFrame(frame, pos)
-        self.root_keyframe.add_keyframe(keyframe)
+    def add_root_keyframe(self, start, last) -> tuple([KeyFrame, KeyFrame]):
+        prev_pos = self.get_character_pos()
+        if len(self.root_keyframe.keyframes) > 0:
+            prev_pos = self.root_keyframe.interpolate_position(start)
+        start_keyframe = KeyFrame(start, prev_pos)
+        self.root_keyframe.add_keyframe(start_keyframe)
+        
+        curr_pos = self.get_character_pos()
+        last_keyframe = KeyFrame(last, curr_pos)
+        self.root_keyframe.add_keyframe(last_keyframe)
+        
+        return start_keyframe, last_keyframe
         
     def add_group_keyframe(self, frame) -> None:
         keyframe = KeyFrame(frame, self.get_group_index)
@@ -90,7 +100,7 @@ class Dancer:
         if len(self.group_keyframe.keyframes) > 0 and self.target is not None:
             group_idx = self.group_keyframe.interpolate_position(frame)
             self.set_group_index = group_idx
-        
+                    
     def render(self,draw_list, x, y, frame):
         color = imgui.get_color_u32_rgba(1,1,0,1) if self.target.is_selected() else imgui.get_color_u32_rgba(1,1,1,1)                 
         draw_list.add_circle_filled(x+self.x, y+self.y, radius = self.radius ,col = color)

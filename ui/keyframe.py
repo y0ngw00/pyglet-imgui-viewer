@@ -70,6 +70,11 @@ class KeyFrameAnimation:
 
                 case InterpolationType.STEP:
                     position = self.keyframes[i].position
+                    
+                case InterpolationType.CUBIC:
+                    # Interpolate the position
+                    t = (frame - self.keyframes[i].frame) / (self.keyframes[i + 1].frame - self.keyframes[i].frame)
+                    position = [self_pos * (1 - t) + other_pos * t for self_pos, other_pos in zip(self.keyframes[i].position, self.keyframes[i + 1].position)]
                 case _:
                     raise ValueError("Interpolation type not supported")
 
@@ -77,29 +82,39 @@ class KeyFrameAnimation:
 
 class KeyFrame:
     def __init__(self, frame, position):
-        self.frame = frame
+        self.__frame = frame
         self.position = copy.deepcopy(position)
 
+    @property
+    def frame(self):
+        return self.__frame
+
+    @frame.setter
+    def frame(self, frame):
+        if frame < 0:
+            frame = 0
+        self.__frame = frame
+        
     def __eq__(self, other):
         if isinstance(other, KeyFrame):
-            return self.frame == other.frame
+            return self.__frame == other.frame
         elif isinstance(other, int):
-            return self.frame == other
+            return self.__frame == other
         else:
             raise ValueError("Unsupported operand type for <: '{}' and '{}'".format(type(self), type(other)))
         
     def __lt__(self, other):
         if isinstance(other, KeyFrame):
-            return self.frame < other.frame
+            return self.__frame < other.frame
         elif isinstance(other, int):
-            return self.frame < other
+            return self.__frame < other
         else:
             raise TypeError("Unsupported operand type for <: '{}' and '{}'".format(type(self), type(other)))
 
     def __gt__(self, other):
         if isinstance(other, KeyFrame):
-            return self.frame > other.frame
+            return self.__frame > other.frame
         elif isinstance(other, int):
-            return self.frame > other
+            return self.__frame > other
         else:
             raise TypeError("Unsupported operand type for >: '{}' and '{}'".format(type(self), type(other)))

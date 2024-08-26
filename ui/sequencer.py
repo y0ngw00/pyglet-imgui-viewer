@@ -163,17 +163,13 @@ class Sequencer(BoxItem):
                 seq.delete_motion_track()
         self.show_popup = False
     
-    def insert_motion(self, file_path):
+    def insert_motion(self, file_path, start_frame):
         name, joints = loader.load_fbx_animation(file_path)
         for seq in self.motion_sequences:
             if hasattr(seq, 'target') and seq.target.is_selected():
-                seq.insert_motion_track(name, joints, self.parent_window.get_frame())
+                seq.target.add_animation(joints, start_frame, initialize_position= True)
+                seq.insert_track(name, start_frame, start_frame + len(joints[0].anim_layers[-1].rotations) -1)
         self.show_popup = False
-    
-    def insert_smpl_motion(self, idx, data):
-        seq = self.motion_sequences[idx]
-        if hasattr(seq, 'target') and seq.target.is_selected():
-            seq.insert_smpl_motion_track(data, self.parent_window.get_frame())
         
     def clear_all_track(self):
         for seq in self.motion_sequences:
@@ -183,10 +179,18 @@ class Sequencer(BoxItem):
         
     def insert_formation_keyframe(self):
         curr_frame = self.parent_window.get_frame()
-        self.formation_sequence.insert_key_frame(curr_frame)
+        prev_frame = max(0, curr_frame-30)
+        self.formation_sequence.insert_track("Form " + str(len(self.formation_sequence.children)), prev_frame, curr_frame)
+        first_keyframes=[]
+        last_keyframes=[]
         for dancer in self.parent_window.get_dancers():
-            dancer.add_root_keyframe(curr_frame)
+            first_key, last_key = dancer.add_root_keyframe(prev_frame, curr_frame)
+            first_keyframes.append(first_key)
+            last_keyframes.append(last_key)
             
+        inserted_track = self.formation_sequence.get_last_track()
+        inserted_track.connect_keyframes(first_keyframes, last_keyframes)
+                    
         self.keyframe_post_processing(curr_frame)
     
     def insert_group_keyframe(self):
@@ -208,7 +212,10 @@ class Sequencer(BoxItem):
                 return seq.set_track_speed(speed)
             
     def keyframe_post_processing(self, curr_frame):
-        keyframes = np.zeros((len(self.parent_window.get_dancers()), 2), dtype = np.int32)
+        num_dancers = len(self.parent_window.get_dancers())
+        if num_dancers == 0:
+            return
+        keyframes = np.zeros((num_dancers, 2), dtype = np.int32)
         for i, dancer in enumerate(self.parent_window.get_dancers()):
             f_1, f_2 = dancer.root_keyframe.get_nearest_keyframe(curr_frame)
             keyframes[i] = [f_1, f_2]
@@ -242,20 +249,23 @@ class Sequencer(BoxItem):
 
         if self.show_popup and button != 4:
             return
-          
+        
+        self.formation_sequence.on_mouse_release(x,y,button,modifier)
         for seq in self.motion_sequences:
             seq.on_mouse_release(x,y,button,modifier)
             
     def on_mouse_press(self, x, y, button, modifier) -> None:
         if self.show_popup:
-            return        
+            return
+        
         if self.is_picked(x,y):
+            self.formation_sequence.on_mouse_press(x,y,button,modifier)
             for seq in self.motion_sequences:
                 if seq.is_picked(x,y):
                     seq.on_mouse_press(x,y,button,modifier)
                     self.select(seq,modifier)
                     break
-            
+
     def on_mouse_drag(self, x, y, dx, dy):
         if self.show_popup:
             return
@@ -264,6 +274,8 @@ class Sequencer(BoxItem):
         if self.frame_bar.is_picked(x,y) or self.frame_bar.selected is True:
             self.parent_window.set_frame(frame+dx)
             self.frame_bar.select(True)
-            
-        for seq in self.motion_sequences:
-            seq.on_mouse_drag(x,y,dx,dy)
+        
+        else:
+            self.formation_sequence.on_mouse_drag(x,y,dx,dy)
+            for seq in self.motion_sequences:
+                seq.on_mouse_drag(x,y,dx,dy)

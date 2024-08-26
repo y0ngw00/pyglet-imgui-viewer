@@ -1,5 +1,5 @@
 import numpy as np
-
+from keyframe import KeyFrame
 
 class CollisionHandler:
     def __init__(self, radius = 20, n_knot = 1, safe_distance = 10):
@@ -43,7 +43,8 @@ class CollisionHandler:
             for j, idx in enumerate(min_indices):
                 diff = pos_diff[idx]
                 diff *= 30 / np.linalg.norm(diff)
-                dancer.add_root_keyframe(idx+min_frame, pos = positions[j] + diff)            
+                keyframe = KeyFrame(idx+min_frame, positions[j] + diff)
+                dancer.root_keyframe.add_keyframe(keyframe)            
     
     
     def compute_resolved_position_diff(self,positions):
