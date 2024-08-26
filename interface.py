@@ -97,9 +97,14 @@ class UI:
     def get_cam_distance(self):
         return self.window.get_cam_eye.mag
 
-    def render_file_dialog(self, file_descriptions,file_ext):
+    def render_open_file_dialog(self, file_descriptions,file_ext):
         file_types = [(file_descriptions, file_ext)]
         selected_file = filedialog.askopenfilename(filetypes=file_types)
+        return selected_file
+    
+    def render_save_file_dialog(self, file_descriptions,file_ext, initial_dir = ""):
+        file_types = [(file_descriptions, file_ext)]
+        selected_file = filedialog.asksaveasfilename(filetypes=file_types, initialdir=initial_dir)
         return selected_file
     
     def initialize_audio(self, file_path):

@@ -191,7 +191,7 @@ class MotionCreator(BoxItem):
     def render_menu(self):
         with imgui.font(self.button_font_medium):
             if imgui.button("Upload video"):
-                file_path = self.parent_window.render_file_dialog("Video Files", ["*.mp4", "*.avi","*.mov" ,"*.wav"])
+                file_path = self.parent_window.render_open_file_dialog("Video Files", ["*.mp4", "*.avi","*.mov" ,"*.wav"])
                 if file_path:
                     self.load_video(file_path)
             imgui.same_line()
@@ -200,9 +200,11 @@ class MotionCreator(BoxItem):
             imgui.same_line()
             if imgui.button("Save video"):
                 if self.current_filepath:
-                    name, ext = os.path.splitext(self.current_filepath)
-                    file_path = f"{name}_trim{ext}"
-                    self.save_video(file_path)
+                    initial_dir = os.path.dirname(self.current_filepath)
+                    selected_file = self.parent_window.render_save_file_dialog("Video Files", ["*.mp4"], initial_dir = initial_dir)
+                    # name, ext = os.path.splitext(self.current_filepath)
+                    # file_path = f"{name}_trim{ext}"
+                    self.save_video(selected_file)
             imgui.same_line()
             if imgui.button("Create motion"):
                 self.create_motion()

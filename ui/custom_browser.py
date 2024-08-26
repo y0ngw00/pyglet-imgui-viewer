@@ -68,7 +68,7 @@ class CustomBrowser:
             if imgui.button("Select audio file"):
                 file_descriptions = "Audio files (.wav)"
                 file_ext = ["*.wav", "*.m4a"]
-                selected_audio_file = self.parent_window.render_file_dialog(file_descriptions, file_ext)
+                selected_audio_file = self.parent_window.render_open_file_dialog(file_descriptions, file_ext)
  
                 self.selected_audio_file = str(selected_audio_file)
                 self.parent_window.initialize_audio(selected_audio_file)
@@ -161,7 +161,7 @@ class CustomBrowser:
                 file_descriptions = "3D model file(.gltf, .glb)"
                 file_ext = ["*.gltf","*.glb"]
                 selected_character_file = "/home/imo/Downloads/Capoeira.gltf"
-                # selected_character_file = self.render_file_dialog(file_descriptions, file_ext)
+                # selected_character_file = self.render_open_file_dialog(file_descriptions, file_ext)
                 # if selected_character_file:
                     # print(f"Open File: {selected_character_file}")
                 self.parent_window.open_file(selected_character_file, FileType.Character)
@@ -169,7 +169,7 @@ class CustomBrowser:
             if imgui.button("Select audio file"):
                 file_descriptions = "Audio files (.wav)"
                 file_ext = ["*.wav", "*.m4a"]
-                selected_audio_file = self.parent_window.render_file_dialog(file_descriptions, file_ext)
+                selected_audio_file = self.parent_window.render_open_file_dialog(file_descriptions, file_ext)
                 # if selected_audio_file:
                 #     print(f"Open File: {selected_audio_file}")
                 #     self.open_file(selected_audio_file)
@@ -182,7 +182,7 @@ class CustomBrowser:
             if imgui.button("Select model checkpoint"):
                 file_descriptions = "checkpoint file (.ckpt)"
                 file_ext = "*.ckpt"
-                self.selected_network_file = self.parent_window.render_file_dialog(file_descriptions, file_ext)
+                self.selected_network_file = self.parent_window.render_open_file_dialog(file_descriptions, file_ext)
             imgui.text(self.selected_network_file)
             imgui.spacing()
             

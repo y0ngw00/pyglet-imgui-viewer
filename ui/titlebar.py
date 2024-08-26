@@ -39,7 +39,7 @@ class TitleBar:
             imgui.open_popup("Open File")
 
             if imgui.begin_popup_modal("Open File", None, imgui.WINDOW_ALWAYS_AUTO_RESIZE)[0]:
-                selected_file = self.parent_window.render_file_dialog(self.file_descriptions, self.file_ext)
+                selected_file = self.parent_window.render_open_file_dialog(self.file_descriptions, self.file_ext)
 
             imgui.end_popup()
 
