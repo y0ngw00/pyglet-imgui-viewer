@@ -58,8 +58,8 @@ class Sequence(BoxItem):
         
         
         with imgui.font(Fonts["sequence_name"]["font"]):
-            text_size = imgui.calc_text_size(self.name)
             name = self.name if self.target is None else self.target.get_name
+            text_size = imgui.calc_text_size(name)
             draw_list.add_text(canvas_pos.x + (self.sequence_pos_start-text_size.x)/2, 
                                self.y_origin + (self.sequence_height-text_size.y)/2, 
                                self.text_color, 
