@@ -32,6 +32,7 @@ class Object:
         }
         self.mesh = mesh_creator[mesh_type](mesh_info)
         self.texture = None
+        self.texture_path = ""
         
         self.selected = False
         
@@ -73,6 +74,7 @@ class Object:
         self.transform = self.transform@s
 
     def set_texture(self,texture_path):
+        self.texture_path = texture_path
         img = pyglet.image.load(texture_path)
         self.texture = img.get_texture()
 
@@ -123,6 +125,29 @@ class Character(Object):
         self.update_world_transform()
         if joints is not None and meshes is not None:
             self.skinning()
+            
+    def copy(self):
+        meshes = []
+        joints = []
+        for joint in self.joints:
+            joints.append(joint.copy())
+        [joint.set_parent(joints[joint.parent_index]) for joint in joints if joint.parent_index != -1]
+        
+        scale = self.scale 
+        for mesh_object in self.meshes:
+            if mesh_object.texture is not None:
+                texture = mesh_object.texture
+                texture_path = mesh_object.texture_path
+                mesh_object.texture = None
+                new_mesh = copy.deepcopy(mesh_object)
+                new_mesh.set_texture(texture_path)
+                
+                mesh_object.texture = texture
+                meshes.append(new_mesh)
+            else:
+                new_mesh = copy.deepcopy(mesh_object)
+                meshes.append(new_mesh)
+        return Character(self.__name + "_copy", meshes = meshes,joints = joints, scale=scale)
     
     def translate(self, pos):
         # if self.root is not None:
@@ -206,7 +231,7 @@ class Character(Object):
     def create_link(self, scale):
         links = []
         for idx, joint in enumerate(self.joints):
-            if joint.is_root is True:
+            if joint.is_root is True or joint.parent_index == -1:
                 continue
             link = Link(joint.parent, joint, scale)
             links.append(link)
@@ -303,7 +328,17 @@ class Joint(Object):
 
         self.order = None
         self.is_root = False
-    
+        self.parent_index = -1
+        
+    def copy(self):
+        name = self.name
+        joint = Joint(name,5.0)
+        joint.init_transform_inv = self.init_transform_inv
+        joint.set_root(self.is_root)
+        joint.set_transform(self.transform)
+        joint.parent_index = self.parent_index
+        return joint
+        
     def set_root(self, is_root):
         self.is_root = is_root
 

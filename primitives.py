@@ -98,9 +98,14 @@ class CustomMesh(Mesh):
         self.colors =(255, 255,255, 255) * self.num_vertices
         self.indices = mesh_info["indices"]
         
+        self.rendering_vertices = []
+        self.render_to_phys_pos = []
+        if self.indices is not None:
+            self.update_rendering_data()
+        
         self.skin_weights = []
         self.skin_joints = []
-        is_skinned = False
+        self.__is_skinned = False
         
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
             
@@ -115,10 +120,11 @@ class CustomMesh(Mesh):
             self.original_vertices = torch.tensor(self.vertices, dtype=torch.float32, device = self.device)
             self.original_vertices = self.original_vertices.view(self.num_vertices, 3)
 
-            is_skinned = True
-            
+            self.__is_skinned = True
+
+    @property
     def is_skinned(self):
-        return self.is_skinned
+        return self.__is_skinned
 
     # skin_mesh
     def skin_mesh(self, joint_bind_matrices):
@@ -130,7 +136,20 @@ class CustomMesh(Mesh):
         positions = torch.einsum('ij,ijk->ik', ori_pos, bone_matrices)
 
         self.vertices = positions[:, :3].flatten().tolist()
-
+        if len(self.render_to_phys_pos) > 0:
+            self.rendering_vertices = positions[self.render_to_phys_pos, :3].flatten().tolist()
+        
+    def update_rendering_data(self):
+        new_normals = []
+        for index in self.indices:
+            self.rendering_vertices.extend(self.vertices[index*3:index*3+3])
+            new_normals.extend(self.normals[index*3:index*3+3])
+            self.render_to_phys_pos.append(index)
+            
+        self.normals = new_normals
+        self.indices = [i for i in range(len(self.rendering_vertices)//3)]
+        self.colors =(255,255,255,255) * (len(self.rendering_vertices)//3)
+        
 class Cylinder(Mesh):
     '''
     default structure of cylinder

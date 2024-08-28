@@ -171,7 +171,6 @@ loadMesh(FbxNode* _pNode)
 
     Eigen::VectorXd pos(numVertices*3);
     Eigen::VectorXd nor(numVertices*3);
-    Eigen::VectorXd uvs(numVertices*2);
     std::vector<unsigned int> indices;
     std::vector<unsigned int> uv_indices;
 
@@ -196,13 +195,13 @@ loadMesh(FbxNode* _pNode)
             nor[i*3+2] = normal[2];
         }
 
-        // Process the UVs.
-        if(bProcessUV)
-        {
-            FbxVector2 uv = uvElement->GetDirectArray().GetAt(i);
-            uvs[i*2] = uv[0];
-            uvs[i*2+1] = uv[1];
-        }
+        // // Process the UVs.
+        // if(bProcessUV)
+        // {
+        //     FbxVector2 uv = uvElement->GetDirectArray().GetAt(i);
+        //     uvs[i*2] = uv[0];
+        //     uvs[i*2+1] = uv[1];
+        // }
 
     }
 
@@ -248,14 +247,15 @@ loadMesh(FbxNode* _pNode)
         uv_indices.insert( uv_indices.end(), textureindex.begin(), textureindex.end() );
     }
 
+    Eigen::VectorXd uvs((int)indices.size()*2);
+
     for (int i = 0; i < indices.size(); i++)
     {
-        unsigned int positionIndex = indices[i];
         int uvIndex = uv_indices[i];
 
         FbxVector2 uvValue = uvElement->GetDirectArray().GetAt(uvIndex);
-        uvs[2 * positionIndex] = uvValue[0];
-        uvs[2 * positionIndex + 1] = uvValue[1];
+        uvs[2 * i] = uvValue[0];
+        uvs[2 * i + 1] = uvValue[1];
     }
 
     Mesh* mesh = new Mesh(pos, nor, uvs, indices, 3);

@@ -17,6 +17,7 @@ import mathutil
 from utils import process_poses, export_animated_mesh, process_mesh_info
 
 sample_character_path = "./data/SMPL_m_unityDoubleBlends_lbs_10_scale5_207_v1.0.0.fbx"
+sample_texture_path = "./data/m_01_alb.002.png"
 sample_character = None
 
 def load_gltf(filename):
@@ -227,9 +228,10 @@ def load_fbx_mesh(fbx_loader):
             
         # diffuse_map = fbx_mesh.diffuseTexture
         # diffuse_map = "/home/imo/Downloads/SMPLitex-texture-00000.png"
+        diffuse_map = sample_texture_path
         # diffuse_map = "/home/imo/Project/DanceTransfer/data/mixamo_library/Amy.fbm/Ch46_1001_Diffuse.png"
-        # if diffuse_map != '':
-            # mesh.set_texture(diffuse_map)
+        if diffuse_map != '':
+            mesh.set_texture(diffuse_map)
         
         mesh.mesh.stride = 3 # set to triangular mesh            
         meshes.append(mesh)
@@ -261,6 +263,7 @@ def load_fbx_joint(fbx_loader, load_anim):
             joint.set_parent(joints[parent_idx])
         # joint.set_position(transform[3,0:3])
         joint.set_transform(transform)
+        joint.parent_index = parent_idx
 
                     
         animation_data =  None
@@ -334,8 +337,10 @@ def load_bvh_animation(filepath):
 def create_sample_character():
     global sample_character
     if sample_character is None:
-        sample_character = load_fbx(sample_character_path, load_anim = False)
-    return deepcopy(sample_character)   
+        sample_character = load_fbx(sample_character_path)
+        return sample_character
+    return sample_character.copy()
+    
 
 def save_smpl_fbx(pkl_path, fbx_path):
     startTime = time.perf_counter()
@@ -380,7 +385,7 @@ def create_bvh_joint(data,names,scale_joint):
         else:
             joint.set_parent(joints[data.parents[idx]])
             joint.set_position(data.offsets[idx])
-        
+        joint.parent_index = data.parents[idx]
         joints.append(joint)
 
     for frame, rot in enumerate(data.rotations):
