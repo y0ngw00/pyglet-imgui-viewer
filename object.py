@@ -115,7 +115,6 @@ class Character(Object):
                     self.root = j
                     self.root.set_parent(self)
                     break
-            self.joint_bind_matrices = torch.zeros([len(joints),4,4], dtype = torch.float32, device=self.device)
             self.links = self.create_link(scale_link)
             
         self.set_scale(scale)          
@@ -243,10 +242,10 @@ class Character(Object):
             return
         
         transform = np.array([j.get_init_transform_inverse() @ j.get_world_transform() for j in self.joints], dtype=np.float32)
-        self.joint_bind_matrices = torch.from_numpy(transform).to(self.device) 
+        joint_bind_matrices = torch.from_numpy(transform).to(self.device) 
         for m in self.meshes:
             if isinstance(m, Object):
-                m.mesh.skin_mesh(self.joint_bind_matrices)
+                m.mesh.skin_mesh(joint_bind_matrices)
     
     def animate(self, frame):    
         if self.is_animate is True and self.root is not None:

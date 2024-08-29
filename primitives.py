@@ -90,41 +90,43 @@ class CustomMesh(Mesh):
     '''
     def __init__(self, mesh_info):
         super().__init__()
+        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
         self.vertices = mesh_info["vertices"]
         self.normals = mesh_info["normals"]
         self.uvs = mesh_info["uvs"]
-        
-        self.num_vertices = len(self.vertices)//3
-        self.colors =(255, 255,255, 255) * self.num_vertices
         self.indices = mesh_info["indices"]
-        
-        self.rendering_vertices = []
-        self.render_to_phys_pos = []
-        if self.indices is not None:
-            self.update_rendering_data()
-        
+                
         self.skin_weights = []
         self.skin_joints = []
-        self.__is_skinned = False
-        
-        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-            
+        self.is_skinned = False
         if "skin_data" in mesh_info:
+            self.is_skinned = True
             skin_data = mesh_info["skin_data"]
-            self.skin_joints = torch.zeros((len(skin_data), 10), dtype=torch.int32, device = self.device)
-            self.skin_weights = torch.zeros((len(skin_data), 10), dtype=torch.float32, device= self.device)
+            self.skin_joints = torch.zeros((len(skin_data), 4), dtype=torch.int32, device = self.device)
+            self.skin_weights = torch.zeros((len(skin_data), 4), dtype=torch.float32, device= self.device)
             for idx,data in enumerate(skin_data):
                 num_joint = len(data.skin_joints)
                 self.skin_joints[idx, 0:num_joint] = torch.tensor(data.skin_joints, dtype=torch.int32,device = self.device)
                 self.skin_weights[idx, 0:num_joint] = torch.tensor(data.skin_weights, dtype=torch.float32, device = self.device)
+        
+        if self.indices is not None:
+            self.update_rendering_data()
+            
+        self.num_vertices = len(self.vertices)//3
+        self.colors =(255, 255,255, 255) * self.num_vertices
+        
+        if "skin_data" in mesh_info:
             self.original_vertices = torch.tensor(self.vertices, dtype=torch.float32, device = self.device)
             self.original_vertices = self.original_vertices.view(self.num_vertices, 3)
-
-            self.__is_skinned = True
 
     @property
     def is_skinned(self):
         return self.__is_skinned
+    
+    @is_skinned.setter
+    def is_skinned(self, value):
+        self.__is_skinned = value
 
     # skin_mesh
     def skin_mesh(self, joint_bind_matrices):
@@ -134,21 +136,23 @@ class CustomMesh(Mesh):
         ori_pos = torch.cat((self.original_vertices, torch.ones((self.num_vertices, 1), device = self.device)), dim=1)
         bone_matrices = torch.sum(self.skin_weights.unsqueeze(-1).unsqueeze(-1) * joint_bind_matrices[self.skin_joints], dim=1)
         positions = torch.einsum('ij,ijk->ik', ori_pos, bone_matrices)
-
         self.vertices = positions[:, :3].flatten().tolist()
-        if len(self.render_to_phys_pos) > 0:
-            self.rendering_vertices = positions[self.render_to_phys_pos, :3].flatten().tolist()
         
     def update_rendering_data(self):
         new_normals = []
+        rendering_vertices = []
+        render_to_phys_pos = []
         for index in self.indices:
-            self.rendering_vertices.extend(self.vertices[index*3:index*3+3])
+            rendering_vertices.extend(self.vertices[index*3:index*3+3])
             new_normals.extend(self.normals[index*3:index*3+3])
-            self.render_to_phys_pos.append(index)
+            render_to_phys_pos.append(index)
             
         self.normals = new_normals
-        self.indices = [i for i in range(len(self.rendering_vertices)//3)]
-        self.colors =(255,255,255,255) * (len(self.rendering_vertices)//3)
+        self.vertices = rendering_vertices
+        self.indices = [i for i in range(len(rendering_vertices)//3)]
+        
+        self.skin_weights = self.skin_weights[render_to_phys_pos]
+        self.skin_joints = self.skin_joints[render_to_phys_pos]
         
 class Cylinder(Mesh):
     '''

@@ -175,16 +175,6 @@ class RenderWindow(pyglet.window.Window):
                         normals = ('f', obj.mesh.normals),
                         uvs = ('f', obj.mesh.uvs),
                         ) 
-        elif isinstance(obj.mesh, CustomMesh):
-            shape.indexed_vertices_list = shape.shader_program.vertex_list_indexed(len(obj.mesh.rendering_vertices)//3, GL_TRIANGLES,
-                            batch = self.batch,
-                            group = shape,
-                            indices = obj.mesh.indices,
-                            vertices = ('f', obj.mesh.rendering_vertices),
-                            colors = ('Bn', obj.mesh.colors),
-                            normals = ('f', obj.mesh.normals),
-                            uvs = ('f', obj.mesh.uvs),
-                            )
         else:
             shape.indexed_vertices_list = shape.shader_program.vertex_list_indexed(len(obj.mesh.vertices)//3, GL_TRIANGLES,
                             batch = self.batch,
@@ -202,10 +192,7 @@ class RenderWindow(pyglet.window.Window):
         
     def update_shape(self):
         for shape in self.shapes:
-            if len(shape.indexed_vertices_list.vertices) != len(shape.object.mesh.vertices):
-                shape.indexed_vertices_list.vertices = shape.object.mesh.rendering_vertices
-            else:
-                shape.indexed_vertices_list.vertices = shape.object.mesh.vertices
+            shape.indexed_vertices_list.vertices = shape.object.mesh.vertices
             
     def capture_screen(self):
         """
