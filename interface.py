@@ -35,14 +35,9 @@ class UI:
         self.root.withdraw()
         # Window variables
         self.test_input = 0
-        self.selected_audio_file = ""
-        self.selected_network_file = ""
         
         self.pos_idx=0
         self.pos_list = [[0,0,0], [1.5,0,-1.5], [-1.5,0,-1.5], [3.0,0,-3.0],[-3.0,0,-3.0] ]
-        
-        self.circles = []
-        self.last_clicked_item = None
         
         self.x_box = 0
         self.y_box = 0
@@ -78,12 +73,6 @@ class UI:
                         file_descriptions = "BVH Files"
                         file_ext = "*.bvh"
                         is_open_file = True
-
-                    if imgui.menu_item("GLTF", None)[0]:
-                        file_descriptions = "GLTF Files"
-                        file_ext = ["*.gltf","*.glb"]
-                        is_open_file = True
-
                     imgui.end_menu()
                 imgui.separator()
                 
@@ -137,46 +126,18 @@ class UI:
         # clicked, value = imgui.input_text("Text Input", "")
 
         with imgui.font(self.new_font):
-            imgui.text("Current number of characters: {}".format(len(self.circles)))
-            imgui.same_line()
-            if imgui.button("Add character(GLTF,GLB)"):
-                file_descriptions = "3D model file(.gltf, .glb)"
-                file_ext = ["*.gltf","*.glb"]
+            if imgui.button("Add character(bvh)"):
+                file_descriptions = "3D model file(.bvh)"
+                file_ext = ["*.bvh"]
                 selected_character_file = self.render_file_dialog(file_descriptions, file_ext)
                 if selected_character_file:
                     print(f"Open File: {selected_character_file}")
                     self.open_file(selected_character_file)
 
-            if imgui.button("Select audio file"):
-                file_descriptions = "Audio files (.wav)"
-                file_ext = "*.wav"
-                selected_audio_file = self.render_file_dialog(file_descriptions, file_ext)
-                # if selected_audio_file:
-                #     print(f"Open File: {selected_audio_file}")
-                #     self.open_file(selected_audio_file)
-                self.selected_audio_file = str(selected_audio_file)
-            
-            imgui.text(self.selected_audio_file)
-            imgui.spacing()
-            
-            if imgui.button("Select model checkpoint"):
-                file_descriptions = "checkpoint file (.ckpt)"
-                file_ext = "*.ckpt"
-                self.selected_network_file = self.render_file_dialog(file_descriptions, file_ext)
-            imgui.text(self.selected_network_file)
-            imgui.spacing()
-            
-            if imgui.button("Generate!"):
-                self.generate_motion()
         imgui.end()
 
     def is_ui_active(self):
         return imgui.is_any_item_active()
-    
-    def generate_motion(self):
-        output_path = os.path.dirname(self.selected_audio_file)+"/" + self.selected_audio_file.split("/")[-1].split(".")[0] + ".bvh"
-        synthesize(self.selected_audio_file, self.selected_network_file, output_path)
-        self.open_file(output_path)
 
     def render_file_dialog(self, file_descriptions,file_ext):
         file_types = [(file_descriptions, file_ext)]
@@ -188,15 +149,10 @@ class UI:
         name = file_path.split('/')[-1]
         if ext == "bvh":
             character = loader.load_bvh(file_path)
-            character.set_scale([0.1,0.1,0.1])
-
-        elif ext == "gltf" or ext == "glb":
-            character = loader.load_gltf(file_path)
-            character.set_position(self.pos_list[self.pos_idx])
+            character.set_scale([1,1,1])
         
         if character is not None:
             self.scene.add_character(character)
-            self.circles.append(DancerCircle(character,self.xsize_box, self.ysize_box, 10))
             self.pos_idx+=1
         return
     
@@ -204,155 +160,16 @@ class UI:
         pass
                     
     def on_key_release(self, symbol, modifiers) -> None:
-        if symbol == pyglet.window.key.F:
-            if modifiers == pyglet.window.key.MOD_CTRL:
-                for circle in self.circles:
-                    circle.add_keyframe(KeyFrame(self.window.frame, (circle.x, circle.y)))
-            else:
-                if isinstance(self.last_clicked_item, DancerCircle): 
-                    self.last_clicked_item.add_keyframe(KeyFrame(self.window.frame, (self.last_clicked_item.x, self.last_clicked_item.y)))
-                    
-        
-        dx = 5 if symbol==pyglet.window.key.D else -5 if symbol==pyglet.window.key.A else 0
-        dy = 5 if symbol==pyglet.window.key.S else -5 if symbol==pyglet.window.key.W else 0
-        if isinstance(self.last_clicked_item, DancerCircle): 
-            self.last_clicked_item.translate(dx, dy)
+        pass
 
     def on_mouse_down(self, x, y, button, modifier) -> None:
-        new_y = self.window.height - y
-        for circle in self.circles:
-            if (x-self.x_box-circle.x)**2 + (new_y - self.y_box-circle.y)**2 < circle.radius**2:
-                circle.set_is_clicked = True
-                break
+        pass
 
     def on_mouse_release(self, x, y, button, modifier) -> None:
-        for circle in self.circles:
-            if circle.get_is_clicked:
-                self.last_clicked_item = circle
-            circle.set_is_clicked = False
+        pass
 
     def on_mouse_drag(self, x, y, dx, dy, button, modifier) -> None:
-        for circle in self.circles:
-            if circle.get_is_clicked:
-                circle.translate(dx, -dy)
-                
-    def update_ui(self, is_animate) -> None:
-        
-        if is_animate:
-            for circle in self.circles:
-                circle.animate(self.window.frame)
-                
-
-class DancerCircle:
-    def __init__(self, character, xsize_box, ysize_box, position_scale = 1, radius = 10):
-        self.target = character
-        self.radius = radius
-        self.position_scale = position_scale
-        self.__clicked = False
-        self.keyframe_anim = KeyFrameAnimation()
-        
-        position = character.get_position()
-        self.x = xsize_box/2 + position_scale * position[0]
-        self.y = ysize_box/2 + position_scale * position[2]
-
-    @property
-    def get_is_clicked(self):
-        return self.__clicked
+        pass
     
-    @get_is_clicked.setter
-    def set_is_clicked(self, clicked):
-        self.__clicked = clicked
-        
-    def get_character_pos(self):
-        return self.target.get_position()
-
-    def add_keyframe(self, keyframe):
-        self.keyframe_anim.add_keyframe(keyframe)
-        
-    def animate(self, frame):
-        if len(self.keyframe_anim.keyframes) == 0:
-            return
-        
-        position = self.keyframe_anim.interpolate_position(frame)
-        self.translate(position[0] - self.x, position[1] - self.y)
-        
-    def translate(self, dx, dy):
-        self.x +=dx
-        self.y +=dy
-        
-        pos_before = self.target.get_position()
-        pos_after = [pos_before[0] + dx / self.position_scale, pos_before[1], pos_before[2] + dy / self.position_scale]
-        self.target.set_position(pos_after)
-
-
-
-class KeyFrameAnimation:
-    def __init__(self):
-        self.keyframes = []
-
-    def add_keyframe(self, keyframe):
-        if len(self.keyframes) == 0:
-            self.keyframes.append(keyframe)
-            return
-        
-        for i, kf in enumerate(self.keyframes):
-            if keyframe<kf:
-                self.keyframes.insert(i, keyframe)
-                return
-            elif keyframe==kf:
-                self.keyframes[i] = keyframe
-                return
-        
-        self.keyframes.append(keyframe)
-        return
-
-    def interpolate_position(self, frame):
-        if len(self.keyframes) == 0:
-            raise ValueError("No keyframes")
-        
-        if frame <= self.keyframes[0].frame:
-            position = self.keyframes[0].position
-        elif frame >= self.keyframes[-1].frame:
-            position = self.keyframes[-1].position
-        else:
-            # Find the two keyframes that the frame is between
-            for i in range(len(self.keyframes) - 1):
-                if self.keyframes[i].frame <= frame < self.keyframes[i + 1].frame:
-                    break
-            else:
-                raise ValueError("Frame is not valid")
-
-            # Interpolate the position
-            t = (frame - self.keyframes[i].frame) / (self.keyframes[i + 1].frame - self.keyframes[i].frame)
-            position = [self_pos * (1 - t) + other_pos * t for self_pos, other_pos in zip(self.keyframes[i].position, self.keyframes[i + 1].position)]
-
-        return position
-
-class KeyFrame:
-    def __init__(self, frame, position):
-        self.frame = frame
-        self.position = position
-
-    def __eq__(self, other):
-        if isinstance(other, KeyFrame):
-            return self.frame == other.frame
-        elif isinstance(other, int):
-            return self.frame == other
-        else:
-            raise ValueError("Unsupported operand type for <: '{}' and '{}'".format(type(self), type(other)))
-        
-    def __lt__(self, other):
-        if isinstance(other, KeyFrame):
-            return self.frame < other.frame
-        elif isinstance(other, int):
-            return self.frame < other
-        else:
-            raise TypeError("Unsupported operand type for <: '{}' and '{}'".format(type(self), type(other)))
-
-    def __gt__(self, other):
-        if isinstance(other, KeyFrame):
-            return self.frame > other.frame
-        elif isinstance(other, int):
-            return self.frame > other
-        else:
-            raise TypeError("Unsupported operand type for >: '{}' and '{}'".format(type(self), type(other)))
+    def update_ui(self, is_animate) -> None:
+        pass
