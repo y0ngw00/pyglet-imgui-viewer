@@ -311,7 +311,9 @@ class Character(Object):
 
     def translate_animation_layer(self, idx, dx):
         for joint in self.joints:
-            anim = joint.anim_layers[idx].translate_region(dx)   
+            anim = joint.anim_layers[idx].translate_region(dx)
+            
+        
 class Joint(Object):
     def __init__(self, name,scale_joint):
         super().__init__(MeshType.Sphere, {"stack":5, "slice":5, "scale":scale_joint})
@@ -323,7 +325,7 @@ class Joint(Object):
         self.positions = []
         self.anim_layers = []
         self.offset = np.array([0.,0.,0.]) # static translation vector
-        self.init_transform_inv = np.eye(4, dtype = float)
+        self.init_transform_inv = np.eye(4, dtype = np.float32)
 
         self.order = None
         self.is_root = False
