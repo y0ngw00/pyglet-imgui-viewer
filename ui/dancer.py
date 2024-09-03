@@ -65,7 +65,7 @@ class Dancer:
         return self.target.get_root_position()
     
     def update_circle_pos(self):
-        position = self.get_character_root_pos()
+        position = self.get_character_pos()
         self.x = self.position_scale[0] * position[0]
         self.y = self.position_scale[1] * position[2]
 
