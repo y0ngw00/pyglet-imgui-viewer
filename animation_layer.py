@@ -1,6 +1,5 @@
 import numpy as np
 
-from object import Joint
 from motionutils.Quaternions import Quaternions
 
 class AnimationLayer:
