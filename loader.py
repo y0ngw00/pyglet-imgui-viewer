@@ -7,6 +7,7 @@ from copy import deepcopy
 
 import numpy as np
 from pygltflib import GLTF2, Node, Skin, Accessor, BufferView, BufferFormat
+import pickle as pkl
 
 from motionutils import BVH
 from motionutils.Quaternions import Quaternions
@@ -14,11 +15,69 @@ from object import Object,MeshType,Character,Joint,Link
 from animation_layer import AnimationLayer
 from extern_file_parser import pycomcon
 import mathutil
-from utils import process_poses, export_animated_mesh, process_mesh_info
+from utils import smpl2fbx, export_animated_mesh, process_mesh_info
+import transforms
+import torch
+from test import synthesize
 
 sample_character_path = "./data/SMPL_m_unityDoubleBlends_lbs_10_scale5_207_v1.0.0.fbx"
 sample_texture_path = "./data/m_01_alb.002.png"
 sample_character = None
+
+bone_name_from_index = {
+    0 : 'Pelvis',
+    1 : 'L_Hip',
+    2 : 'R_Hip',
+    3 : 'Spine1',
+    4 : 'L_Knee',
+    5 : 'R_Knee',
+    6 : 'Spine2',
+    7 : 'L_Ankle',
+    8: 'R_Ankle',
+    9: 'Spine3',
+    10: 'L_Foot',
+    11: 'R_Foot',
+    12: 'Neck',
+    13: 'L_Collar',
+    14: 'R_Collar',
+    15: 'Head',
+    16: 'L_Shoulder',
+    17: 'R_Shoulder',
+    18: 'L_Elbow',
+    19: 'R_Elbow',
+    20: 'L_Wrist',
+    21: 'R_Wrist',
+    22: 'L_Hand',
+    23: 'R_Hand'
+}
+
+bone_index_from_name = {
+    'Pelvis': 0,
+    'L_Hip' : 1,
+    'R_Hip' : 2,
+    'Spine1': 3,
+    'L_Knee': 4,
+    'R_Knee': 5,
+    'Spine2': 6,
+    'L_Ankle': 7,
+    'R_Ankle': 8,
+    'Spine3': 9,
+    'L_Foot': 10,
+    'R_Foot': 11,
+    'Neck': 12,
+    'L_Collar': 13,
+    'R_Collar': 14,
+    'Head': 15,
+    'L_Shoulder': 16,
+    'R_Shoulder': 17,
+    'L_Elbow': 18,
+    'R_Elbow': 19,
+    'L_Wrist': 20,
+    'R_Wrist': 21,
+    'L_Hand': 22,
+    'R_Hand': 23
+}
+
 
 def load_gltf(filename):
     gltf = GLTF2().load(filename)
@@ -228,7 +287,8 @@ def load_fbx_mesh(fbx_loader):
             
         # diffuse_map = fbx_mesh.diffuseTexture
         # diffuse_map = "/home/imo/Downloads/SMPLitex-texture-00000.png"
-        diffuse_map = sample_texture_path
+        diffuse_map = "/home/imo/Downloads/m_01_alb.002.png"
+        # diffuse_map = sample_texture_path
         # diffuse_map = "/home/imo/Project/DanceTransfer/data/mixamo_library/Amy.fbm/Ch46_1001_Diffuse.png"
         if diffuse_map != '':
             mesh.set_texture(diffuse_map)
@@ -350,7 +410,7 @@ def save_smpl_fbx(pkl_path, fbx_path):
             print('ERROR: Invalid input file')
             return
 
-        poses_processed = process_poses(
+        poses_processed = smpl2fbx(
             input_path=pkl_path,
             gender='male',
             fps_source=30,
@@ -386,16 +446,19 @@ def create_bvh_joint(data,names,scale_joint):
             joint.set_parent(joints[data.parents[idx]])
             joint.set_position(data.offsets[idx])
         joint.parent_index = data.parents[idx]
-        joints.append(joint)
-
+        
+        anim_layer = AnimationLayer(joint)
+        anim_layer.initialize_region(0, len(data.rotations) - 1)
+        joint.anim_layers.append(anim_layer)  
+        joints.append(joint)  
+       
     for frame, rot in enumerate(data.rotations):
         for idx, joint in enumerate(joints):
             rotation = rot[idx]
             rotation[1:] *= -1 # Because I use row-major matrix....sorry
-            joint.rotations.append(rotation)
-
+            joint.anim_layers[-1].rotations.append(rotation)
             if joint.is_root is True:
-                joint.positions.append(data.positions[frame][idx])
+                joint.anim_layers[-1].positions.append(data.positions[frame][idx])
 
     return joints
 
@@ -420,5 +483,61 @@ def get_buffer_data(file_path, gltf,buffer_view, glb_data=None):
 
     else:
         return None
-    
 
+def generate_motion_from_network(character,condition,audio_path, network_path,output_path,nframe):
+    synthesize(condition, audio_path, network_path, output_path,nframe)
+    load_pose_from_pkl(output_path+"output.pkl", character, 0, use_translation=True)
+        
+
+def load_pose_from_pkl(pose_dir, character, character_idx, use_translation=True):
+    with open(pose_dir, "rb") as f:
+        seq_data = pkl.load(f)
+        
+    smpl_poses = seq_data["smpl_poses"] #shape (n_persons, n_frames, pose_dim) , smpl pose excluding L/R hand joint
+    if smpl_poses.shape[-1]<23*3:
+        smpl_poses = np.concatenate([smpl_poses, np.zeros(list(smpl_poses.shape[:-1]) + [23*3 -smpl_poses.shape[-1] ])], axis=-1)
+    if "smpl_orients" in seq_data:
+        smpl_orients = seq_data["smpl_orients"]
+        smpl_poses = np.concatenate([smpl_orients, smpl_poses], axis=-1)            
+    smpl_trans = seq_data["root_trans"]
+    
+    if "meta" in seq_data:
+        metadata = seq_data["meta"]
+                
+        orig_start, orig_end = metadata["orig_start"], metadata["orig_end"]
+        orig_seq_len = smpl_poses.shape[1]  # actual sequence length
+                
+    smpl_poses = torch.from_numpy(smpl_poses)
+    n_persons, seq_len = smpl_poses.shape[:2]
+    if character_idx >= n_persons:
+        return
+    smpl_poses = smpl_poses.view(n_persons, seq_len, -1, 3)  # reshape to (n_persons, seq_len, J, 3)
+
+    smpl_poses = transforms.aa2quat(smpl_poses)
+
+    ret = smpl_poses[character_idx].detach().cpu().numpy()
+
+    positions = None
+    if use_translation is True:
+        positions = smpl_trans[character_idx] * 100.0  # convert to cm
+        positions += character.get_root_position()
+
+    for idx,joint in enumerate(character.joints):
+        if idx==0:
+            continue
+        for name in bone_index_from_name:
+            if name in joint.name:
+                data_index = bone_index_from_name[name]
+                
+        rot_quat = -Quaternions(ret[:,data_index])
+        anim_layer = AnimationLayer(joint)
+        anim_layer.rotations = list(rot_quat)
+        # if use_translation and ("Pelvis" in joint.name or "pelvis" in joint.name):
+        #     anim_layer.positions= list(positions)
+
+        anim_layer.initialize_region(0, len(rot_quat) - 1)
+        joint.anim_layers.append(anim_layer)  
+    
+    print("Success to generate. data representation: ", ret.shape)
+
+    return
