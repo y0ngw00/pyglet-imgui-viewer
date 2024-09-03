@@ -15,8 +15,8 @@ from box_item import BoxItem
 from enum_list import Boundary
 
 import loader
-
 from ops import CollisionHandler
+
 class Sequencer(BoxItem):
     def __init__(self, parent_window, x_pos, y_pos, x_size, y_size):
         super().__init__()
