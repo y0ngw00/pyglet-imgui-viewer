@@ -2,6 +2,7 @@ import os
 import sys
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 import glob
+import subprocess
 
 from typing import Tuple
 from pathlib import Path
@@ -13,6 +14,8 @@ import imgui.core
 
 import numpy as np
 import pickle as pkl
+
+import loader
 
 from test import synthesize
 from fonts import Fonts
@@ -35,6 +38,7 @@ class CustomBrowser:
         self.selected_network_file = ""
         
         self.selected_file_idx = 0
+        self.output_dir = "./results/"
         self.motion_library_dir = "./data/smpl/"
         # self.default_character_path = "idle.fbx"
         self.default_character_path = "./data/SMPL_m_unityDoubleBlends_lbs_10_scale5_207_v1.0.0.fbx"
@@ -140,6 +144,10 @@ class CustomBrowser:
         imgui.same_line()
         if imgui.button("Refresh"):
             self.update_motion_library()
+        imgui.same_line()
+        if imgui.button("Load Folder"):
+            subprocess.run(['xdg-open', self.motion_library_dir])
+
 
         window_size = imgui.get_window_size()
         imgui.push_item_width(window_size[0] * 0.8)
@@ -166,15 +174,14 @@ class CustomBrowser:
                     # print(f"Open File: {selected_character_file}")
                 self.parent_window.open_file(selected_character_file, FileType.Character)
 
-            if imgui.button("Select audio file"):
-                file_descriptions = "Audio files (.wav)"
-                file_ext = ["*.wav", "*.m4a"]
+            if imgui.button("Select audio features"):
+                file_descriptions = "Audio features (.npy)"
+                file_ext = ["*.npy"]
                 selected_audio_file = self.parent_window.render_open_file_dialog(file_descriptions, file_ext)
                 # if selected_audio_file:
                 #     print(f"Open File: {selected_audio_file}")
                 #     self.open_file(selected_audio_file)
                 self.selected_audio_file = str(selected_audio_file)
-                self.parent_window.initialize_audio(selected_audio_file)
             
             imgui.text(self.selected_audio_file)
             imgui.spacing()
@@ -186,24 +193,16 @@ class CustomBrowser:
             imgui.text(self.selected_network_file)
             imgui.spacing()
             
-            # if imgui.button("Draw random trajectoris from gcd"):
-            #     data_root = "./data/gdance/"
-            #     path = "train_split_sequence_names.txt"
-            #     pos_traj_list, vel_traj_list = self.generate_random_trajectory_from_gcd(data_root, path)
-            #     idx=0
-            #     endframe = pos_traj_list.shape[1]
-            #     for pos_traj,vel_traj in zip(pos_traj_list, vel_traj_list):
-            #         output_path = "/home/imo/Downloads/gcd_output_" + str(idx)
-            #         idx+=1 
-                    
-            #         # pos_traj += self.pos_list[self.pos_idx]
-            #         self.scene.draw_trajectory(pos_traj)
-            #         synthesize(vel_traj,self.selected_audio_file, self.selected_network_file, output_path, endframe)
-            #         self.parent_window.open_file(output_path + ".bvh", FileType.Character)
-            # imgui.spacing()
             
+            frmae = self.parent_window.get_end_frame()
             if imgui.button("Generate!"):
-                self.generate_motion(300)
+                # self.load_smpl_motion()
+                self.generate_motion(frmae)
+            if imgui.button("Debug generate!"):
+                file_descriptions = "Motion file (.pkl)"
+                file_ext = ["*.pkl"]
+                motion_path = self.parent_window.render_open_file_dialog(file_descriptions, file_ext)
+                self.load_smpl_motion(motion_path)
                 
     def update_motion_library(self):
         files = glob.glob(self.motion_library_dir + '*.fbx')
@@ -211,19 +210,13 @@ class CustomBrowser:
         
 
     def generate_motion(self, nframe):
-        output_path = os.path.dirname(self.selected_audio_file)+"/" + self.selected_audio_file.split("/")[-1].split(".")[0] + "_output"
+        output_path = os.path.dirname(self.output_dir)+"/"
         traj = None
         circles = self.parent_window.get_dancers()
-        if len(circles) > 0:
-            for circle in circles:
-                pos_traj,vel_traj = self.extract_root_positions(circle, nframe)
-                rot_traj = self.extract_rotations(circle, nframe)
-                # pos_traj += self.pos_list[self.pos_idx]
-                # self.scene.draw_trajectory(pos_traj)
-                
-                condition={"pos_traj":pos_traj, "vel_traj":vel_traj, "rot_traj":rot_traj}
-                synthesize(condition, self.selected_audio_file, self.selected_network_file, output_path)
-                self.parent_window.open_file(output_path + ".bvh", FileType.Character)
+        for circle in circles:
+            circle.target.clear_all_animation()
+            loader.generate_motion_from_network(circle.target, {}, self.selected_audio_file, self.selected_network_file, output_path, nframe)
+            # self.parent_window.insert_motion(output_path, 0)
                  
         # else:
         #     rot_traj = self.extract_rotations(nframe)
@@ -231,6 +224,14 @@ class CustomBrowser:
         #     synthesize(vel_traj,self.selected_audio_file, self.selected_network_file, output_path)   
         #     self.parent_window.open_file(output_path + ".bvh", FileType.Character)
         
+    def load_smpl_motion(self,motion_path):
+        # path = "./data/test/-4yoUMiBwXg_01_0_960.pkl"
+        # path = "./results/0_0_val_val.pkl"
+        circles = self.parent_window.get_dancers()
+        for idx, circle in enumerate(circles):
+            circle.target.clear_all_animation()
+            loader.load_pose_from_pkl(motion_path, circle.target, idx, use_translation=True)
+   
     def generate_trajectory(self, circle, nframe: int) -> Tuple[np.ndarray, np.ndarray]:
         pos_traj = np.zeros([nframe,3], dtype = np.float32)
         vel_traj = np.zeros([nframe,3], dtype = np.float32)

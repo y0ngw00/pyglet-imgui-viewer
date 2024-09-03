@@ -14,7 +14,7 @@ import imgui
 import imgui.core
 import cv2
 
-from utils import process_poses, export_animated_mesh
+from utils import smpl2fbx, export_animated_mesh
 
 from fonts import Fonts
 from frame_bar import FrameBar
