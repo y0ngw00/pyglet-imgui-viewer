@@ -46,6 +46,7 @@ class CustomBrowser:
         self.grouping_status = GroupingStatus(parent_window)
         
         self.motion_files = []
+        self.is_no_inpaint = False
         self.update_motion_library()
         
     def render(self):
@@ -198,6 +199,9 @@ class CustomBrowser:
             if imgui.button("Generate!"):
                 # self.load_smpl_motion()
                 self.generate_motion(frmae)
+            imgui.same_line()
+            _, self.is_no_inpaint = imgui.checkbox("All Random", self.is_no_inpaint)
+                
             if imgui.button("Debug generate!"):
                 file_descriptions = "Motion file (.pkl)"
                 file_ext = ["*.pkl"]
@@ -214,8 +218,9 @@ class CustomBrowser:
         traj = None
         circles = self.parent_window.get_dancers()
         for circle in circles:
-            circle.target.clear_all_animation()
-            loader.generate_motion_from_network(circle.target, {}, self.selected_audio_file, self.selected_network_file, output_path, nframe)
+            circle.target.clear_all_animation()           
+            motion_cond = None if self.is_no_inpaint else circle.get_motion_condition(nframe)
+            loader.generate_motion_from_network(circle.target, motion_cond, self.selected_audio_file, self.selected_network_file, output_path, nframe)
             # self.parent_window.insert_motion(output_path, 0)
                  
         # else:
@@ -230,7 +235,7 @@ class CustomBrowser:
         circles = self.parent_window.get_dancers()
         for idx, circle in enumerate(circles):
             circle.target.clear_all_animation()
-            loader.load_pose_from_pkl(motion_path, circle.target, idx, use_translation=True)
+            loader.load_pose_from_pkl(motion_path, circle.target, idx, use_translation=False)
    
     def generate_trajectory(self, circle, nframe: int) -> Tuple[np.ndarray, np.ndarray]:
         pos_traj = np.zeros([nframe,3], dtype = np.float32)

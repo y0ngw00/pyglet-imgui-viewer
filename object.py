@@ -291,6 +291,22 @@ class Character(Object):
             else:
                 self.joints[idx].add_animation(joint, frame)
                 
+        
+    def get_motion_condition(self, nframe):
+        motion_condition = np.zeros((nframe, len(self.joints) * 3 +1), dtype=np.float32)
+        
+        for frame in range(nframe):
+            for j_idx, joint in enumerate(self.joints):
+                if j_idx == 0:
+                    continue
+                rot = joint.get_rotation(frame)
+                if rot is not [1,0,0]:
+                    motion_condition[frame, j_idx * 3: j_idx * 3 + 3] = rot
+                    
+            motion_condition[frame, -1] = self.get_root_position()[1] * 0.01
+                    
+        return motion_condition
+                
     def remove_animation(self, idx):
         for joint in self.joints:
             anim = joint.anim_layers[idx]
