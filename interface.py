@@ -100,7 +100,7 @@ class UI:
     def get_end_frame(self):
         if self.window.get_audio_framelength() == 0:
             return 150
-        return self.window.get_audio_framelength()
+        return int(self.window.get_audio_framelength())
 
     def render_open_file_dialog(self, file_descriptions,file_ext):
         file_types = [(file_descriptions, file_ext)]

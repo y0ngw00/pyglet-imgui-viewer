@@ -195,10 +195,10 @@ class CustomBrowser:
             imgui.spacing()
             
             
-            frmae = self.parent_window.get_end_frame()
+            frame = self.parent_window.get_end_frame()
             if imgui.button("Generate!"):
                 # self.load_smpl_motion()
-                self.generate_motion(frmae)
+                self.generate_motion(frame)
             imgui.same_line()
             _, self.is_no_inpaint = imgui.checkbox("All Random", self.is_no_inpaint)
                 

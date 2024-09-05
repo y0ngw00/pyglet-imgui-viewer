@@ -486,7 +486,7 @@ def get_buffer_data(file_path, gltf,buffer_view, glb_data=None):
 
 def generate_motion_from_network(character,condition,audio_path, network_path,output_path,nframe):
     synthesize(condition, audio_path, network_path, output_path,nframe)
-    load_pose_from_pkl(output_path+"output.pkl", character, 0, use_translation=True)
+    load_pose_from_pkl(output_path+"output.pkl", character, 0, use_translation=False)
         
 
 def load_pose_from_pkl(pose_dir, character, character_idx, use_translation=True):
@@ -499,7 +499,8 @@ def load_pose_from_pkl(pose_dir, character, character_idx, use_translation=True)
     if "smpl_orients" in seq_data:
         smpl_orients = seq_data["smpl_orients"]
         smpl_poses = np.concatenate([smpl_orients, smpl_poses], axis=-1)            
-    smpl_trans = seq_data["root_trans"]
+    if "root_trans" in seq_data:
+        smpl_trans = seq_data["root_trans"]
     
     if "meta" in seq_data:
         metadata = seq_data["meta"]
