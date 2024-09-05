@@ -35,6 +35,7 @@ class CustomBrowser:
         self.status_font = Fonts["dancer_label"]["font"]   
         
         self.selected_audio_file = ""
+        self.selected_audio_feat_file = ""
         self.selected_network_file = ""
         
         self.selected_file_idx = 0
@@ -178,13 +179,13 @@ class CustomBrowser:
             if imgui.button("Select audio features"):
                 file_descriptions = "Audio features (.npy)"
                 file_ext = ["*.npy"]
-                selected_audio_file = self.parent_window.render_open_file_dialog(file_descriptions, file_ext)
+                selected_audio_feat_file = self.parent_window.render_open_file_dialog(file_descriptions, file_ext)
                 # if selected_audio_file:
                 #     print(f"Open File: {selected_audio_file}")
                 #     self.open_file(selected_audio_file)
-                self.selected_audio_file = str(selected_audio_file)
+                self.selected_audio_feat_file = str(selected_audio_feat_file)
             
-            imgui.text(self.selected_audio_file)
+            imgui.text(self.selected_audio_feat_file)
             imgui.spacing()
             
             if imgui.button("Select model checkpoint"):
@@ -212,15 +213,14 @@ class CustomBrowser:
         files = glob.glob(self.motion_library_dir + '*.fbx')
         self.motion_files = [os.path.splitext(os.path.basename(file))[0] for file in files]
         
-
     def generate_motion(self, nframe):
         output_path = os.path.dirname(self.output_dir)+"/"
         traj = None
         circles = self.parent_window.get_dancers()
         for circle in circles:
-            circle.target.clear_all_animation()           
-            motion_cond = None if self.is_no_inpaint else circle.get_motion_condition(nframe)
-            loader.generate_motion_from_network(circle.target, motion_cond, self.selected_audio_file, self.selected_network_file, output_path, nframe)
+            motion_cond = None if self.is_no_inpaint else loader.convert_joint_to_smpl_format(circle.target, nframe)
+            circle.target.clear_all_animation()
+            loader.generate_motion_from_network(circle.target, motion_cond, self.selected_audio_feat_file, self.selected_network_file, output_path, nframe)
             # self.parent_window.insert_motion(output_path, 0)
                  
         # else:
@@ -230,6 +230,9 @@ class CustomBrowser:
         #     self.parent_window.open_file(output_path + ".bvh", FileType.Character)
         
     def load_smpl_motion(self,motion_path):
+        if not os.path.exists(str(motion_path)):
+            print("Invalid pose file path")
+            return
         # path = "./data/test/-4yoUMiBwXg_01_0_960.pkl"
         # path = "./results/0_0_val_val.pkl"
         circles = self.parent_window.get_dancers()

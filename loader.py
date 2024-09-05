@@ -490,6 +490,7 @@ def generate_motion_from_network(character,condition,audio_path, network_path,ou
         
 
 def load_pose_from_pkl(pose_dir, character, character_idx, use_translation=True):
+    
     with open(pose_dir, "rb") as f:
         seq_data = pkl.load(f)
         
@@ -533,12 +534,68 @@ def load_pose_from_pkl(pose_dir, character, character_idx, use_translation=True)
         rot_quat = -Quaternions(ret[:,data_index])
         anim_layer = AnimationLayer(joint)
         anim_layer.rotations = list(rot_quat)
-        # if use_translation and ("Pelvis" in joint.name or "pelvis" in joint.name):
-        #     anim_layer.positions= list(positions)
+        if use_translation and ("Pelvis" in joint.name or "pelvis" in joint.name):
+            anim_layer.positions= list(positions)
 
         anim_layer.initialize_region(0, len(rot_quat) - 1)
         joint.anim_layers.append(anim_layer)  
     
     print("Success to generate. data representation: ", ret.shape)
-
     return
+
+def convert_joint_to_smpl_format(character, nframe):
+    joints = character.joints[1:] if character.is_smpl is True else character.joints
+    motion_condition = np.zeros((nframe, len(joints) * 3 +1), dtype=np.float32)
+        
+    for frame in range(nframe):
+        for j_idx, joint in enumerate(joints):
+            rot = torch.tensor((-joint.get_rotation(frame)).qs, dtype=torch.float32)
+            aa_rot = transforms.quat2aa(rot)
+            if aa_rot is not [0,0,0]:
+                for name in bone_index_from_name:
+                    if name in joint.name:
+                        data_index = bone_index_from_name[name]
+                        motion_condition[frame, data_index * 3: data_index * 3 + 3] = aa_rot
+                
+        motion_condition[frame, -1] = character.get_root_position()[1] * 0.01
+        
+        
+    
+    return motion_condition
+
+def write_pkl(pred_clips, dataset_info, log_dir="", name_prefix=""):
+    
+    translation = None
+    if dataset_info["use_contact"] is True:
+        pred_clips = pred_clips[:,:,:-4]
+    
+    if dataset_info["translation"] is True:
+        xz_vel = pred_clips[:,:,-2:]
+        xz_translation = torch.cumsum(xz_vel, dim=1)
+        # xz_translation = np.cumsum(xz_vel, axis=1)
+        pred_clips = pred_clips[:,:,:-2]
+    
+    y_height = pred_clips[:,:,-1]
+    pred_clips = pred_clips[:,:,:-1]
+        
+    if dataset_info["translation"] is True:
+        translation = torch.cat([xz_translation[:,:,0].unsqueeze(-1), y_height.unsqueeze(-1), xz_translation[:,:,1].unsqueeze(-1)], dim=-1)
+    else:
+        y_height = y_height.unsqueeze(-1)
+        translation = torch.cat([torch.zeros_like(y_height), y_height, torch.zeros_like(y_height)], dim=-1)
+    
+    
+    if dataset_info["translation"] is True:        
+        data = {
+            "smpl_poses": pred_clips.detach().cpu().numpy(),
+            "root_trans": translation.detach().cpu().numpy(),
+        }
+    elif dataset_info["translation"] is False:
+        data = {
+            "smpl_poses": pred_clips.detach().cpu().numpy(),
+        }
+
+    # Save the data to a .pkl file
+    fname = f"{log_dir}/{name_prefix}.pkl"
+    with open(fname, "wb") as f:
+        pkl.dump(data, f)

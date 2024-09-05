@@ -291,23 +291,7 @@ class Character(Object):
                 
             else:
                 self.joints[idx].add_animation(joint, frame)
-                
-        
-    def get_motion_condition(self, nframe):
-        num_joint = (len(self.joints)-1) if self.is_smpl is True else len(self.joints)
-        joints = self.joints[1:] if self.is_smpl is True else self.joints
-        motion_condition = np.zeros((nframe, num_joint * 3 +1), dtype=np.float32)
-        
-        for frame in range(nframe):
-            for j_idx, joint in enumerate(joints):
-                rot = joint.get_rotation(frame)
-                if rot is not [1,0,0]:
-                    motion_condition[frame, j_idx * 3: j_idx * 3 + 3] = rot
-                    
-            motion_condition[frame, -1] = self.get_root_position()[1] * 0.01
-                    
-        return motion_condition
-                
+                                
     def remove_animation(self, idx):
         for joint in self.joints:
             anim = joint.anim_layers[idx]
@@ -420,10 +404,9 @@ class Joint(Object):
         for anim_layer in self.anim_layers:
             rot_quat = anim_layer.get_rotation_quaternion(frame)
             if rot_quat is not None:
-                angle, axis = rot_quat.angle_axis()
-                return angle * axis
+                return rot_quat
             
-        return [0,0,0]
+        return Quaternions(np.array([1,0,0,0]))
     
     def translate(self, pos):
         self.transform[3,0:3] += pos
