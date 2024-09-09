@@ -48,6 +48,7 @@ class CustomBrowser:
         
         self.motion_files = []
         self.is_no_inpaint = False
+        self.is_load_translation = True
         self.update_motion_library()
         
     def render(self):
@@ -72,12 +73,7 @@ class CustomBrowser:
             imgui.same_line()
 
             if imgui.button("Select audio file"):
-                file_descriptions = "Audio files (.wav)"
-                file_ext = ["*.wav", "*.m4a"]
-                selected_audio_file = self.parent_window.render_open_file_dialog(file_descriptions, file_ext)
- 
-                self.selected_audio_file = str(selected_audio_file)
-                self.parent_window.initialize_audio(selected_audio_file)
+                self.load_audio_file()
         
         imgui.text("Number of Dancers: "+ str(self.parent_window.get_num_dancers()))
 
@@ -177,13 +173,7 @@ class CustomBrowser:
                 self.parent_window.open_file(selected_character_file, FileType.Character)
 
             if imgui.button("Select audio features"):
-                file_descriptions = "Audio features (.npy)"
-                file_ext = ["*.npy"]
-                selected_audio_feat_file = self.parent_window.render_open_file_dialog(file_descriptions, file_ext)
-                # if selected_audio_file:
-                #     print(f"Open File: {selected_audio_file}")
-                #     self.open_file(selected_audio_file)
-                self.selected_audio_feat_file = str(selected_audio_feat_file)
+                self.load_audio_feature()
             
             imgui.text(self.selected_audio_feat_file)
             imgui.spacing()
@@ -201,7 +191,9 @@ class CustomBrowser:
                 # self.load_smpl_motion()
                 self.generate_motion(frame)
             imgui.same_line()
-            _, self.is_no_inpaint = imgui.checkbox("All Random", self.is_no_inpaint)
+            _, self.is_no_inpaint = imgui.checkbox("Random", self.is_no_inpaint)
+            imgui.same_line()
+            _, self.is_load_translation = imgui.checkbox("Root Translation", self.is_load_translation)
                 
             if imgui.button("Debug generate!"):
                 file_descriptions = "Motion file (.pkl)"
@@ -209,6 +201,29 @@ class CustomBrowser:
                 motion_path = self.parent_window.render_open_file_dialog(file_descriptions, file_ext)
                 self.load_smpl_motion(motion_path)
                 
+    def load_audio_file(self):
+        file_descriptions = "Audio files (.wav)"
+        file_ext = ["*.wav", "*.m4a"]
+        selected_audio_file = self.parent_window.render_open_file_dialog(file_descriptions, file_ext)
+
+        self.selected_audio_file = str(selected_audio_file)
+        self.parent_window.initialize_audio(selected_audio_file)
+        
+        filename =  os.path.splitext(os.path.basename(selected_audio_file))[0]
+        feature_dir = os.path.abspath(os.path.join(os.path.dirname(selected_audio_file), '..')) + '/jukebox_features'
+        feature_path = feature_dir + "/" + filename + ".npy"
+        if os.path.exists(feature_path):
+            self.selected_audio_feat_file = feature_path
+        
+    def load_audio_feature(self):
+        file_descriptions = "Audio features (.npy)"
+        file_ext = ["*.npy"]
+        selected_audio_feat_file = self.parent_window.render_open_file_dialog(file_descriptions, file_ext)
+        # if selected_audio_file:
+        #     print(f"Open File: {selected_audio_file}")
+        #     self.open_file(selected_audio_file)
+        self.selected_audio_feat_file = str(selected_audio_feat_file)
+        
     def update_motion_library(self):
         files = glob.glob(self.motion_library_dir + '*.fbx')
         self.motion_files = [os.path.splitext(os.path.basename(file))[0] for file in files]
@@ -218,9 +233,9 @@ class CustomBrowser:
         traj = None
         circles = self.parent_window.get_dancers()
         for circle in circles:
-            motion_cond = None if self.is_no_inpaint else loader.convert_joint_to_smpl_format(circle.target, nframe)
+            motion_cond = None if self.is_no_inpaint else loader.convert_joint_to_smpl_format(circle, nframe, add_root_trajectory=self.is_load_translation)
             circle.target.clear_all_animation()
-            loader.generate_motion_from_network(circle.target, motion_cond, self.selected_audio_feat_file, self.selected_network_file, output_path, nframe)
+            loader.generate_motion_from_network(circle.target, motion_cond, self.selected_audio_feat_file, self.selected_network_file, output_path, nframe, load_translation=self.is_load_translation)
             # self.parent_window.insert_motion(output_path, 0)
                  
         # else:
@@ -238,7 +253,7 @@ class CustomBrowser:
         circles = self.parent_window.get_dancers()
         for idx, circle in enumerate(circles):
             circle.target.clear_all_animation()
-            loader.load_pose_from_pkl(motion_path, circle.target, idx, use_translation=False)
+            loader.load_pose_from_pkl(motion_path, circle.target, idx, use_translation=self.is_load_translation)
    
     def generate_trajectory(self, circle, nframe: int) -> Tuple[np.ndarray, np.ndarray]:
         pos_traj = np.zeros([nframe,3], dtype = np.float32)

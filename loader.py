@@ -484,13 +484,13 @@ def get_buffer_data(file_path, gltf,buffer_view, glb_data=None):
     else:
         return None
 
-def generate_motion_from_network(character,condition,audio_path, network_path,output_path,nframe):
+def generate_motion_from_network(character,condition,audio_path, network_path,output_path, nframe,  load_translation = True):
     synthesize(condition, audio_path, network_path, output_path,nframe)
-    load_pose_from_pkl(output_path+"output.pkl", character, 0, use_translation=False)
+    load_pose_from_pkl(output_path+"output.pkl", character, 0, use_translation=load_translation)
         
 
 def load_pose_from_pkl(pose_dir, character, character_idx, use_translation=True):
-    
+    load_translation = False
     with open(pose_dir, "rb") as f:
         seq_data = pkl.load(f)
         
@@ -500,8 +500,9 @@ def load_pose_from_pkl(pose_dir, character, character_idx, use_translation=True)
     if "smpl_orients" in seq_data:
         smpl_orients = seq_data["smpl_orients"]
         smpl_poses = np.concatenate([smpl_orients, smpl_poses], axis=-1)            
-    if "root_trans" in seq_data:
+    if "root_trans" in seq_data and use_translation is True:
         smpl_trans = seq_data["root_trans"]
+        load_translation = True
     
     if "meta" in seq_data:
         metadata = seq_data["meta"]
@@ -520,9 +521,10 @@ def load_pose_from_pkl(pose_dir, character, character_idx, use_translation=True)
     ret = smpl_poses[character_idx].detach().cpu().numpy()
 
     positions = None
-    if use_translation is True:
+    if load_translation is True:
         positions = smpl_trans[character_idx] * 100.0  # convert to cm
-        positions += character.get_root_position()
+        positions[:, 1] -= positions[0, 1]  # set the first frame to 0
+        positions[:, 1] += character.get_root_position()[1]
 
     for idx,joint in enumerate(character.joints):
         if idx==0:
@@ -534,7 +536,7 @@ def load_pose_from_pkl(pose_dir, character, character_idx, use_translation=True)
         rot_quat = -Quaternions(ret[:,data_index])
         anim_layer = AnimationLayer(joint)
         anim_layer.rotations = list(rot_quat)
-        if use_translation and ("Pelvis" in joint.name or "pelvis" in joint.name):
+        if load_translation and ("Pelvis" in joint.name or "pelvis" in joint.name):
             anim_layer.positions= list(positions)
 
         anim_layer.initialize_region(0, len(rot_quat) - 1)
@@ -543,11 +545,16 @@ def load_pose_from_pkl(pose_dir, character, character_idx, use_translation=True)
     print("Success to generate. data representation: ", ret.shape)
     return
 
-def convert_joint_to_smpl_format(character, nframe):
+def convert_joint_to_smpl_format(dancer, nframe, add_root_trajectory = True):
+    character = dancer.target
     joints = character.joints[1:] if character.is_smpl is True else character.joints
-    motion_condition = np.zeros((nframe, len(joints) * 3 +1), dtype=np.float32)
+    num_root_condition = 3 if add_root_trajectory is True else 1
+    motion_condition = np.zeros((nframe, len(joints) * 3 +num_root_condition), dtype=np.float32)
+    root_positions= np.zeros((nframe, 3), dtype=np.float32)
         
     for frame in range(nframe):
+        dancer.animate(frame)
+        character.update_world_transform()
         for j_idx, joint in enumerate(joints):
             rot = torch.tensor((-joint.get_rotation(frame)).qs, dtype=torch.float32)
             aa_rot = transforms.quat2aa(rot)
@@ -557,10 +564,21 @@ def convert_joint_to_smpl_format(character, nframe):
                         data_index = bone_index_from_name[name]
                         motion_condition[frame, data_index * 3: data_index * 3 + 3] = aa_rot
                 
-        motion_condition[frame, -1] = character.get_root_position()[1] * 0.01
+                motion_condition[frame, -num_root_condition] = character.get_root_position()[1] * 0.01
         
-        
+        root_positions[frame] = character.get_root_position()
     
+    if add_root_trajectory is True:
+        root_vel = torch.from_numpy(root_positions[1:] - root_positions[:-1])
+        last_diff = torch.from_numpy(root_positions[-1] - root_positions[-2])
+        last_diff = last_diff.unsqueeze(0)
+        root_vel = torch.cat((root_vel, last_diff), dim=0)
+        
+        indices = torch.tensor([0, 2]) # x,z component
+        root_vel = root_vel[:, indices]
+        
+        
+        motion_condition[:, -num_root_condition+1:] = root_vel
     return motion_condition
 
 def write_pkl(pred_clips, dataset_info, log_dir="", name_prefix=""):
