@@ -348,6 +348,15 @@ class GridPlane(Mesh):
         num_x = mesh_info["grid_x"]
         num_z = mesh_info["grid_z"]
         scale = mesh_info["scale"]
+        if "white_color" in mesh_info:
+            white_color = mesh_info["white_color"]
+        else:
+            white_color = (191, 191,191, 255)
+        
+        if "black_color" in mesh_info:
+            black_color = mesh_info["black_color"]
+        else:
+            black_color = (134, 125,140, 255)
         num_face = num_x*num_z
         
         for i in range(num_x):
@@ -379,9 +388,9 @@ class GridPlane(Mesh):
                 self.uvs += [0.0,1.0]
 
                 if ((i+j)%2==0):
-                    self.colors +=(191, 191,191, 255) *6
+                    self.colors +=white_color *6
                 else:
-                    self.colors +=(134, 125,140, 255) *6
+                    self.colors +=black_color *6
 
         self.vertices = [scale * x for idx, x in enumerate(self.vertices)]
         self.num_vertices = len(self.vertices)//self.stride

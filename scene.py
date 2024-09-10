@@ -5,6 +5,7 @@ from object import Object,MeshType
 
 import shader
 import ui
+import os
 
 class Scene:
     def __init__(self, window):
@@ -20,8 +21,15 @@ class Scene:
         
     def draw_default_scene(self):
         mat4_identity =  np.eye(4, dtype = np.float32)
+        # plane = Object(MeshType.GridPlane, {"grid_x":6, "grid_z":6, "scale":1000.0, 
+        #                                     "black_color":(191, 191,191, 255), "white_color":(191, 191,191, 255)})
+        # plane.set_transform(mat4_identity)
+        # curr_path = os.path.dirname(os.path.abspath(__file__))
+        # plane.set_texture(curr_path+"/textures/floor2.jpg")
         plane = Object(MeshType.GridPlane, {"grid_x":60, "grid_z":60, "scale":100.0})
         plane.set_transform(mat4_identity)
+        curr_path = os.path.dirname(os.path.abspath(__file__))
+        plane.set_texture(curr_path+"/textures/floor.jpeg")
         self.add_object(plane)
         
         wall = Object(MeshType.Cube, {"scale":[6000.0, 6000.0, 1.0]})
