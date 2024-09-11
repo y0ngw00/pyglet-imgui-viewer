@@ -242,7 +242,7 @@ class RenderWindow(pyglet.window.Window):
         pyglet.app.exit()
 
     def is_ui_active(self):
-        return self.GUI.is_ui_active()
+        return UI.is_ui_active()
     
     def start_recording(self):
         save_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'save/')
