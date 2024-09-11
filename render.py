@@ -12,7 +12,7 @@ import imageio # For video recording
 
 from primitives import CustomGroup, CustomMesh
 from scene import Scene
-from control import Control
+from control import CONTROLLER
 from interface import UI
 import shader
 
@@ -72,8 +72,6 @@ class RenderWindow(pyglet.window.Window):
         self.writer = None
 
         self.setup()
-        # Keyboard/Mouse control. Not implemented yet.
-        self.controller = Control(self)
 
         # Scene environment
         self.scene = Scene(self)

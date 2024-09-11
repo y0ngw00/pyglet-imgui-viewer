@@ -11,7 +11,17 @@ class Control:
     """
     Control class controls keyboard & mouse inputs.
     """
-    def __init__(self, window):
+    _instance = None
+    def __new__(cls, *args, **kwargs):
+        if cls._instance is None:
+            cls._instance = super(Control, cls).__new__(cls)
+        return cls._instance
+    
+    def __init__(self):
+        self.window = None
+        
+    def connect_renderer(self, window):
+        self.window = window
         window.on_key_press = self.on_key_press
         window.on_key_release = self.on_key_release
         window.on_mouse_motion = self.on_mouse_motion
@@ -19,7 +29,6 @@ class Control:
         window.on_mouse_press = self.on_mouse_press
         window.on_mouse_release = self.on_mouse_release
         window.on_mouse_scroll = self.on_mouse_scroll
-        self.window = window
         self.trackball_size = ((self.window.width ** 2 + self.window.height**2)**0.5) / 2.0
         self.setup()
 
@@ -106,3 +115,12 @@ class Control:
         dt = (self.window.get_cam_target - self.window.get_cam_eye)* (1-scroll_y * 0.1)
         self.window.set_cam_eye = self.window.get_cam_target - dt
         
+    @classmethod
+    def get_instance(cls):
+        # Initialize the singleton if not already done
+        if cls._instance is None:
+            cls._instance = Control()
+        return cls._instance
+                
+
+CONTROLLER = Control.get_instance()
