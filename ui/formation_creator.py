@@ -51,7 +51,7 @@ class FormationCreator(BoxItem):
                     draw_list.add_polyline(points = self.boundary_points, col=imgui.get_color_u32_rgba(1, 0, 0, 1), flags=flag, thickness=2)
                 if len(self.dancer_points)>0:
                     for point in self.dancer_points:
-                        draw_list.add_circle_filled(point[0], point[1], radius=10, col=imgui.get_color_u32_rgba(1, 1, 1, 1))
+                        draw_list.add_circle_filled(point[0], point[1], radius=3, col=imgui.get_color_u32_rgba(0, 1, 0, 1))
                 imgui.end()
 
         return
@@ -75,8 +75,10 @@ class FormationCreator(BoxItem):
     def on_mouse_release(self, x, y, button, modifier) -> None:
         if button == pyglet.window.mouse.LEFT:
             self.is_drawing = False
-            autoarr = AutoArrangement(self.boundary_points)            
-            voronoi_points = autoarr.get_arranged_positions(6, sampling_option="grid_sampling")
+            import numpy as np
+            autoarr = AutoArrangement(np.array(self.boundary_points))
+            points = autoarr.generate_random_points(5)
+            voronoi_points = autoarr.lloyd_relaxation(points)
             self.dancer_points = voronoi_points
 
     def on_mouse_drag(self, x, y, dx, dy):
