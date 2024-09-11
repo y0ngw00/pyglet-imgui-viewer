@@ -45,7 +45,7 @@ class RenderWindow(pyglet.window.Window):
         self.shapes=[]
 
         # Set up the fog parameters
-        self.fog_start = 1000.0
+        self.fog_start = 800.0
         self.fog_end = 3000.0
         self.fog_color = (0.7, 0.7, 0.7, 1.0)
         
@@ -113,42 +113,41 @@ class RenderWindow(pyglet.window.Window):
 
     def update(self,dt) -> None:
         self.fps = 1.0/dt
-        # 1. Create a view matrix
+        # 1. Create a view matrix       
+        self.__view_mat = Mat4.look_at(
+            self.__cam_eye, target=self.__cam_target, up=self.__cam_vup)
+        
+        # 2. Create a projection matrix 
+        self.proj_mat = Mat4.perspective_projection(
+            aspect = self.width/self.height, 
+            z_near=self.z_near, 
+            z_far=self.z_far, 
+            fov = self.__fov)
+
+        view_proj = self.proj_mat @ self.__view_mat
+        
         if self.animate is True:
             self.frame += 1
-        if self.show_scene is True:
-            self.__view_mat = Mat4.look_at(
-                self.__cam_eye, target=self.__cam_target, up=self.__cam_vup)
-            
-            # 2. Create a projection matrix 
-            self.proj_mat = Mat4.perspective_projection(
-                aspect = self.width/self.height, 
-                z_near=self.z_near, 
-                z_far=self.z_far, 
-                fov = self.__fov)
-
-            view_proj = self.proj_mat @ self.__view_mat
-
-            if self.animate is True:
-                SCENE.animate(self.frame)
+            SCENE.animate(self.frame)
             SCENE.update()
+        if self.show_scene is True:
             self.update_shape()
-            for i, shape in enumerate(self.shapes):
-                '''
-                Update position/orientation in the scene. In the current setting, 
-                shapes created later rotate faster while positions are not changed.
-                '''                
+        for i, shape in enumerate(self.shapes):
+            '''
+            Update position/orientation in the scene. In the current setting, 
+            shapes created later rotate faster while positions are not changed.
+            '''                
 
-                # # Example) You can control the vertices of shape.
-                # shape.indexed_vertices_list.vertices[0] += 0.5 * dt
-                shape.shader_program['view_proj'] = view_proj
-                shape.shader_program["lightPos"] = self.light_pos
-                # shape.shader_program["viewPos"] = self.get_cam_eye
-                # shape.shader_program["lightSpaceMatrix"] = self.light_space_matrix
-                shape.shader_program["fogStart"] = self.fog_start
-                shape.shader_program["fogEnd"] = self.fog_end
-                shape.shader_program["fogColor"] = self.fog_color
-            
+            # # Example) You can control the vertices of shape.
+            # shape.indexed_vertices_list.vertices[0] += 0.5 * dt
+            shape.shader_program['view_proj'] = view_proj
+            shape.shader_program["lightPos"] = self.light_pos
+            # shape.shader_program["viewPos"] = self.get_cam_eye
+            # shape.shader_program["lightSpaceMatrix"] = self.light_space_matrix
+            shape.shader_program["fogStart"] = self.fog_start
+            shape.shader_program["fogEnd"] = self.fog_end
+            shape.shader_program["fogColor"] = self.fog_color
+        
         if self.show_ui is True:
             UI.update_ui(self.animate)
         
