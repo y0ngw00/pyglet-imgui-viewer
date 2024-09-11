@@ -22,20 +22,19 @@ from fonts import Fonts
 from enum_list import FileType
 from group_status import GroupingStatus
 
+from interface import UI
 class CustomBrowser:
-    def __init__(self, parent_window, x_pos, y_pos, x_size, y_size, scene):
-        self.parent_window = parent_window
+    def __init__(self, x_pos, y_pos, x_size, y_size):
         self.x_pos = x_pos
         self.y_pos = y_pos
         self.x_size = x_size
         self.y_size = y_size
         
-        self.scene = scene
         self.button_font_bold = Fonts["button_font_bold"]["font"]
         self.status_font = Fonts["dancer_label"]["font"]   
         
         self.selected_audio_file = ""
-        self.selected_audio_feat_file = ""
+        self.selected_audio_feat_file =""
         self.selected_network_file = ""
         
         self.selected_file_idx = 0
@@ -44,7 +43,7 @@ class CustomBrowser:
         # self.default_character_path = "idle.fbx"
         self.default_character_path = "./data/SMPL_m_unityDoubleBlends_lbs_10_scale5_207_v1.0.0.fbx"
 
-        self.grouping_status = GroupingStatus(parent_window)
+        self.grouping_status = GroupingStatus()
         
         self.motion_files = []
         self.is_no_inpaint = False
@@ -68,14 +67,14 @@ class CustomBrowser:
     
         with imgui.font(self.button_font_bold):
             if imgui.button("Create Dancer"):
-                self.parent_window.create_dancer()
+                UI.create_dancer()
 
             imgui.same_line()
 
             if imgui.button("Select audio file"):
                 self.load_audio_file()
         
-        imgui.text("Number of Dancers: "+ str(self.parent_window.get_num_dancers()))
+        imgui.text("Number of Dancers: "+ str(UI.get_num_dancers()))
 
         imgui.end_child()
         
@@ -118,19 +117,19 @@ class CustomBrowser:
         # Begin current status viewer
         imgui.begin_child("Child Window3", window_size[0] - 30, 400/1440*y_scale, border=True)        
         with imgui.font(self.status_font):
-            imgui.text("Current frame: {}".format(self.parent_window.get_frame()))
-            imgui.text("Current time: {}".format(self.parent_window.get_play_time()))
-            imgui.text("Current FPS: {:02f}".format(self.parent_window.get_fps()))
+            imgui.text("Current frame: {}".format(UI.get_frame()))
+            imgui.text("Current time: {}".format(UI.get_play_time()))
+            imgui.text("Current FPS: {:02f}".format(UI.get_fps()))
         imgui.end_child()
 
         imgui.end()
         
     def save_current_formation(self):
-        self.parent_window.get_sequencer().insert_formation_keyframe()
+        UI.get_sequencer().insert_formation_keyframe()
         return
         
     def save_current_grouping(self):
-        self.parent_window.get_sequencer().insert_group_keyframe()
+        UI.get_sequencer().insert_group_keyframe()
         return
 
     def render_motion_library(self):
@@ -142,7 +141,7 @@ class CustomBrowser:
         # imgui.same_line()
         if imgui.button("Insert Motion"):
             file_path = self.motion_library_dir + current_motion + ".fbx"
-            self.parent_window.insert_motion(file_path)
+            UI.insert_motion(file_path)
         imgui.same_line()
         if imgui.button("Refresh"):
             self.update_motion_library()
@@ -159,13 +158,13 @@ class CustomBrowser:
         with imgui.font(self.button_font_bold):
             if imgui.button("Insert Current Motion", width = window_size[0] - 50):
                 file_path = self.motion_library_dir +current_motion + ".fbx"
-                self.parent_window.insert_motion(file_path)
+                UI.insert_motion(file_path)
             if imgui.button("Create New Motion", width = window_size[0] - 50):
-                self.parent_window.show_motion_creator(True)
+                UI.show_motion_creator(True)
                         
     def render_model_connector(self):
         with imgui.font(self.button_font_bold):
-            imgui.text("Current number of characters: {}".format(self.parent_window.get_num_dancers()))
+            imgui.text("Current number of characters: {}".format(UI.get_num_dancers()))
             imgui.same_line()
             if imgui.button("Add character(GLTF,GLB)"):
                 file_descriptions = "3D model file(.gltf, .glb)"
@@ -174,7 +173,7 @@ class CustomBrowser:
                 # selected_character_file = self.render_open_file_dialog(file_descriptions, file_ext)
                 # if selected_character_file:
                     # print(f"Open File: {selected_character_file}")
-                self.parent_window.open_file(selected_character_file, FileType.Character)
+                UI.open_file(selected_character_file, FileType.Character)
 
             if imgui.button("Select audio features"):
                 self.load_audio_feature()
@@ -185,12 +184,12 @@ class CustomBrowser:
             if imgui.button("Select model checkpoint"):
                 file_descriptions = "checkpoint file (.ckpt)"
                 file_ext = "*.ckpt"
-                self.selected_network_file = self.parent_window.render_open_file_dialog(file_descriptions, file_ext)
+                self.selected_network_file = UI.render_open_file_dialog(file_descriptions, file_ext)
             imgui.text(self.selected_network_file)
             imgui.spacing()
             
             
-            frame = self.parent_window.get_end_frame()
+            frame = UI.get_end_frame()
             if imgui.button("Generate!"):
                 # self.load_smpl_motion()
                 self.generate_motion(frame)
@@ -202,7 +201,7 @@ class CustomBrowser:
             if imgui.button("Debug generate!"):
                 file_descriptions = "Motion file (.pkl)"
                 file_ext = ["*.pkl"]
-                motion_path = self.parent_window.render_open_file_dialog(file_descriptions, file_ext)
+                motion_path = UI.render_open_file_dialog(file_descriptions, file_ext)
                 self.load_smpl_motion(motion_path)
                 
     def render_formation_setting(self):
@@ -221,15 +220,15 @@ class CustomBrowser:
                 self.clear_grouping()
                 
             if imgui.button("Draw Formation"):
-                self.parent_window.show_formation_creator(True)
+                UI.show_formation_creator(True)
                 
     def load_audio_file(self):
         file_descriptions = "Audio files (.wav)"
         file_ext = ["*.wav", "*.m4a"]
-        selected_audio_file = self.parent_window.render_open_file_dialog(file_descriptions, file_ext)
+        selected_audio_file = UI.render_open_file_dialog(file_descriptions, file_ext)
 
         self.selected_audio_file = str(selected_audio_file)
-        self.parent_window.initialize_audio(selected_audio_file)
+        UI.initialize_audio(selected_audio_file)
         
         filename =  os.path.splitext(os.path.basename(selected_audio_file))[0]
         feature_dir = os.path.abspath(os.path.join(os.path.dirname(selected_audio_file), '..')) + '/jukebox_features'
@@ -240,7 +239,7 @@ class CustomBrowser:
     def load_audio_feature(self):
         file_descriptions = "Audio features (.npy)"
         file_ext = ["*.npy"]
-        selected_audio_feat_file = self.parent_window.render_open_file_dialog(file_descriptions, file_ext)
+        selected_audio_feat_file = UI.render_open_file_dialog(file_descriptions, file_ext)
         # if selected_audio_file:
         #     print(f"Open File: {selected_audio_file}")
         #     self.open_file(selected_audio_file)
@@ -253,18 +252,18 @@ class CustomBrowser:
     def generate_motion(self, nframe):
         output_path = os.path.dirname(self.output_dir)+"/"
         traj = None
-        circles = self.parent_window.get_dancers()
+        circles = UI.get_dancers()
         for circle in circles:
             motion_cond = None if self.is_no_inpaint else loader.convert_joint_to_smpl_format(circle, nframe, add_root_trajectory=self.is_load_translation)
             circle.target.clear_all_animation()
             loader.generate_motion_from_network(circle.target, motion_cond, self.selected_audio_feat_file, self.selected_network_file, output_path, nframe, load_translation=self.is_load_translation)
-            # self.parent_window.insert_motion(output_path, 0)
+            # UI.insert_motion(output_path, 0)
                  
         # else:
         #     rot_traj = self.extract_rotations(nframe)
         #     condition={"rot_traj":rot_traj}
         #     synthesize(vel_traj,self.selected_audio_file, self.selected_network_file, output_path)   
-        #     self.parent_window.open_file(output_path + ".bvh", FileType.Character)
+        #     UI.open_file(output_path + ".bvh", FileType.Character)
         
     def load_smpl_motion(self,motion_path):
         if not os.path.exists(str(motion_path)):
@@ -272,7 +271,7 @@ class CustomBrowser:
             return
         # path = "./data/test/-4yoUMiBwXg_01_0_960.pkl"
         # path = "./results/0_0_val_val.pkl"
-        circles = self.parent_window.get_dancers()
+        circles = UI.get_dancers()
         for idx, circle in enumerate(circles):
             circle.target.clear_all_animation()
             loader.load_pose_from_pkl(motion_path, circle.target, idx, use_translation=self.is_load_translation)
@@ -307,7 +306,7 @@ class CustomBrowser:
         return pos_traj,vel_traj
     
     def extract_rotations(self, circle, nframe: int) -> np.ndarray:
-        num_joints = character = self.parent_window.get_character(0).get_num_joints()
+        num_joints = character = UI.get_character(0).get_num_joints()
         rotations = np.zeros([nframe, num_joints * 3], dtype = np.float32)
         
         for f in range(nframe):

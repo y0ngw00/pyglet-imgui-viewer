@@ -5,11 +5,12 @@ import imgui.core
 
 import numpy as np
 from imgui_color import COLORS
+
+from interface import UI
 class GroupingStatus:
-    def __init__(self, parent_window):
-        self.parent_window = parent_window
-        self.sequencer = parent_window.Sequencer
-        self.formation = parent_window.DancerFormation
+    def __init__(self):
+        self.sequencer = UI.Sequencer
+        self.formation = UI.DancerFormation
         
         self.new_pair_input = dict({"dancer1": "", "dancer2": "", "start": "", "last": ""})
         self.pairs = np.zeros([0,4], dtype = np.int32)       
@@ -24,7 +25,7 @@ class GroupingStatus:
             imgui.push_item_width(200)
             imgui.text("Group")
             
-            dancers = self.parent_window.get_dancers()
+            dancers = UI.get_dancers()
             
             for idx, dancer in enumerate(dancers):
                 imgui.table_next_row()

@@ -20,14 +20,22 @@ import fonts
 from enum_list import FileType
 
 import loader
-from ui import Dancer, KeyFrame, Sequencer, Sequence, SequenceTrack, DancerFormation, TitleBar,CustomBrowser,MotionCreator, FormationCreator
-class UI:
-    def __init__(self, window):
+class UIInterface:
+    _instance = None
+    def __new__(cls, *args, **kwargs):
+        if cls._instance is None:
+            cls._instance = super(UIInterface, cls).__new__(cls)
+        return cls._instance
+    
+    def __init__(self):
         imgui.create_context()
+        self.window = None
+
+    def connect_renderer(self, window):
+        self.impl = create_renderer(window)
         imgui.get_io().display_size = window.width, window.height
         imgui.get_io().fonts.get_tex_data_as_rgba32()
-        self.impl = create_renderer(window)
-        
+
         fonts.initialize_imgui_fonts()
         
         imgui.new_frame()  
@@ -38,23 +46,28 @@ class UI:
         self.root = tk.Tk()
         self.root.withdraw()
         # Window variables
-        self.pos_idx=0
         self.pos_idx2=0
         self.pos_list = [[0,0,0], [100,0,-50], [-100,0,-50], [200,0,0],[-200,0,0],[0,0,-100],
                          [-200,0,-100], [200,0,-100], [300,0,-50], [-300,0,50],[400,0,0],[-400,0,0]]
 
-        self.dancers = []                   
+        self.dancers = []    
+        
+        from ui import Dancer, KeyFrame, Sequencer, Sequence, SequenceTrack, DancerFormation, TitleBar,CustomBrowser,MotionCreator, FormationCreator
+        self.titlebar = TitleBar()
 
-        self.titlebar = TitleBar(self)
-
-        self.DancerFormation = DancerFormation(self,660/2560, 30/1440, 1900/2560, 960/1440)
-        self.Sequencer = Sequencer(self, 660/2560, 960/1440, 1900/2560, 480/1440)
-        self.custom_browser = CustomBrowser(self,0/2560,30/1440,660/2560,1440/1440, self.scene)
-        self.motion_creator = MotionCreator(self, 660/2560, 30/1440, 1500/2560, 1440/1440)
-        self.formation_creator = FormationCreator(self, 660/2560, 30/1440, 1500/2560, 1440/1440)
+        self.DancerFormation = DancerFormation(660/2560, 30/1440, 1900/2560, 960/1440)
+        self.Sequencer = Sequencer(660/2560, 960/1440, 1900/2560, 480/1440)
+        self.custom_browser = CustomBrowser(0/2560,30/1440,660/2560,1440/1440)
+        self.motion_creator = MotionCreator(660/2560, 30/1440, 1500/2560, 1440/1440)
+        self.formation_creator = FormationCreator(660/2560, 30/1440, 1500/2560, 1440/1440)
+        
         self.impl.refresh_font_texture()
+
         
     def render(self):
+        if self.window is None:
+            return
+        
         imgui.render()
         self.impl.render(imgui.get_draw_data())
         imgui.new_frame()
@@ -83,6 +96,7 @@ class UI:
         bound_x, bound_z = self.get_scene_bound()
         position_scale = [2*self.DancerFormation.xsize_box / bound_x, (2* self.DancerFormation.ysize_box) / bound_z ]
 
+        from ui import Dancer
         self.dancers.append(Dancer(character, position_scale=position_scale, radius = 30))
         self.Sequencer.add_sequence(character)
         self.scene.add_character(character)
@@ -95,9 +109,6 @@ class UI:
     
     def get_num_dancers(self):
         return len(self.dancers)
-    
-    def get_cam_distance(self):
-        return self.window.get_cam_eye.mag
     
     def get_end_frame(self):
         if self.window.get_audio_framelength() == 0:
@@ -136,8 +147,8 @@ class UI:
         if file_type == FileType.Character:
             if ext == "bvh":
                 character = loader.load_bvh(file_path)
-                character.translate(self.pos_list[self.pos_idx])
-                self.pos_idx+=1
+                character.translate(self.pos_list[self.pos_idx2])
+                self.pos_idx2+=1
 
             elif ext == "gltf" or ext == "glb":
                 character = loader.load_gltf(file_path)
@@ -239,8 +250,16 @@ class UI:
             self.Sequencer.on_mouse_drag(x, self.window.height - y, dx, dy)            
                 
     def update_ui(self, is_animate) -> None:
+        if self.window is None:
+            return
         self.DancerFormation.update_ui(is_animate, self.window.frame)
+        
+    @classmethod
+    def get_instance(cls):
+        # Initialize the singleton if not already done
+        if cls._instance is None:
+            cls._instance = UIInterface()
+        return cls._instance
                 
 
-
-
+UI = UIInterface.get_instance()

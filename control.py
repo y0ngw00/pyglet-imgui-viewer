@@ -6,8 +6,7 @@ from pyglet.window import mouse,key
 from pyglet.math import Mat4, Vec3, Vec4, Quaternion
 
 import mathutil
-
-    
+from interface import UI
 class Control:
     """
     Control class controls keyboard & mouse inputs.
@@ -43,24 +42,24 @@ class Control:
         if symbol in key_interact:
             key_interact[symbol]()
             
-        self.window.GUI.on_key_release(symbol, modifier)
+        UI.on_key_release(symbol, modifier)
 
     def on_mouse_motion(self, x, y, dx, dy):
         # TODO:
         pass
 
     def on_mouse_press(self, x, y, button, modifier):
-        self.window.GUI.on_mouse_press(x, y, button, modifier)        
+        UI.on_mouse_press(x, y, button, modifier)        
         return
 
     def on_mouse_release(self, x, y, button, modifier):
-        self.window.GUI.on_mouse_release(x, y, button, modifier)
+        UI.on_mouse_release(x, y, button, modifier)
         return
 
     def on_mouse_drag(self, x, y, dx, dy, button, modifier):
         if button == 1:  # rotation
             if self.window.is_ui_active() is True:
-                self.window.GUI.on_mouse_drag(x, y, dx, dy, button, modifier)
+                UI.on_mouse_drag(x, y, dx, dy, button, modifier)
                 return
 
             w = self.window.width

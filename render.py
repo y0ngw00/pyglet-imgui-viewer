@@ -79,7 +79,6 @@ class RenderWindow(pyglet.window.Window):
         self.scene = Scene(self)
 
         # User interface
-        self.GUI = UI(self)
         self.audio_manager = AudioManager(self, framerate = self.framerate)
         self.update_audio = False
 
@@ -110,7 +109,7 @@ class RenderWindow(pyglet.window.Window):
         if self.show_scene is True:
             self.batch.draw()
         if self.show_ui is True:
-            self.GUI.render()
+            UI.render()
             
         if self.is_record is True and self.writer is not None:
             self.record()
@@ -154,7 +153,7 @@ class RenderWindow(pyglet.window.Window):
                 shape.shader_program["fogColor"] = self.fog_color
             
         if self.show_ui is True:
-            self.GUI.update_ui(self.animate)
+            UI.update_ui(self.animate)
         
         if self.update_audio is True:
             self.audio_manager.update(self.frame, self.update_audio)

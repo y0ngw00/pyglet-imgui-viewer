@@ -5,12 +5,11 @@ import imgui
 import imgui.core
 from imgui.integrations.pyglet import create_renderer
 
-
+from interface import UI
 class TitleBar:
-    def __init__(self, parent_window):
+    def __init__(self):
         
-        self.parent_window = parent_window
-        self.renderer = self.parent_window.window
+        self.renderer = UI.window
         self.is_open_file = False
         self.file_ext = ""
         self.file_descriptions = ""
@@ -39,13 +38,13 @@ class TitleBar:
             imgui.open_popup("Open File")
 
             if imgui.begin_popup_modal("Open File", None, imgui.WINDOW_ALWAYS_AUTO_RESIZE)[0]:
-                selected_file = self.parent_window.render_open_file_dialog(self.file_descriptions, self.file_ext)
+                selected_file = UI.render_open_file_dialog(self.file_descriptions, self.file_ext)
 
             imgui.end_popup()
 
             if selected_file:
                 print(f"Open File: {selected_file}")
-                self.parent_window.open_file(selected_file)
+                UI.open_file(selected_file)
                 
         return
     

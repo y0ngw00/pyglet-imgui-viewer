@@ -9,11 +9,11 @@ from ops import AutoArrangement
 
 import imgui.core
 
+from interface import UI
 class FormationCreator(BoxItem):
-    def __init__(self, parent_window, x_pos, y_pos, x_size, y_size):
+    def __init__(self, x_pos, y_pos, x_size, y_size):
         super().__init__()
         self.last_clicked_item = []
-        self.parent_window = parent_window
         self.x_pos = x_pos
         self.y_pos = y_pos
         self.x_size = x_size
@@ -58,7 +58,7 @@ class FormationCreator(BoxItem):
         return
 
     def get_frame(self):
-        return self.parent_window.get_frame()
+        return UI.get_frame()
 
     @property
     def is_show(self):

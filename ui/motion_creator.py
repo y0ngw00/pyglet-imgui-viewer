@@ -14,18 +14,17 @@ import imgui
 import imgui.core
 import cv2
 
-from utils import smpl2fbx, export_animated_mesh
-
 from fonts import Fonts
 from frame_bar import FrameBar
 from box_item import BoxItem
 from sequencer import Sequencer
 from sequence import Sequence
 import loader
+
+from interface import UI
 class MotionCreator(BoxItem):
-    def __init__(self, parent_window, x_pos, y_pos, x_size, y_size):
+    def __init__(self, x_pos, y_pos, x_size, y_size):
         super().__init__()
-        self.parent_window = parent_window
         self.x_pos = x_pos
         self.y_pos = y_pos
         self.x_size = x_size
@@ -57,7 +56,7 @@ class MotionCreator(BoxItem):
                                 color = imgui.get_color_u32_rgba(1,0,0,1))
         
         # Apply Motion popup
-        self.checkbox_applied_dancers = [False for i in range(self.parent_window.get_num_dancers())]
+        self.checkbox_applied_dancers = [False for i in range(UI.get_num_dancers())]
         self.start_frame_applied = 0
         self.fbx_path = ""
             
@@ -157,7 +156,7 @@ class MotionCreator(BoxItem):
 
             imgui.end()
                         
-        # if self.parent_window.is_playing() is True:
+        # if UI.is_playing() is True:
         #     self.player.seek_next_frame()
     @property
     def is_show(self):
@@ -194,7 +193,7 @@ class MotionCreator(BoxItem):
     def render_menu(self):
         with imgui.font(self.button_font_medium):
             if imgui.button("Upload video"):
-                file_path = self.parent_window.render_open_file_dialog("Video Files", ["*.mp4", "*.avi","*.mov" ,"*.wav"])
+                file_path = UI.render_open_file_dialog("Video Files", ["*.mp4", "*.avi","*.mov" ,"*.wav"])
                 if file_path:
                     self.load_video(file_path)
             imgui.same_line()
@@ -204,7 +203,7 @@ class MotionCreator(BoxItem):
             if imgui.button("Save video"):
                 if self.current_filepath:
                     initial_dir = os.path.dirname(self.current_filepath)
-                    selected_file = self.parent_window.render_save_file_dialog("Video Files", ["*.mp4"], initial_dir = initial_dir)
+                    selected_file = UI.render_save_file_dialog("Video Files", ["*.mp4"], initial_dir = initial_dir)
                     # name, ext = os.path.splitext(self.current_filepath)
                     # file_path = f"{name}_trim{ext}"
                     self.save_video(selected_file)
@@ -227,8 +226,8 @@ class MotionCreator(BoxItem):
                     _, self.start_frame_applied = imgui.input_int("Start frame", self.start_frame_applied)
                     imgui.text("Select dancers:")
                     imgui.separator()
-                    dancers = self.parent_window.get_dancers()
-                    num_dancers = self.parent_window.get_num_dancers()
+                    dancers = UI.get_dancers()
+                    num_dancers = UI.get_num_dancers()
                     if num_dancers > len(self.checkbox_applied_dancers):
                         self.checkbox_applied_dancers = [False for i in range(num_dancers)]
                     for idx, dancer in enumerate(dancers):
@@ -321,19 +320,19 @@ class MotionCreator(BoxItem):
         loader.save_smpl_fbx(pkl_path, self.fbx_path)
 
         self.load_video(output_dir + "/output.mp4")
-        self.parent_window.update_motion_library()
+        UI.update_motion_library()
         
     def apply_motion(self, start_frame):           
         file_path = self.fbx_path
                 
         # Check dancers to apply motion
-        dancers = self.parent_window.get_dancers()
+        dancers = UI.get_dancers()
         for idx, dancer in enumerate(dancers):
             dancer.target.select(False)
             if self.checkbox_applied_dancers[idx]:
                 dancer.target.select(True)
                 
-        self.parent_window.insert_motion(file_path, start_frame)
+        UI.insert_motion(file_path, start_frame)
             
     def draw_time_line(self, draw_list, x,y):
         time_length_scale = self.time_length_scale if self.time_length_scale > 0 else 0.1

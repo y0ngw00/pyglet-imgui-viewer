@@ -17,14 +17,15 @@ from enum_list import Boundary
 import loader
 from ops import CollisionHandler
 
+from interface import UI
+
 class Sequencer(BoxItem):
-    def __init__(self, parent_window, x_pos, y_pos, x_size, y_size):
+    def __init__(self, x_pos, y_pos, x_size, y_size):
         super().__init__()
         self.motion_sequences=[]
         self.sequence_pos_start = 150
         self.sequence_height = 110
         
-        self.parent_window = parent_window
         self.x_pos = x_pos
         self.y_pos = y_pos
         self.x_size = x_size
@@ -50,7 +51,7 @@ class Sequencer(BoxItem):
         y_pos = self.y_pos * y_scale
         x_size = self.x_size * x_scale
         y_size = self.y_size * y_scale
-        frame = self.parent_window.get_frame()
+        frame = UI.get_frame()
         imgui.set_next_window_position(x_pos, y_pos, imgui.ALWAYS)
         imgui.set_next_window_size(x_size, y_size, imgui.ALWAYS)
 
@@ -107,7 +108,7 @@ class Sequencer(BoxItem):
         return
     
     def draw_time_line(self, draw_list, offset):
-        framerate = self.parent_window.get_framerate()
+        framerate = UI.get_framerate()
         short_line = 10
         long_line = 15
         draw_list.add_line(self.x_origin, 
@@ -178,12 +179,12 @@ class Sequencer(BoxItem):
         self.show_popup = False
         
     def insert_formation_keyframe(self):
-        curr_frame = self.parent_window.get_frame()
+        curr_frame = UI.get_frame()
         prev_frame = max(0, curr_frame-30)
         self.formation_sequence.insert_track("Form " + str(len(self.formation_sequence.children)), prev_frame, curr_frame)
         first_keyframes=[]
         last_keyframes=[]
-        for dancer in self.parent_window.get_dancers():
+        for dancer in UI.get_dancers():
             first_key, last_key = dancer.add_root_keyframe(prev_frame, curr_frame)
             first_keyframes.append(first_key)
             last_keyframes.append(last_key)
@@ -194,9 +195,9 @@ class Sequencer(BoxItem):
         self.keyframe_post_processing(curr_frame)
     
     def insert_group_keyframe(self):
-        self.group_sequence.insert_key_frame(self.parent_window.get_frame())
-        for dancer in self.parent_window.get_dancers():
-            dancer.add_group_keyframe(self.parent_window.get_frame())
+        self.group_sequence.insert_key_frame(UI.get_frame())
+        for dancer in UI.get_dancers():
+            dancer.add_group_keyframe(UI.get_frame())
             
     def insert_music_sequence(self, duration):
         self.music_sequence.fill_sequence(0, duration)
@@ -212,11 +213,11 @@ class Sequencer(BoxItem):
                 return seq.set_track_speed(speed)
             
     def keyframe_post_processing(self, curr_frame):
-        num_dancers = len(self.parent_window.get_dancers())
+        num_dancers = len(UI.get_dancers())
         if num_dancers == 0:
             return
         keyframes = np.zeros((num_dancers, 2), dtype = np.int32)
-        for i, dancer in enumerate(self.parent_window.get_dancers()):
+        for i, dancer in enumerate(UI.get_dancers()):
             f_1, f_2 = dancer.root_keyframe.get_nearest_keyframe(curr_frame)
             keyframes[i] = [f_1, f_2]
             
@@ -227,13 +228,13 @@ class Sequencer(BoxItem):
             return
         
         col_handler = CollisionHandler(radius = 10, n_knot = 1)
-        col_handler.handle_collision(self.parent_window.get_dancers(), min_frame, max_frame)
+        col_handler.handle_collision(UI.get_dancers(), min_frame, max_frame)
         
     def on_key_release(self, symbol, modifiers, frame):
         if symbol==pyglet.window.key.P and modifiers==pyglet.window.key.MOD_CTRL:
             self.formation_sequence.clear_all_track()
             self.group_sequence.clear_all_track()
-            for dancer in self.parent_window.get_dancers():
+            for dancer in UI.get_dancers():
                 dancer.clear_root_keyframe()
                 dancer.clear_group_keyframe()
                 
@@ -270,9 +271,9 @@ class Sequencer(BoxItem):
         if self.show_popup:
             return
         
-        frame = self.parent_window.get_frame()
+        frame = UI.get_frame()
         if self.frame_bar.is_picked(x,y) or self.frame_bar.selected is True:
-            self.parent_window.set_frame(frame+dx)
+            UI.set_frame(frame+dx)
             self.frame_bar.select(True)
         
         else:
