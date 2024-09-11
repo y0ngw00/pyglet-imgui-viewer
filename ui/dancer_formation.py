@@ -29,7 +29,7 @@ class DancerFormation(BoxItem):
         y_size = self.y_size * y_scale
         imgui.set_next_window_position(x_pos,y_pos, imgui.ALWAYS)
         imgui.set_next_window_size(x_size, y_size, imgui.ALWAYS)
-        if imgui.begin("Drawing Interface", True, flags=imgui.WINDOW_NO_MOVE):
+        if imgui.begin("Formation Interface", True, flags=imgui.WINDOW_NO_MOVE):
             draw_list = imgui.get_window_draw_list()
             canvas_pos = imgui.get_window_position()  # Get the position of the canvas window
             window_size = imgui.get_window_size()

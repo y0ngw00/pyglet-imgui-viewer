@@ -20,7 +20,7 @@ import fonts
 from enum_list import FileType
 
 import loader
-from ui import Dancer, KeyFrame, Sequencer, Sequence, SequenceTrack, DancerFormation, TitleBar,CustomBrowser,MotionCreator
+from ui import Dancer, KeyFrame, Sequencer, Sequence, SequenceTrack, DancerFormation, TitleBar,CustomBrowser,MotionCreator, FormationCreator
 class UI:
     def __init__(self, window):
         imgui.create_context()
@@ -51,6 +51,7 @@ class UI:
         self.Sequencer = Sequencer(self, 660/2560, 960/1440, 1900/2560, 480/1440)
         self.custom_browser = CustomBrowser(self,0/2560,30/1440,660/2560,1440/1440, self.scene)
         self.motion_creator = MotionCreator(self, 660/2560, 30/1440, 1500/2560, 1440/1440)
+        self.formation_creator = FormationCreator(self, 660/2560, 30/1440, 1500/2560, 1440/1440)
         self.impl.refresh_font_texture()
         
     def render(self):
@@ -70,6 +71,7 @@ class UI:
         self.custom_browser.render()
         self.Sequencer.render(x,self.window.height - y)
         self.motion_creator.render()
+        self.formation_creator.render()
 
     def is_ui_active(self):
         return imgui.is_any_item_active()
@@ -158,6 +160,9 @@ class UI:
     def show_motion_creator(self, is_show):
         self.motion_creator.show(is_show)
         
+    def show_formation_creator(self, is_show):
+        self.formation_creator.show(is_show)
+        
     def get_scene_bound(self):
         return self.scene.x_bound, self.scene.z_bound
     
@@ -202,22 +207,36 @@ class UI:
 
     def on_mouse_press(self, x, y, button, modifier) -> None:
         new_y = self.window.height - y
-        if button == 1:  # rotation
-            self.DancerFormation.on_mouse_press(x, new_y, button, modifier)
-        self.Sequencer.on_mouse_press(x, new_y, button, modifier)
-        self.motion_creator.on_mouse_press(x, new_y, button, modifier)
+        
+        if self.motion_creator.is_show:
+            self.motion_creator.on_mouse_press(x, new_y, button, modifier)
+        elif self.formation_creator.is_show:
+            self.formation_creator.on_mouse_press(x, new_y, button, modifier)
+        else:
+            if button == 1:  # rotation
+                self.DancerFormation.on_mouse_press(x, new_y, button, modifier)
+            self.Sequencer.on_mouse_press(x, new_y, button, modifier)
 
     def on_mouse_release(self, x, y, button, modifier) -> None:
-        if button == 1:  # rotation
-            self.DancerFormation.on_mouse_release(x, self.window.height - y, button, modifier)
-        self.Sequencer.on_mouse_release(x, self.window.height - y, button, modifier)
-        self.motion_creator.on_mouse_release(x, self.window.height - y, button, modifier)
+        if self.motion_creator.is_show:
+            self.motion_creator.on_mouse_release(x, self.window.height - y, button, modifier)
+        elif self.formation_creator.is_show:
+            self.formation_creator.on_mouse_release(x, self.window.height - y, button, modifier)
+        else:
+            if button == 1:  # rotation
+                self.DancerFormation.on_mouse_release(x, self.window.height - y, button, modifier)
+            self.Sequencer.on_mouse_release(x, self.window.height - y, button, modifier)
 
     def on_mouse_drag(self, x, y, dx, dy, button, modifier) -> None:
-        if button == 1:  # rotation
-            self.DancerFormation.on_mouse_drag(x, self.window.height - y, dx, dy)
-        self.Sequencer.on_mouse_drag(x, self.window.height - y, dx, dy)
-        self.motion_creator.on_mouse_drag(x, self.window.height - y, dx, dy)    
+
+        if self.motion_creator.is_show:
+            self.motion_creator.on_mouse_drag(x, self.window.height - y, dx, dy)    
+        elif self.formation_creator.is_show:
+            self.formation_creator.on_mouse_drag(x, self.window.height - y, dx, dy)
+        else:
+            if button == 1:  # rotation
+                self.DancerFormation.on_mouse_drag(x, self.window.height - y, dx, dy)
+            self.Sequencer.on_mouse_drag(x, self.window.height - y, dx, dy)            
                 
     def update_ui(self, is_animate) -> None:
         self.DancerFormation.update_ui(is_animate, self.window.frame)

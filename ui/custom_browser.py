@@ -108,6 +108,10 @@ class CustomBrowser:
                 self.render_model_connector()
                 imgui.end_tab_item()
                 
+            if imgui.begin_tab_item("Formation Settings").selected:
+                self.render_formation_setting()
+                imgui.end_tab_item()
+                
             imgui.end_tab_bar()
         imgui.end_child()
         
@@ -200,6 +204,24 @@ class CustomBrowser:
                 file_ext = ["*.pkl"]
                 motion_path = self.parent_window.render_open_file_dialog(file_descriptions, file_ext)
                 self.load_smpl_motion(motion_path)
+                
+    def render_formation_setting(self):
+        with imgui.font(self.button_font_bold):
+            if imgui.button("Save Formation"):
+                self.save_current_formation()
+            if imgui.button("Save Grouping"):
+                self.save_current_grouping()
+            if imgui.button("Load Formation"):
+                self.load_formation()
+            if imgui.button("Load Grouping"):
+                self.load_grouping()
+            if imgui.button("Clear Formation"):
+                self.clear_formation()
+            if imgui.button("Clear Grouping"):
+                self.clear_grouping()
+                
+            if imgui.button("Draw Formation"):
+                self.parent_window.show_formation_creator(True)
                 
     def load_audio_file(self):
         file_descriptions = "Audio files (.wav)"

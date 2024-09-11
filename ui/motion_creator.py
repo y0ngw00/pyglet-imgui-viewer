@@ -31,7 +31,7 @@ class MotionCreator(BoxItem):
         self.x_size = x_size
         self.y_size = y_size
         # self.update = False
-        self.is_show = False
+        self.__show = False
         
         self.control_frame = 0
         self.video_timestep = 0.5
@@ -70,8 +70,8 @@ class MotionCreator(BoxItem):
         imgui.set_next_window_position(x_pos, y_pos, imgui.ONCE)
         imgui.set_next_window_size(x_size, y_size, imgui.ONCE)
             
-        if self.is_show is True:
-            expanded, self.is_show = imgui.begin("Motion Creator", True, flags=imgui.WINDOW_NO_MOVE)
+        if self.__show is True:
+            expanded, self.__show = imgui.begin("Motion Creator", True, flags=imgui.WINDOW_NO_MOVE)
             
             canvas_pos = imgui.get_window_position()
             self.update_position(x = canvas_pos.x, 
@@ -81,7 +81,7 @@ class MotionCreator(BoxItem):
             
             self.sequence_width = self.xsize_box - 30
 
-            if self.is_show:
+            if self.__show:
                 self.render_menu()
                 
                 if self.player.texture is not None:
@@ -159,9 +159,12 @@ class MotionCreator(BoxItem):
                         
         # if self.parent_window.is_playing() is True:
         #     self.player.seek_next_frame()
-            
+    @property
+    def is_show(self):
+        return self.__show
+        
     def show(self, is_show):
-        self.is_show = is_show
+        self.__show = is_show
         
     def prev(self):
         # curr_time = self.player.time
