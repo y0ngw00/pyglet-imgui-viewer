@@ -1,21 +1,27 @@
+import os
+
 import numpy as np
 import pyglet
 from pyglet.math import Mat4, Vec3
 from object import Object,MeshType
 
-import shader
-import ui
-import os
-
 class Scene:
-    def __init__(self, window):
+    _instance = None
+    def __new__(cls, *args, **kwargs):
+        if cls._instance is None:
+            cls._instance = super(Scene, cls).__new__(cls)
+        return cls._instance
+    
+    def __init__(self):
         self.objects=[]
         self.characters = []
-        self.window=window
+        self.window = None
         
         self.__x_bound = 3000
         self.__z_bound = 3000
-
+                
+    def connect_renderer(self, window):
+        self.window=window
         self.draw_default_scene()
         # self.draw_root_trajectory()
         
@@ -165,3 +171,12 @@ class Scene:
     def y_bound(self, z_bound):
         self.__z_bound = z_bound
     
+    @classmethod
+    def get_instance(cls):
+        # Initialize the singleton if not already done
+        if cls._instance is None:
+            cls._instance = Scene()
+        return cls._instance
+                
+
+SCENE = Scene.get_instance()

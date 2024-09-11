@@ -14,7 +14,6 @@ import imgui
 import imgui.core
 import cv2
 
-from fonts import Fonts
 from frame_bar import FrameBar
 from box_item import BoxItem
 from sequencer import Sequencer
@@ -42,7 +41,7 @@ class MotionCreator(BoxItem):
         self.sequence_pos_start = 0
         self.sequence_height = 200
         
-        self.button_font_medium = Fonts["button_font_medium"]["font"]
+        self.button_font_medium = UI.fonts["button_font_medium"]["font"]
         
         self.padding_x = 30
         self.video_sequence = Sequence("", 

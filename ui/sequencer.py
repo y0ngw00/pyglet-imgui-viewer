@@ -7,7 +7,6 @@ import imgui.core
 import pyglet
 import numpy as np
 
-from fonts import Fonts
 from sequencer_menu import SequencerMenu
 from sequence import Sequence, SequenceTrack
 from frame_bar import FrameBar

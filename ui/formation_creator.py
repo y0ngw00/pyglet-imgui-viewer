@@ -1,7 +1,6 @@
 import pyglet
 import imgui
 from imgui.integrations.pyglet import create_renderer
-from fonts import Fonts
 from keyframe import KeyFrame
 from box_item import BoxItem
 

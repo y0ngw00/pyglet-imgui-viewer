@@ -18,7 +18,6 @@ import pickle as pkl
 import loader
 
 from test import synthesize
-from fonts import Fonts
 from enum_list import FileType
 from group_status import GroupingStatus
 
@@ -30,8 +29,9 @@ class CustomBrowser:
         self.x_size = x_size
         self.y_size = y_size
         
-        self.button_font_bold = Fonts["button_font_bold"]["font"]
-        self.status_font = Fonts["dancer_label"]["font"]   
+        
+        self.button_font_bold = UI.fonts["button_font_bold"]["font"]
+        self.status_font = UI.fonts["dancer_label"]["font"]   
         
         self.selected_audio_file = ""
         self.selected_audio_feat_file =""

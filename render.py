@@ -11,7 +11,7 @@ from pyglet.gl import *
 import imageio # For video recording
 
 from primitives import CustomGroup, CustomMesh
-from scene import Scene
+from scene import SCENE
 from control import CONTROLLER
 from interface import UI
 import shader
@@ -72,9 +72,8 @@ class RenderWindow(pyglet.window.Window):
         self.writer = None
 
         self.setup()
-
-        # Scene environment
-        self.scene = Scene(self)
+        
+        self.scene = SCENE
 
         # User interface
         self.audio_manager = AudioManager(self, framerate = self.framerate)
@@ -94,7 +93,7 @@ class RenderWindow(pyglet.window.Window):
             
     def show(self) -> None:
         self.show_scene = not self.show_scene
-        self.scene.show(self.show_scene)
+        SCENE.show(self.show_scene)
          
     def setup(self) -> None:
         self.set_minimum_size(width = 400, height = 300)
@@ -131,8 +130,8 @@ class RenderWindow(pyglet.window.Window):
             view_proj = self.proj_mat @ self.__view_mat
 
             if self.animate is True:
-                self.scene.animate(self.frame)
-            self.scene.update()
+                SCENE.animate(self.frame)
+            SCENE.update()
             self.update_shape()
             for i, shape in enumerate(self.shapes):
                 '''
@@ -327,5 +326,5 @@ class RenderWindow(pyglet.window.Window):
         
     
     def draw_trajectory(self, pos_traj):
-        self.scene.draw_trajectory(pos_traj)
+        SCENE.draw_trajectory(pos_traj)
         return

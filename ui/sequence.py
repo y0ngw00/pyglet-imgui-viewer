@@ -2,10 +2,10 @@
 import imgui
 import imgui.core
 
-from fonts import Fonts
 from box_item import BoxItem
 from enum_list import Boundary
 
+from interface import UI
 class Sequence(BoxItem):
     def __init__(self, name, target,sequence_pos_start,sequence_height):
         super().__init__()
@@ -57,7 +57,7 @@ class Sequence(BoxItem):
         # self.draw_box(draw_list, color = self.sequence_color, rounding=4, thickness=2)
         
         
-        with imgui.font(Fonts["sequence_name"]["font"]):
+        with imgui.font(UI.fonts["sequence_name"]["font"]):
             name = self.name if self.target is None else self.target.get_name
             text_size = imgui.calc_text_size(name)
             draw_list.add_text(canvas_pos.x + (self.sequence_pos_start-text_size.x)/2, 

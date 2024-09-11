@@ -1,10 +1,9 @@
-from fonts import Fonts
 from keyframe import KeyFrameAnimation, KeyFrame, InterpolationType
 from animation_layer import AnimationLayer
 import imgui
 
 from imgui_color import COLORS, ImguiColor
-
+from interface import UI
 class Dancer:
     def __init__(self, character, position_scale = [1.0,1.0], radius = 10):
         self.target = character
@@ -18,8 +17,8 @@ class Dancer:
         self.update_circle_pos()
                 
         self.__group_idx = 0      
-        self.group_idx_font = Fonts["group_idx_font"]["font"]
-        self.dancer_label= Fonts["dancer_label"]["font"]
+        self.group_idx_font = UI.fonts["group_idx_font"]["font"]
+        self.dancer_label= UI.fonts["dancer_label"]["font"]
         
         self.root_keyframe = KeyFrameAnimation(InterpolationType.LINEAR)
         self.group_keyframe = KeyFrameAnimation(InterpolationType.STEP)

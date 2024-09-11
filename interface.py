@@ -16,10 +16,11 @@ import numpy as np
 import tkinter as tk
 from tkinter import filedialog
 
-import fonts
+# import fonts
 from enum_list import FileType
 
 import loader
+from scene import SCENE
 class UIInterface:
     _instance = None
     def __new__(cls, *args, **kwargs):
@@ -28,21 +29,19 @@ class UIInterface:
         return cls._instance
     
     def __init__(self):
-        imgui.create_context()
+        imgui.create_context()        
+        imgui.get_io().fonts.get_tex_data_as_rgba32()
+        self.initialize_imgui_fonts()
         self.window = None
 
     def connect_renderer(self, window):
         self.impl = create_renderer(window)
         imgui.get_io().display_size = window.width, window.height
-        imgui.get_io().fonts.get_tex_data_as_rgba32()
-
-        fonts.initialize_imgui_fonts()
         
         imgui.new_frame()  
         imgui.end_frame()
 
         self.window = window
-        self.scene = window.scene
         self.root = tk.Tk()
         self.root.withdraw()
         # Window variables
@@ -52,7 +51,7 @@ class UIInterface:
 
         self.dancers = []    
         
-        from ui import Dancer, KeyFrame, Sequencer, Sequence, SequenceTrack, DancerFormation, TitleBar,CustomBrowser,MotionCreator, FormationCreator
+        from ui import Dancer, Sequencer, Sequence, SequenceTrack, DancerFormation, TitleBar,CustomBrowser,MotionCreator, FormationCreator
         self.titlebar = TitleBar()
 
         self.DancerFormation = DancerFormation(660/2560, 30/1440, 1900/2560, 960/1440)
@@ -99,10 +98,10 @@ class UIInterface:
         from ui import Dancer
         self.dancers.append(Dancer(character, position_scale=position_scale, radius = 30))
         self.Sequencer.add_sequence(character)
-        self.scene.add_character(character)
+        SCENE.add_character(character)
         
     def get_character(self, idx):
-        return self.scene.get_character(idx)
+        return SCENE.get_character(idx)
 
     def get_dancers(self):
         return self.dancers
@@ -175,7 +174,7 @@ class UIInterface:
         self.formation_creator.show(is_show)
         
     def get_scene_bound(self):
-        return self.scene.x_bound, self.scene.z_bound
+        return SCENE.x_bound, SCENE.z_bound
     
     def get_frame(self):
         return self.window.frame
@@ -260,6 +259,38 @@ class UIInterface:
         if cls._instance is None:
             cls._instance = UIInterface()
         return cls._instance
-                
+    
+    def initialize_imgui_fonts(self):
+        self.fonts = {
+            "group_idx_font": {
+                "font": None,
+                "path": "pyglet_render/data/PublicSans-SemiBold.ttf",
+                "size": 30
+            },
+            "dancer_label":{
+                "font": None,
+                "path": "pyglet_render/data/PublicSans-SemiBold.ttf",
+                "size": 15
+            },
+            "button_font_medium":{
+                "font": None,
+                "path": "pyglet_render/data/PublicSans-SemiBold.ttf",
+                "size": 20
+            },
+            "button_font_bold":{
+                "font": None,
+                "path": "pyglet_render/data/PublicSans-SemiBold.ttf",
+                "size": 20
+            },
+            "sequence_name":{
+                "font": None,
+                "path": "pyglet_render/data/PublicSans-SemiBold.ttf",
+                "size": 20
+            },
+        }
+        for font in self.fonts:
+            self.fonts[font]["font"] = imgui.get_io().fonts.add_font_from_file_ttf(self.fonts[font]["path"], self.fonts[font]["size"])
+
+                    
 
 UI = UIInterface.get_instance()
