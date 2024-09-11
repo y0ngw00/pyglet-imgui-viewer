@@ -92,7 +92,7 @@ class UIInterface:
         return self.Sequencer
     
     def add_dancer(self, character)->None:
-        bound_x, bound_z = self.get_scene_bound()
+        bound_x, bound_z = SCENE.get_scene_bound()
         position_scale = [2*self.DancerFormation.xsize_box / bound_x, (2* self.DancerFormation.ysize_box) / bound_z ]
 
         from ui import Dancer
@@ -172,10 +172,7 @@ class UIInterface:
         
     def show_formation_creator(self, is_show):
         self.formation_creator.show(is_show)
-        
-    def get_scene_bound(self):
-        return SCENE.x_bound, SCENE.z_bound
-    
+         
     def get_frame(self):
         return self.window.frame
     

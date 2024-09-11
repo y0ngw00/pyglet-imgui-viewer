@@ -10,6 +10,7 @@ from keyframe_viewer import KeyframeViewer
 from box_item import BoxItem
 
 from interface import UI
+from scene import SCENE
 class DancerFormation(BoxItem):
     def __init__(self,x_pos, y_pos, x_size, y_size):
         super().__init__()
@@ -43,7 +44,7 @@ class DancerFormation(BoxItem):
             
             # Draw a dot
             frame = UI.get_frame()
-            bound_x, bound_z = UI.get_scene_bound()
+            bound_x, bound_z = SCENE.get_scene_bound()
             for dancer in UI.get_dancers():
                 dancer.position_scale = [2*self.xsize_box / bound_x, (2* self.ysize_box) / bound_z]
                 dancer.update_circle_pos()

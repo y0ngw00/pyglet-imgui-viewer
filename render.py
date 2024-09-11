@@ -73,8 +73,6 @@ class RenderWindow(pyglet.window.Window):
 
         self.setup()
         
-        self.scene = SCENE
-
         # User interface
         self.audio_manager = AudioManager(self, framerate = self.framerate)
         self.update_audio = False

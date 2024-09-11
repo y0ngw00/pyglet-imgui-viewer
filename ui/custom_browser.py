@@ -19,7 +19,6 @@ import loader
 
 from test import synthesize
 from enum_list import FileType
-from group_status import GroupingStatus
 
 from interface import UI
 class CustomBrowser:
@@ -28,7 +27,6 @@ class CustomBrowser:
         self.y_pos = y_pos
         self.x_size = x_size
         self.y_size = y_size
-        
         
         self.button_font_bold = UI.fonts["button_font_bold"]["font"]
         self.status_font = UI.fonts["dancer_label"]["font"]   
@@ -42,8 +40,6 @@ class CustomBrowser:
         self.motion_library_dir = "./data/smpl/"
         # self.default_character_path = "idle.fbx"
         self.default_character_path = "./data/SMPL_m_unityDoubleBlends_lbs_10_scale5_207_v1.0.0.fbx"
-
-        self.grouping_status = GroupingStatus()
         
         self.motion_files = []
         self.is_no_inpaint = False
@@ -88,10 +84,6 @@ class CustomBrowser:
         if imgui.begin_tab_bar("Tab Browser", imgui.TAB_BAR_FITTING_POLICY_DEFAULT):
             imgui.set_next_item_width(100)
             if imgui.begin_tab_item("Grouping Status").selected:
-                imgui.begin_child("Grouping widget", window_size[0] - 50, 720/1440*y_scale, border=False)
-                self.grouping_status.render()
-                imgui.end_child()
-                
                 with imgui.font(self.button_font_bold):
                     if imgui.button("Save Current Formation", width = window_size[0] - 50):
                         self.save_current_formation()                     
@@ -206,21 +198,27 @@ class CustomBrowser:
                 
     def render_formation_setting(self):
         with imgui.font(self.button_font_bold):
-            if imgui.button("Save Formation"):
-                self.save_current_formation()
-            if imgui.button("Save Grouping"):
-                self.save_current_grouping()
-            if imgui.button("Load Formation"):
-                self.load_formation()
-            if imgui.button("Load Grouping"):
-                self.load_grouping()
-            if imgui.button("Clear Formation"):
-                self.clear_formation()
-            if imgui.button("Clear Grouping"):
-                self.clear_grouping()
+            # if imgui.button("Save Formation"):
+            #     self.save_current_formation()
+            # if imgui.button("Save Grouping"):
+            #     self.save_current_grouping()
+            # if imgui.button("Load Formation"):
+            #     self.load_formation()
+            # if imgui.button("Load Grouping"):
+            #     self.load_grouping()
+            # if imgui.button("Clear Formation"):
+            #     self.clear_formation()
+            # if imgui.button("Clear Grouping"):
+            #     self.clear_grouping()
                 
             if imgui.button("Draw Formation"):
                 UI.show_formation_creator(True)
+            
+            _, self.is_no_inpaint = imgui.checkbox("Random", self.is_no_inpaint)
+            imgui.same_line()
+            _, self.is_load_translation = imgui.checkbox("Root Translation", self.is_load_translation)
+             
+            
                 
     def load_audio_file(self):
         file_descriptions = "Audio files (.wav)"

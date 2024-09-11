@@ -158,6 +158,9 @@ class Scene:
         self.window.add_shape(object)
         self.objects.append(object)
         
+    def get_scene_bound(self):
+        return self.x_bound, self.z_bound
+   
     @property
     def x_bound(self):
         return self.__x_bound
