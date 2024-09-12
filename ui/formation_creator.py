@@ -1,7 +1,7 @@
 import pyglet
 import imgui
 from imgui.integrations.pyglet import create_renderer
-from keyframe import KeyFrame
+from pyglet_render.keyframe import KeyFrame
 from box_item import BoxItem
 
 from ops import AutoArrangement

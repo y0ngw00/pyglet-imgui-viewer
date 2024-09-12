@@ -1,6 +1,3 @@
-
-import copy
-
 class InterpolationType:
     """
     Represents the type of interpolation for keyframe animation.
@@ -10,9 +7,37 @@ class InterpolationType:
     CUBIC = 2
     BEZIER = 3
 class KeyFrameAnimation:
-    def __init__(self, interpolation_type=InterpolationType.LINEAR):
+    def __init__(self, target, interpolation_type=InterpolationType.LINEAR):
+        self.target = target
         self.keyframes = []
         self.interpolation_type = interpolation_type
+        self.current_keyframe_idx = 0
+
+        self.frame_original_region_start = 0
+        self.frame_original_region_end = 0
+        self.frame_play_region_start = 0
+        self.frame_play_region_end = 0
+        
+        self.animation_speed = 1.0
+        
+    @property
+    def animation_length(self):
+        return len(self.keyframes)
+    
+    def initialize_region(self, frame_start, frame_end):
+        self.frame_original_region_start = frame_start
+        self.frame_original_region_end = frame_end
+        
+        self.frame_play_region_start = frame_start
+        self.frame_play_region_end = frame_end
+    
+    def update_play_region(self, frame_start, frame_end, bTrim = True):
+        self.frame_play_region_start = frame_start
+        self.frame_play_region_end = frame_end
+        if bTrim is not True:
+            original_length = self.frame_original_region_end - self.frame_original_region_start
+            play_length = self.frame_play_region_end - self.frame_play_region_start
+            self.animation_speed = original_length / play_length
 
     def add_keyframe(self, keyframe):
         if len(self.keyframes) == 0:
@@ -46,19 +71,37 @@ class KeyFrameAnimation:
                     break
             return self.keyframes[idx].frame, self.keyframes[idx+1].frame
 
+    def animate(self, frame):
+        position = self.interpolate_position(frame)
+        if self.target is not None:
+            self.target.set_position(position)
+        return position
+        
     def interpolate_position(self, frame):
         if len(self.keyframes) == 0:
             raise ValueError("No keyframes")
+
+        frame = int((frame - self.frame_play_region_start) * self.animation_speed) + self.frame_original_region_start
+        
         
         if frame <= self.keyframes[0].frame:
             position = self.keyframes[0].position
+            self.current_keyframe_idx = 0
         elif frame >= self.keyframes[-1].frame:
             position = self.keyframes[-1].position
+            self.current_keyframe_idx = len(self.keyframes) - 1
         else:
              # Find the two keyframes that the frame is between
-            for i in range(len(self.keyframes) - 1):
-                if self.keyframes[i].frame <= frame < self.keyframes[i + 1].frame:
-                    break
+            if frame >= self.keyframes[self.current_keyframe_idx].frame:
+                for i in range(self.current_keyframe_idx, len(self.keyframes) - 1):
+                    if self.keyframes[i].frame <= frame and frame < self.keyframes[i + 1].frame:
+                        self.current_keyframe_idx = i
+                        break
+            elif frame < self.keyframes[self.current_keyframe_idx].frame:
+                for i in range(0, self.current_keyframe_idx):
+                    if self.keyframes[i].frame <= frame and frame < self.keyframes[i + 1].frame:
+                        self.current_keyframe_idx = i
+                        break
             else:
                 raise ValueError("Frame is not valid")
 
@@ -77,44 +120,9 @@ class KeyFrameAnimation:
                     position = [self_pos * (1 - t) + other_pos * t for self_pos, other_pos in zip(self.keyframes[i].position, self.keyframes[i + 1].position)]
                 case _:
                     raise ValueError("Interpolation type not supported")
-
+        
         return position
-
-class KeyFrame:
-    def __init__(self, frame, position):
-        self.__frame = frame
-        self.position = copy.deepcopy(position)
-
-    @property
-    def frame(self):
-        return self.__frame
-
-    @frame.setter
-    def frame(self, frame):
-        if frame < 0:
-            frame = 0
-        self.__frame = frame
-        
-    def __eq__(self, other):
-        if isinstance(other, KeyFrame):
-            return self.__frame == other.frame
-        elif isinstance(other, int):
-            return self.__frame == other
-        else:
-            raise ValueError("Unsupported operand type for <: '{}' and '{}'".format(type(self), type(other)))
-        
-    def __lt__(self, other):
-        if isinstance(other, KeyFrame):
-            return self.__frame < other.frame
-        elif isinstance(other, int):
-            return self.__frame < other
-        else:
-            raise TypeError("Unsupported operand type for <: '{}' and '{}'".format(type(self), type(other)))
-
-    def __gt__(self, other):
-        if isinstance(other, KeyFrame):
-            return self.__frame > other.frame
-        elif isinstance(other, int):
-            return self.__frame > other
-        else:
-            raise TypeError("Unsupported operand type for >: '{}' and '{}'".format(type(self), type(other)))
+    
+    def translate_region(self, dx):
+        self.frame_play_region_start += dx
+        self.frame_play_region_end += dx

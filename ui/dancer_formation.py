@@ -64,7 +64,7 @@ class DancerFormation(BoxItem):
             if self.mode == FormationMode.DRAW:
                 self.draw_box_filled(draw_list, color=imgui.get_color_u32_rgba(0,0,0,0.8), rounding=5)
                 
-                text = "Draw Formation" if len(self.formation_markers)==0 else "Assign dancer"
+                text = "Draw Formation" if len(self.formation_markers)==0 or self.is_drawing else "Assign dancer"
                 text_size = imgui.calc_text_size(text)
                 draw_list.add_text( self.x_origin + self.xsize_box/2-text_size.x/2, self.y_origin + self.ysize_box/5-text_size.y/2, imgui.get_color_u32_rgba(1,1,1,1), text)
                 
@@ -131,7 +131,7 @@ class DancerFormation(BoxItem):
                         
             elif self.mode == FormationMode.DRAW:
                 self.is_drawing = False
-                if len(self.boundary_points) > 2:
+                if len(self.boundary_points) > 2 and UI.get_num_dancers() > 0:
                     autoarr = AutoArrangement(self.boundary_points)            
                     voronoi_points = autoarr.get_arranged_positions(UI.get_num_dancers(), sampling_option="grid_sampling")
                     self.formation_markers = voronoi_points

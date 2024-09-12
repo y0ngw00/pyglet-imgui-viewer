@@ -1,5 +1,5 @@
-from keyframe import KeyFrame
-from keyframe_animation import KeyFrameAnimation,InterpolationType
+from pyglet_render.keyframe import KeyFrame
+from pyglet_render.keyframe_animation import KeyFrameAnimation,InterpolationType
 from animation_layer import AnimationLayer
 from joint_animation import JointAnimation
 import imgui
