@@ -8,13 +8,13 @@ import pyglet
 import numpy as np
 
 from sequencer_menu import SequencerMenu
-from sequence import Sequence, SequenceTrack
+from sequence import Sequence
 from frame_bar import FrameBar
 from box_item import BoxItem
 from enum_list import Boundary
 
 import loader
-from ops import CollisionHandler
+from ops import CollisionHandler, SocialForceModel
 
 from interface import UI
 
@@ -168,7 +168,7 @@ class Sequencer(BoxItem):
         for seq in self.motion_sequences:
             if hasattr(seq, 'target') and seq.target.is_selected():
                 seq.target.add_animation(joints, start_frame, initialize_position= True)
-                seq.insert_track(name, start_frame, start_frame + len(joints[0].anim_layers[-1].rotations) -1)
+                seq.insert_track(name, start_frame, start_frame + len(joints[0].anim_layer[-1].rotations) -1)
         self.show_popup = False
         
     def clear_all_track(self):
@@ -180,18 +180,32 @@ class Sequencer(BoxItem):
     def insert_formation_keyframe(self):
         curr_frame = UI.get_frame()
         prev_frame = max(0, curr_frame-30)
+        if curr_frame < 0 :
+            return            
         self.formation_sequence.insert_track("Form " + str(len(self.formation_sequence.children)), prev_frame, curr_frame)
-        first_keyframes=[]
-        last_keyframes=[]
-        for dancer in UI.get_dancers():
-            first_key, last_key = dancer.add_root_keyframe(prev_frame, curr_frame)
-            first_keyframes.append(first_key)
-            last_keyframes.append(last_key)
-            
+        
+        # 1. 모든 댄서의 시작지점과 끝지점 포지션 정보를 가져온다.
+        # 2. 시뮬레이션에 주는 정보 : 시작지점, 끝지점, 제한시간 -> 나중에 시간 늘이거나 줄이면 다시 시뮬레이션 통해서 재계산한다.
+        # 3. 시뮬레이션을 통해 매프레임 이동 위치를 정한다.
+        # 4. 각 댄서에게 애니메이션 레이어를 생성한다. 
+
+        positions = np.zeros((len(UI.get_dancers()), curr_frame - prev_frame +1, 3), dtype = np.float32)
+        for idx, dancer in enumerate(UI.get_dancers()):
+            curr_pos = dancer.get_character_pos()
+            prev_pos = dancer.interpolate_root_position(prev_frame)
+            for frame in range(prev_frame, curr_frame+1):
+                t = (frame - prev_frame) / (curr_frame - prev_frame) if curr_frame != prev_frame else 1
+                positions[idx,frame-prev_frame] = prev_pos * (1 - t) + curr_pos * t
+
+        sim_model = SocialForceModel()
+        positions = sim_model.correct_trajectory(positions)
+        
         inserted_track = self.formation_sequence.get_last_track()
-        inserted_track.connect_keyframes(first_keyframes, last_keyframes)
-                    
-        self.keyframe_post_processing(curr_frame)
+        
+        for idx, dancer in enumerate(UI.get_dancers()):
+            dancer.insert_formation_keyframe(prev_frame, curr_frame, positions[idx], inserted_track)
+                            
+        # self.keyframe_post_processing(curr_frame)
     
     def insert_group_keyframe(self):
         self.group_sequence.insert_key_frame(UI.get_frame())

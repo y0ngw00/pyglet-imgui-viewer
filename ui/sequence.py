@@ -23,8 +23,8 @@ class Sequence(BoxItem):
         self.sequence_color = imgui.get_color_u32_rgba(1,0.7,0,1)   
         self.background_color = imgui.get_color_u32_rgba(1,1,1,0.3)     
 
-        if target is not None and len(target.joints) > 0 and len(target.joints[0].anim_layers)>0:
-            for anim_layer in target.joints[0].anim_layers:
+        if target is not None and len(target.joints) > 0 and len(target.joints[0].anim_layer)>0:
+            for anim_layer in target.joints[0].anim_layer.get_all_animations():
                 frame_start = anim_layer.frame_original_region_start
                 frame_end = anim_layer.frame_original_region_end
                 self.children.append(SequenceTrack(self, target.get_name, frame_start, frame_end))
@@ -165,9 +165,8 @@ class SequenceTrack(BoxItem):
         
         self.track_color = imgui.get_color_u32_rgba(1,1,0.7,1)
         self.text_color = imgui.get_color_u32_rgba(0,0,0,1)
-        
-        self.connected_keyframes = None # Only for root keyframing
-        
+                
+        self.target_anim = []
         self.selected = False
         self.boundary_picked= None
         self.translated = 0
@@ -192,14 +191,8 @@ class SequenceTrack(BoxItem):
     def lock_translate(self, lock):
         self.__lock_translate = lock
         
-    def connect_keyframes(self, start_keyframes, last_keyframes):
-        '''
-        Just for root keyframing. Joint animation sequence does not need this attributes.
-        '''
-        self.connected_keyframes = {
-            "start" :start_keyframes, 
-            "last" : last_keyframes
-        }
+    def add_target_anim(self, anim):
+        self.target_anim.append(anim)
                 
     def on_mouse_press(self, x, y, button, modifier):
         if self.is_picked(x,y):
@@ -217,20 +210,16 @@ class SequenceTrack(BoxItem):
             
         if self.boundary_picked is not None:
             self.parent.update_animation_layer(self, self.frame_start, self.frame_end)
-            if self.connected_keyframes is not None:
-                for keyframe in self.connected_keyframes["start"]:
-                    keyframe.frame = self.frame_start
-                for keyframe in self.connected_keyframes["last"]:
-                    keyframe.frame = self.frame_end
+            if len(self.target_anim) > 0:
+                for anim in self.target_anim:
+                    anim.update_play_region(self.frame_start, self.frame_end, bTrim = False)
             self.boundary_picked = None
             
         if self.translated != 0:
             self.parent.translate_animation_layer(self, self.translated)
-            if self.connected_keyframes is not None:
-                for keyframe in self.connected_keyframes["start"]:
-                    keyframe.frame = keyframe.frame + self.translated
-                for keyframe in self.connected_keyframes["last"]:
-                    keyframe.frame = keyframe.frame + self.translated
+            if len(self.target_anim) > 0:
+                for anim in self.target_anim:
+                    anim.translate_region(self.translated)
             self.translated = 0
             
     def on_mouse_drag(self, x, y, dx, dy):

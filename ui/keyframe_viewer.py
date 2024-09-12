@@ -6,6 +6,7 @@ import imgui
 import imgui.core
 from imgui.integrations.pyglet import create_renderer
 
+
 class KeyframeViewer:
     def __init__(self, parent_window):
         self.xsize_box = 500

@@ -15,10 +15,12 @@ import imgui.core
 import numpy as np
 import pickle as pkl
 
+from enum_list import *
 import loader
 
 from test import synthesize
 from enum_list import FileType
+from group_status import GroupingStatus
 
 from interface import UI
 class CustomBrowser:
@@ -27,6 +29,7 @@ class CustomBrowser:
         self.y_pos = y_pos
         self.x_size = x_size
         self.y_size = y_size
+        
         
         self.button_font_bold = UI.fonts["button_font_bold"]["font"]
         self.status_font = UI.fonts["dancer_label"]["font"]   
@@ -40,6 +43,8 @@ class CustomBrowser:
         self.motion_library_dir = "./data/smpl/"
         # self.default_character_path = "idle.fbx"
         self.default_character_path = "./data/SMPL_m_unityDoubleBlends_lbs_10_scale5_207_v1.0.0.fbx"
+
+        self.grouping_status = GroupingStatus()
         
         self.motion_files = []
         self.is_no_inpaint = False
@@ -84,11 +89,16 @@ class CustomBrowser:
         if imgui.begin_tab_bar("Tab Browser", imgui.TAB_BAR_FITTING_POLICY_DEFAULT):
             imgui.set_next_item_width(100)
             if imgui.begin_tab_item("Grouping Status").selected:
-                with imgui.font(self.button_font_bold):
-                    if imgui.button("Save Current Formation", width = window_size[0] - 50):
-                        self.save_current_formation()                     
+                imgui.begin_child("Grouping widget", window_size[0] - 50, 720/1440*y_scale, border=False)
+                self.grouping_status.render()
+                imgui.end_child()
+                
+                with imgui.font(self.button_font_bold):                  
                     if imgui.button("Save Current Grouping", width = window_size[0] - 50):
                         self.save_current_grouping()
+                imgui.end_tab_item()
+            if imgui.begin_tab_item("Formation Settings").selected:
+                self.render_formation_setting()
                 imgui.end_tab_item()
                 
             if imgui.begin_tab_item("Motion Library").selected:
@@ -97,10 +107,6 @@ class CustomBrowser:
 
             if imgui.begin_tab_item("Model Connector").selected:
                 self.render_model_connector()
-                imgui.end_tab_item()
-                
-            if imgui.begin_tab_item("Formation Settings").selected:
-                self.render_formation_setting()
                 imgui.end_tab_item()
                 
             imgui.end_tab_bar()
@@ -197,26 +203,36 @@ class CustomBrowser:
                 self.load_smpl_motion(motion_path)
                 
     def render_formation_setting(self):
+        x_scale, y_scale = imgui.get_io().display_size 
+        window_size = imgui.get_window_size()
         with imgui.font(self.button_font_bold):
-            # if imgui.button("Save Formation"):
-            #     self.save_current_formation()
-            # if imgui.button("Save Grouping"):
-            #     self.save_current_grouping()
-            # if imgui.button("Load Formation"):
-            #     self.load_formation()
-            # if imgui.button("Load Grouping"):
-            #     self.load_grouping()
-            # if imgui.button("Clear Formation"):
-            #     self.clear_formation()
-            # if imgui.button("Clear Grouping"):
-            #     self.clear_grouping()
-                
-            if imgui.button("Draw Formation"):
-                UI.show_formation_creator(True)
+            if imgui.begin_child("Formation widget", window_size[0] - 50, 720/1440*y_scale, border=False):
+                imgui.button("source", 100)
+                if imgui.begin_drag_drop_source():
+                    imgui.set_drag_drop_payload("TYPE", b"Dragged data")
+                    imgui.button("source")
+                    imgui.end_drag_drop_source()
             
-            _, self.is_no_inpaint = imgui.checkbox("Random", self.is_no_inpaint)
-            imgui.same_line()
-            _, self.is_load_translation = imgui.checkbox("Root Translation", self.is_load_translation)
+                imgui.button("source2", 100)
+                if imgui.begin_drag_drop_source():
+                    imgui.set_drag_drop_payload("TYPE", b"Dragged data")
+                    imgui.button("source2")
+                    imgui.end_drag_drop_source()
+                        
+                        
+                imgui.end_child()
+
+            if imgui.button("Save Current Formation", width = window_size[0] - 50):
+                self.save_current_formation() 
+            
+            formation_guide = "Draw Formation" if UI.formation_mode == FormationMode.NORMAL else "Close Drawing Mode"
+            toggle = FormationMode.DRAW if UI.formation_mode == FormationMode.NORMAL else FormationMode.NORMAL
+            if imgui.button(formation_guide, width = window_size[0]-50):
+                UI.set_formation_mode(toggle)
+            
+            # _, self.is_no_inpaint = imgui.checkbox("Random", self.is_no_inpaint)
+            # imgui.same_line()
+            # _, self.is_load_translation = imgui.checkbox("Root Translation", self.is_load_translation)
              
             
                 

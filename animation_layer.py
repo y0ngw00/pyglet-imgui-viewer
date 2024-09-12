@@ -3,73 +3,39 @@ import numpy as np
 from motionutils.Quaternions import Quaternions
 
 class AnimationLayer:
-    def __init__(self, joint):
-        self.joint = joint
-        self.rotations = []
-        self.positions = []
+    def __init__(self):
+        self.animations = []
         
-        self.frame_original_region_start = 0
-        self.frame_original_region_end = 0
+    def add_animation(self, animation):
+        self.animations.append(animation)
         
-        self.frame_play_region_start = 0
-        self.frame_play_region_end = 0
+    def clear(self):
+        self.animations = []
         
-        self.animation_length = 0
-        self.animation_speed = 1.0
+    def remove(self, animation):
+        self.animations.remove(animation)
         
-    def animate(self, frame):
-        frame_end = self.frame_play_region_start + (self.frame_play_region_end - self.frame_play_region_start)/self.animation_speed
-        if frame < self.frame_play_region_start or frame > frame_end:
-            return
-        
-        index = int((frame - self.frame_original_region_start) * self.animation_speed) % self.animation_length
-        
-        m = np.eye(4, dtype=np.float32)
-        m[0:3, 0:3] = Quaternions(self.rotations[index]).transforms()[0]
-        if len(self.positions) > index:
-            m[3, 0:3] = self.positions[index]
-        else:
-            m[3, 0:3] = self.joint.transform[3, 0:3]
+    def get_all_animations(self):
+        return self.animations
 
-        self.joint.set_transform(m)
+    def animate(self, frame):
+        for animation in self.animations:
+            animation.animate(frame)
+            
+    def update_play_region(self, idx, frame_start, frame_end):
+        self.animations[idx].update_play_region(frame_start, frame_end)
         
-    @property
-    def get_animation_speed(self):
-        return self.animation_speed
+    def translate_region(self, idx, dx):
+        self.animations[idx].translate_region(dx)
+            
+    def translate(self, pos):
+        for anim in self.animations:
+            anim.translate_position(pos)
+            
+    def __len__(self):
+        return len(self.animations)
     
-    @get_animation_speed.setter
-    def set_animation_speed(self, speed):
-        self.animation_speed = speed
-                
-    def get_rotation_quaternion(self, frame):
-        if frame < self.frame_play_region_start or frame > self.frame_play_region_end:
-            return None
-        
-        index = (frame - self.frame_original_region_start) % self.animation_length
-        return Quaternions(self.rotations[index])
-         
-    def translate_position(self, pos):
-        self.positions = [p + pos for p in self.positions] 
-        
-    def initialize_region(self, frame_start, frame_end):
-        self.frame_original_region_start = frame_start
-        self.frame_original_region_end = frame_end
-        
-        self.frame_play_region_start = frame_start
-        self.frame_play_region_end = frame_end
-        
-        self.animation_length = frame_end - frame_start + 1
-        
-    def translate_region(self, dx):
-        self.frame_original_region_start += dx
-        self.frame_original_region_end += dx
-        self.frame_play_region_start += dx
-        self.frame_play_region_end += dx
-                
-    def update_full_region(self, frame_start, frame_end):
-        self.frame_original_region_start = frame_start
-        self.frame_original_region_end = frame_end
-        
-    def update_play_region(self, frame_start, frame_end):
-        self.frame_play_region_start = frame_start
-        self.frame_play_region_end = frame_end
+    def __getitem__(self, index):
+        if len(self.animations) <= index:
+            raise ValueError("Index out of range")
+        return self.animations[index]

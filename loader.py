@@ -12,7 +12,7 @@ import pickle as pkl
 from motionutils import BVH
 from motionutils.Quaternions import Quaternions
 from object import Object,MeshType,Character,Joint,Link
-from animation_layer import AnimationLayer
+from joint_animation import JointAnimation
 from extern_file_parser import pycomcon
 import mathutil
 from utils import smpl2fbx, export_animated_mesh, process_mesh_info
@@ -335,13 +335,13 @@ def load_fbx_joint(fbx_loader, load_anim):
                 rot_mat = animation_data[:,:3,:3]
                 rot_quat = Quaternions.from_transforms(rot_mat).qs
                 
-                anim_layer = AnimationLayer(joint)
-                anim_layer.rotations = list(rot_quat)
+                joint_anim = JointAnimation(joint)
+                joint_anim.rotations = list(rot_quat)
                 # if parent_idx ==-1:
-                anim_layer.positions = list(animation_data[:,3,0:3])
-                anim_layer.initialize_region(0, len(animation_data) - 1)
+                joint_anim.positions = list(animation_data[:,3,0:3])
+                joint_anim.initialize_region(0, len(animation_data) - 1)
                 
-                joint.anim_layers.append(anim_layer)            
+                joint.anim_layer.add_animation(joint_anim)            
         joints.append(joint)
 
     return joints
@@ -447,18 +447,20 @@ def create_bvh_joint(data,names,scale_joint):
             joint.set_position(data.offsets[idx])
         joint.parent_index = data.parents[idx]
         
-        anim_layer = AnimationLayer(joint)
-        anim_layer.initialize_region(0, len(data.rotations) - 1)
-        joint.anim_layers.append(anim_layer)  
+        joint_anim = JointAnimation(joint)
+        joint_anim.initialize_region(0, len(data.rotations) - 1)
+        joint.anim_layer.add_animation(joint_anim)  
         joints.append(joint)  
        
     for frame, rot in enumerate(data.rotations):
         for idx, joint in enumerate(joints):
             rotation = rot[idx]
             rotation[1:] *= -1 # Because I use row-major matrix....sorry
-            joint.anim_layers[-1].rotations.append(rotation)
+            
+            joint_anim = joint.anim_layer[-1]
+            joint_anim.rotations.append(rotation)
             if joint.is_root is True:
-                joint.anim_layers[-1].positions.append(data.positions[frame][idx])
+                joint_anim.positions.append(data.positions[frame][idx])
 
     return joints
 
@@ -534,13 +536,13 @@ def load_pose_from_pkl(pose_dir, character, character_idx, use_translation=True)
                 data_index = bone_index_from_name[name]
                 
         rot_quat = -Quaternions(ret[:,data_index])
-        anim_layer = AnimationLayer(joint)
-        anim_layer.rotations = list(rot_quat)
+        joint_anim = JointAnimation(joint)
+        joint_anim.rotations = list(rot_quat)
         if load_translation and ("Pelvis" in joint.name or "pelvis" in joint.name):
-            anim_layer.positions= list(positions)
+            joint_anim.positions= list(positions)
 
-        anim_layer.initialize_region(0, len(rot_quat) - 1)
-        joint.anim_layers.append(anim_layer)  
+        joint_anim.initialize_region(0, len(rot_quat) - 1)
+        joint.anim_layer.add_animation(joint_anim)  
     
     print("Success to generate. data representation: ", ret.shape)
     return

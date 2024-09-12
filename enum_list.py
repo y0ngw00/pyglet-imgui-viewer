@@ -19,3 +19,8 @@ class Boundary(Enum):
     Left = 1
     Up = 2
     Down = 3
+    
+
+class FormationMode(Enum):
+    NORMAL = 0
+    DRAW = 1

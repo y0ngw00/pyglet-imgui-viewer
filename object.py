@@ -8,6 +8,7 @@ import torch
 
 import mathutil
 from primitives import CustomMesh,Cube,Sphere, GridPlane, Cylinder
+from animation_layer import AnimationLayer
 
 import sys
 import os
@@ -250,7 +251,7 @@ class Character(Object):
     
     def animate(self, frame):    
         if self.is_animate is True and self.root is not None:
-            if frame < 0 or len(self.root.anim_layers) == 0:
+            if frame < 0 or len(self.root.anim_layer) == 0:
                 return
             
             for j_idx, j in enumerate(self.joints):
@@ -260,30 +261,6 @@ class Character(Object):
             self.root.set_scale(self.scale)
             
     def add_animation(self, joints, frame, initialize_position = False):
-        # if initialize_position is True and len(self.root.positions) >0:
-        #     closest_frame = frame
-        #     if closest_frame >= len(self.root.positions):
-        #         closest_frame = len(self.root.positions) - 1
-                
-            
-        #     root = joints[0]
-            
-        #     # reflect current xz-plane facing direction to motion data
-        #     curr_rot_mat = Quaternions(self.root.rotations[closest_frame]).transforms()[0]
-        #     face_dir = curr_rot_mat[:,2] / np.linalg.norm(curr_rot_mat[:,2])
-        #     angle = np.arccos(np.dot([0, 0, 1] , face_dir))
-        #     if np.cross([0, 0, 1] , face_dir)[1] < 0:
-        #         angle = -angle
-                
-        #     curr_rot = Quaternions.from_angle_axis(angle, np.array([0,1,0]))
-        #     curr_rot_mat = curr_rot.transforms()[0]
-        #     root.positions = [p @ curr_rot_mat for p in root.positions]
-        #     root.rotations = [(curr_rot * Quaternions(q)).qs for q in root.rotations]
-            
-        #     # position difference update to motion data
-        #     curr_pos = self.root.positions[closest_frame]
-        #     pos_diff = root.positions[0] - curr_pos
-        #     root.positions -= pos_diff
         copied_joints = copy.deepcopy(joints)
         for idx, joint in enumerate(copied_joints):
             if idx > len(self.joints):
@@ -294,25 +271,25 @@ class Character(Object):
                                 
     def remove_animation(self, idx):
         for joint in self.joints:
-            anim = joint.anim_layers[idx]
-            joint.anim_layers.remove(anim)
+            anim = joint.anim_layer[idx]
+            joint.anim_layer.remove(anim)
             
     def clear_all_animation(self):
         for joint in self.joints:
-            joint.anim_layers = []
+            joint.anim_layer.clear()
             
     def set_animation_speed(self, idx, speed):
         for joint in self.joints:
-            anim = joint.anim_layers[idx]
+            anim = joint.anim_layer[idx]
             anim.set_animation_speed = speed 
             
     def update_animation_layer(self, idx, frame_start, frame_end):
         for joint in self.joints:
-            anim = joint.anim_layers[idx].update_play_region(frame_start, frame_end)        
+            joint.anim_layer.update_play_region(idx,frame_start, frame_end)        
 
     def translate_animation_layer(self, idx, dx):
         for joint in self.joints:
-            anim = joint.anim_layers[idx].translate_region(dx)
+            joint.anim_layer.translate_region(idx, dx)
             
         
 class Joint(Object):
@@ -324,7 +301,7 @@ class Joint(Object):
         self.channels = []
         self.rotations = []
         self.positions = []
-        self.anim_layers = []
+        self.anim_layer = AnimationLayer()
         self.offset = np.array([0.,0.,0.]) # static translation vector
         self.init_transform_inv = np.eye(4, dtype = np.float32)
 
@@ -345,8 +322,7 @@ class Joint(Object):
         self.is_root = is_root
 
     def animate(self, frame):
-        for anim_layer in self.anim_layers:
-            anim_layer.animate(frame)
+        self.anim_layer.animate(frame)
         # if frame > len(self.rotations)-1:
         #     return        
         # m = np.eye(4, dtype=np.float32)
@@ -360,11 +336,11 @@ class Joint(Object):
         
     def add_animation(self, joint, frame):
         
-        anim_layer = joint.anim_layers
+        anim_layer = joint.anim_layer.get_all_animations()
         for anim in anim_layer:
             anim.joint = self
             anim.translate_region(frame)       
-            self.anim_layers.append(anim)
+            self.anim_layer.add_animation(anim)
         # rest_pos = None
         # rest_rot = None
         # if frame > len(self.rotations):
@@ -401,7 +377,7 @@ class Joint(Object):
     #     return
     
     def get_rotation(self, frame):
-        for anim_layer in self.anim_layers:
+        for anim_layer in self.anim_layer.get_all_animation():
             rot_quat = anim_layer.get_rotation_quaternion(frame)
             if rot_quat is not None:
                 return rot_quat
@@ -410,9 +386,7 @@ class Joint(Object):
     
     def translate(self, pos):
         self.transform[3,0:3] += pos
-        for anim in self.anim_layers:
-            anim.translate_position(pos)
-        
+        self.anim_layer.translate(pos)
         return
         
     def get_init_transform_inverse(self):

@@ -1,5 +1,7 @@
-from keyframe import KeyFrameAnimation, KeyFrame, InterpolationType
+from keyframe import KeyFrame
+from keyframe_animation import KeyFrameAnimation,InterpolationType
 from animation_layer import AnimationLayer
+from joint_animation import JointAnimation
 import imgui
 
 from imgui_color import COLORS, ImguiColor
@@ -8,6 +10,7 @@ class Dancer:
     def __init__(self, character, position_scale = [1.0,1.0], radius = 10):
         self.target = character
         self.radius = radius
+        # Position scale = (2D Viewer position / 3D Scene position)
         self.position_scale = position_scale
         self.__clicked = False
         
@@ -20,8 +23,8 @@ class Dancer:
         self.group_idx_font = UI.fonts["group_idx_font"]["font"]
         self.dancer_label= UI.fonts["dancer_label"]["font"]
         
-        self.root_keyframe = KeyFrameAnimation(InterpolationType.LINEAR)
-        self.group_keyframe = KeyFrameAnimation(InterpolationType.STEP)
+        self.root_keyframe = AnimationLayer()
+        self.group_keyframe = KeyFrameAnimation(target = None, interpolation_type=InterpolationType.STEP)
         self.add_group_keyframe(0)
         
     @property
@@ -67,34 +70,39 @@ class Dancer:
         position = self.get_character_pos()
         self.x = self.position_scale[0] * position[0]
         self.y = self.position_scale[1] * position[2]
-
-    def add_root_keyframe(self, start, last) -> tuple([KeyFrame, KeyFrame]):
+        
+    def interpolate_root_position(self, frame):
         prev_pos = self.get_character_pos()
-        if len(self.root_keyframe.keyframes) > 0:
-            prev_pos = self.root_keyframe.interpolate_position(start)
-        start_keyframe = KeyFrame(start, prev_pos)
-        self.root_keyframe.add_keyframe(start_keyframe)
+        for i in range(len(self.root_keyframe)):
+            animation = self.root_keyframe[i]
+            if frame < animation.frame_play_region_start:
+                continue
+            prev_pos = animation.interpolate_position(frame)
+        return prev_pos
+    
+    def insert_formation_keyframe(self, prev_frame, curr_frame, positions, ui_sequence_track) -> None:
+        keyframe_anim = KeyFrameAnimation(self.target, InterpolationType.LINEAR)
+        for frame in range(prev_frame, curr_frame+1):
+            keyframe = KeyFrame(frame, positions[frame-prev_frame])
+            keyframe_anim.add_keyframe(keyframe)
+        keyframe_anim.initialize_region(prev_frame, curr_frame)
+        self.root_keyframe.add_animation(keyframe_anim)
         
-        curr_pos = self.get_character_pos()
-        last_keyframe = KeyFrame(last, curr_pos)
-        self.root_keyframe.add_keyframe(last_keyframe)
-        
-        return start_keyframe, last_keyframe
+        ui_sequence_track.add_target_anim(keyframe_anim)
         
     def add_group_keyframe(self, frame) -> None:
         keyframe = KeyFrame(frame, self.get_group_index)
         self.group_keyframe.add_keyframe(keyframe)
         
     def clear_root_keyframe(self) -> None:
-        self.root_keyframe.clear_keyframe()
+        self.root_keyframe.clear()
         
     def clear_group_keyframe(self) -> None:
         self.group_keyframe.clear_keyframe()
         
     def animate(self, frame):
-        if len(self.root_keyframe.keyframes) > 0 and self.target is not None:
-            position = self.root_keyframe.interpolate_position(frame)
-            self.target.set_position(position)
+        if len(self.root_keyframe) > 0 and self.target is not None:
+            self.root_keyframe.animate(frame)
             
         if len(self.group_keyframe.keyframes) > 0 and self.target is not None:
             group_idx = self.group_keyframe.interpolate_position(frame)
