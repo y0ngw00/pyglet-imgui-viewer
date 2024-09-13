@@ -207,19 +207,15 @@ class CustomBrowser:
         window_size = imgui.get_window_size()
         with imgui.font(self.button_font_bold):
             if imgui.begin_child("Formation widget", window_size[0] - 50, 720/1440*y_scale, border=False):
-                imgui.button("source", 100)
-                if imgui.begin_drag_drop_source():
-                    imgui.set_drag_drop_payload("TYPE", b"Dragged data")
-                    imgui.button("source")
-                    imgui.end_drag_drop_source()
-            
-                imgui.button("source2", 100)
-                if imgui.begin_drag_drop_source():
-                    imgui.set_drag_drop_payload("TYPE", b"Dragged data")
-                    imgui.button("source2")
-                    imgui.end_drag_drop_source()
-                        
-                        
+                
+                if UI.formation_mode == FormationMode.DRAW:
+                    for dancer_idx,dancer in enumerate(UI.get_dancers()):
+                        imgui.button(dancer.name, 100)
+                        if imgui.begin_drag_drop_source():
+                            imgui.set_drag_drop_payload('Dancer index', (dancer_idx).to_bytes(2, 'big'))
+                            imgui.button(dancer.name)
+                            imgui.end_drag_drop_source()
+                            
                 imgui.end_child()
 
             if imgui.button("Save Current Formation", width = window_size[0] - 50):

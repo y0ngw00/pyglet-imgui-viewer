@@ -28,11 +28,11 @@ class Dancer:
         self.add_group_keyframe(0)
         
     @property
-    def get_name(self):
+    def name(self):
         return self.target.get_name
     
-    @get_name.setter
-    def set_name(self, name):
+    @name.setter
+    def name(self, name):
         self.target.set_name = name
     
     @property
@@ -123,8 +123,8 @@ class Dancer:
         
         # Dancer name
         with imgui.font(self.dancer_label):
-            text_size = imgui.calc_text_size(self.get_name)
-            draw_list.add_text(x+self.x-text_size.x/2, y+self.y+self.radius+text_size.y/2, col = color, text = self.get_name)
+            text_size = imgui.calc_text_size(self.name)
+            draw_list.add_text(x+self.x-text_size.x/2, y+self.y+self.radius+text_size.y/2, col = color, text = self.name)
         
     def translate(self, dx, dy):
         self.x +=dx

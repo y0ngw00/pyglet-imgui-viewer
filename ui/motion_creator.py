@@ -230,7 +230,7 @@ class MotionCreator(BoxItem):
                     if num_dancers > len(self.checkbox_applied_dancers):
                         self.checkbox_applied_dancers = [False for i in range(num_dancers)]
                     for idx, dancer in enumerate(dancers):
-                        _, self.checkbox_applied_dancers[idx] = imgui.checkbox(str(idx)+". "+dancer.get_name, self.checkbox_applied_dancers[idx])
+                        _, self.checkbox_applied_dancers[idx] = imgui.checkbox(str(idx)+". "+dancer.name, self.checkbox_applied_dancers[idx])
                     imgui.dummy(0, imgui.get_content_region_available()[1] - imgui.get_text_line_height_with_spacing())
                     imgui.dummy((imgui.get_content_region_available()[0] - 100)/2,0)
                     imgui.same_line()

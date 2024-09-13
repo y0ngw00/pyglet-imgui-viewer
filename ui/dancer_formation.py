@@ -30,6 +30,10 @@ class DancerFormation(BoxItem):
         self.is_drawing = False
         self.boundary_points = []
         self.formation_markers = []
+        self.marker_indices = []
+        
+        self.marker_label = UI.fonts["dancer_label"]["font"]
+        self.marker_radius = 20
                     
     def render(self, x, y):
         x_scale, y_scale = imgui.get_io().display_size 
@@ -72,13 +76,26 @@ class DancerFormation(BoxItem):
                     flag = imgui.DRAW_NONE if self.is_drawing else imgui.DRAW_CLOSED
                     draw_list.add_polyline(points = self.boundary_points, col=imgui.get_color_u32_rgba(1, 0, 0, 1), flags=flag, thickness=2)
                 if len(self.formation_markers)>0:
-                    for point in self.formation_markers:
-                        draw_list.add_circle_filled(point[0], point[1], radius=20, col=imgui.get_color_u32_rgba(1, 1, 1, 1))
+                    color = imgui.get_color_u32_rgba(1, 1, 1, 1)
+                    dancers = UI.get_dancers()
+                    for idx, point in enumerate(self.formation_markers):
+                        draw_list.add_circle_filled(point[0], point[1], radius=self.marker_radius, col=color)
+                        if self.marker_indices[idx] != -1:
+                            with imgui.font(self.marker_label):
+                                name = dancers[self.marker_indices[idx]].name
+                                text_size = imgui.calc_text_size(name)
+                                draw_list.add_text(point[0]-text_size.x/2, point[1]+self.marker_radius+text_size.y/2, col = color, text = name)
+                                        
+                        imgui.set_cursor_pos((point[0] - canvas_pos.x - self.marker_radius, point[1] - canvas_pos.y - 20))
+                        imgui.invisible_button('marker'+str(idx), 40, 40)
+                        with imgui.begin_drag_drop_target() as drag_drop_dst:
+                            if drag_drop_dst.hovered:
+                                payload = imgui.accept_drag_drop_payload('Dancer index')
+                                if payload is not None:
+                                    dancer_index = int.from_bytes(payload, 'big')
+                                    self.marker_indices[idx] = dancer_index
+                                    
             imgui.end()
-            
-        # bChanged = self.keyframe_viewer.render()
-        # if bChanged:
-        #     self.update_ui(self.keyframe_viewer.is_keyframe_animate)
                     
         return
     
@@ -130,18 +147,19 @@ class DancerFormation(BoxItem):
                         dancer.set_is_clicked = False
                         
             elif self.mode == FormationMode.DRAW:
-                self.is_drawing = False
-                if len(self.boundary_points) > 2 and UI.get_num_dancers() > 0:
+                if self.is_drawing and len(self.boundary_points) > 2 and UI.get_num_dancers() > 0:
+                    self.is_drawing = False
                     autoarr = AutoArrangement(self.boundary_points)            
                     voronoi_points = autoarr.get_arranged_positions(UI.get_num_dancers(), sampling_option="grid_sampling")
                     self.formation_markers = voronoi_points
+                    self.marker_indices = [-1 for _ in range(len(voronoi_points))]
             
     def on_mouse_drag(self,x, y, dx, dy):
         if self.is_picked(x, y):
             if self.mode == FormationMode.NORMAL:
                 new_picked = None
                 prev_picked = []
-                dancers = UI.get_dancers()
+                dancers  =UI.get_dancers()
                 stage_x = x - (self.x_origin + self.xsize_box/2)
                 stage_y = y - (self.y_origin + self.ysize_box/2)
                 for dancer in dancers:

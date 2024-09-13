@@ -27,7 +27,7 @@ class Sequence(BoxItem):
             for anim_layer in target.joints[0].anim_layer.get_all_animations():
                 frame_start = anim_layer.frame_original_region_start
                 frame_end = anim_layer.frame_original_region_end
-                self.children.append(SequenceTrack(self, target.get_name, frame_start, frame_end))
+                self.children.append(SequenceTrack(self, target.name, frame_start, frame_end))
     
     def render(self, idx, current_frame=0):
         draw_list = imgui.get_window_draw_list()
@@ -58,7 +58,7 @@ class Sequence(BoxItem):
         
         
         with imgui.font(UI.fonts["sequence_name"]["font"]):
-            name = self.name if self.target is None else self.target.get_name
+            name = self.name if self.target is None else self.target.name
             text_size = imgui.calc_text_size(name)
             draw_list.add_text(canvas_pos.x + (self.sequence_pos_start-text_size.x)/2, 
                                self.y_origin + (self.sequence_height-text_size.y)/2, 
