@@ -30,8 +30,7 @@ class DancerFormation(BoxItem):
         self.is_drawing = False
         self.boundary_points = []
         self.formation_markers = []
-        self.marker_indices = []
-        
+        self.marker_indices = [-1 for _ in range(UI.get_num_dancers())]
         self.marker_label = UI.fonts["dancer_label"]["font"]
         self.marker_radius = 20
                     
@@ -99,11 +98,18 @@ class DancerFormation(BoxItem):
                     
         return
     
+    def reset_markers(self):
+        self.marker_indices = [-1 for _ in range(UI.get_num_dancers())]
+        
+    def get_marker_indices(self):
+        return self.marker_indices
+    
     def get_frame(self):
         return UI.get_frame()
     
     def set_mode(self, mode):
         self.mode = mode
+        self.marker_indices = [-1 for _ in range(UI.get_num_dancers())]
     
     def select(self, selected, modifier = None):
         dancers = UI.get_dancers()

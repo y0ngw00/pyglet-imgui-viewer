@@ -206,10 +206,13 @@ class CustomBrowser:
         x_scale, y_scale = imgui.get_io().display_size 
         window_size = imgui.get_window_size()
         with imgui.font(self.button_font_bold):
-            if imgui.begin_child("Formation widget", window_size[0] - 50, 720/1440*y_scale, border=False):
+            if imgui.begin_child("Formation widget", window_size[0] - 50, 660/1440*y_scale, border=False):
                 
                 if UI.formation_mode == FormationMode.DRAW:
+                    marker_indices = UI.DancerFormation.get_marker_indices()
                     for dancer_idx,dancer in enumerate(UI.get_dancers()):
+                        if dancer_idx in marker_indices:
+                            continue
                         imgui.button(dancer.name, 100)
                         if imgui.begin_drag_drop_source():
                             imgui.set_drag_drop_payload('Dancer index', (dancer_idx).to_bytes(2, 'big'))
@@ -217,6 +220,9 @@ class CustomBrowser:
                             imgui.end_drag_drop_source()
                             
                 imgui.end_child()
+                
+            if imgui.button("Reset Assigned Markers", width = window_size[0] - 50):
+                UI.DancerFormation.reset_markers()
 
             if imgui.button("Save Current Formation", width = window_size[0] - 50):
                 self.save_current_formation() 
