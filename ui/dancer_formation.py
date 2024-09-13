@@ -32,6 +32,7 @@ class DancerFormation(BoxItem):
         self.formation_markers = []
         self.marker_indices = [-1 for _ in range(UI.get_num_dancers())]
         self.marker_label = UI.fonts["dancer_label"]["font"]
+        self.button_font_bold = UI.fonts["button_font_bold"]["font"]
         self.marker_radius = 20
                     
     def render(self, x, y):
@@ -93,7 +94,12 @@ class DancerFormation(BoxItem):
                                 if payload is not None:
                                     dancer_index = int.from_bytes(payload, 'big')
                                     self.marker_indices[idx] = dancer_index
-                                    
+                
+                imgui.set_cursor_pos((self.xsize_box-200, self.ysize_box))                    
+                with imgui.font(self.button_font_bold): 
+                    if imgui.button('Apply', width=100):
+                        pass
+                                        
             imgui.end()
                     
         return
