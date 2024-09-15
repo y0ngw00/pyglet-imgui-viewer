@@ -162,6 +162,12 @@ class Sequencer(BoxItem):
             if hasattr(seq, 'target') and seq.target.is_selected():
                 seq.delete_motion_track()
         self.show_popup = False
+        
+    def mirror_motion(self):
+        for seq in self.motion_sequences:
+            if hasattr(seq, 'target') and seq.target.is_selected():
+                seq.mirror_motion()
+        self.show_popup = False
     
     def insert_motion(self, file_path, start_frame):
         name, joints = loader.load_fbx_animation(file_path)

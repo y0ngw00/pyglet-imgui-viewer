@@ -1,7 +1,7 @@
 import numpy as np
 
 from motionutils.Quaternions import Quaternions
-
+from copy import deepcopy
 class JointAnimation:
     def __init__(self, joint):
         self.joint = joint
@@ -73,3 +73,14 @@ class JointAnimation:
     def update_play_region(self, frame_start, frame_end):
         self.frame_play_region_start = frame_start
         self.frame_play_region_end = frame_end
+        
+    @classmethod
+    def create_mirrored_animation(cls, joint_anim):
+        new_anim = cls(joint_anim.joint)
+        new_anim.rotations = deepcopy(joint_anim.rotations)
+        new_anim.positions = deepcopy(joint_anim.positions)
+        new_anim.initialize_region(joint_anim.frame_original_region_start, joint_anim.frame_original_region_end)
+        new_anim.rotations[:,2:] = new_anim.rotations[:,2:] * -1
+        new_anim.positions[:,0] = -new_anim.positions[:,0]
+            
+        return new_anim

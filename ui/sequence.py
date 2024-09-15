@@ -58,7 +58,7 @@ class Sequence(BoxItem):
         
         
         with imgui.font(UI.fonts["sequence_name"]["font"]):
-            name = self.name if self.target is None else self.target.name
+            name = self.name
             text_size = imgui.calc_text_size(name)
             draw_list.add_text(canvas_pos.x + (self.sequence_pos_start-text_size.x)/2, 
                                self.y_origin + (self.sequence_height-text_size.y)/2, 
@@ -111,6 +111,11 @@ class Sequence(BoxItem):
                 return track.track_speed
             
         return -1
+    
+    def mirror_motion(self):
+        for idx, track in enumerate(self.children):
+            if track.selected is True:
+                self.target.mirror_motion(idx)
                 
     def set_track_speed(self, speed):
         for idx, track in enumerate(self.children):

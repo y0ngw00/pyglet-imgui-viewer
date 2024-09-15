@@ -78,6 +78,33 @@ bone_index_from_name = {
     'R_Hand': 23
 }
 
+mirror_index = {
+    '0':0,
+    '1':2,
+    '2':1,
+    '3':3,
+    '4':5,
+    '5':4,
+    '6':6,
+    '7':8,
+    '8':7,
+    '9':9,
+    '10':11,
+    '11':10,
+    '12':12,
+    '13':14,
+    '14':13,
+    '15':15,
+    '16':17,
+    '17':16,
+    '18':19,
+    '19':18,
+    '20':21,
+    '21':20,
+    '22':23,
+    '23':22
+}
+
 
 def load_gltf(filename):
     gltf = GLTF2().load(filename)
@@ -336,9 +363,9 @@ def load_fbx_joint(fbx_loader, load_anim):
                 rot_quat = Quaternions.from_transforms(rot_mat).qs
                 
                 joint_anim = JointAnimation(joint)
-                joint_anim.rotations = list(rot_quat)
+                joint_anim.rotations = np.array(rot_quat)
                 # if parent_idx ==-1:
-                joint_anim.positions = list(animation_data[:,3,0:3])
+                joint_anim.positions = np.array(animation_data[:,3,0:3])
                 joint_anim.initialize_region(0, len(animation_data) - 1)
                 
                 joint.anim_layer.add_animation(joint_anim)            
@@ -461,6 +488,9 @@ def create_bvh_joint(data,names,scale_joint):
             joint_anim.rotations.append(rotation)
             if joint.is_root is True:
                 joint_anim.positions.append(data.positions[frame][idx])
+                
+    joint_anim.rotations = np.array(joint_anim.rotations)
+    joint_anim.positions = np.array(joint_anim.positions)
 
     return joints
 
@@ -583,8 +613,28 @@ def convert_joint_to_smpl_format(dancer, nframe, add_root_trajectory = True):
         motion_condition[:, -num_root_condition+1:] = root_vel
     return motion_condition
 
+def mirror_motion(joints, idx):
+    new_anim_list = {}
+    for j in joints[1:]:
+        anims = j.anim_layer.get_all_animations()
+        # for anim in anims:
+        new_anim = JointAnimation.create_mirrored_animation(anims[idx])
+        for name in bone_index_from_name:
+            if name in j.name:
+                data_index = bone_index_from_name[name]
+                new_joint_index = mirror_index[str(data_index)]
+                
+                mirror_name = bone_name_from_index[new_joint_index]
+                new_anim_list[mirror_name] = new_anim
+                
+    for j in joints[1:]:
+        for new_joint in new_anim_list:
+            if new_joint in j.name:
+                new_anim = new_anim_list[new_joint]
+                new_anim.joint = j
+                j.anim_layer[idx] = new_anim
+
 def write_pkl(pred_clips, dataset_info, log_dir="", name_prefix=""):
-    
     translation = None
     if dataset_info["use_contact"] is True:
         pred_clips = pred_clips[:,:,:-4]

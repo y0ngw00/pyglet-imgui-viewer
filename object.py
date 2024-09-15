@@ -239,6 +239,14 @@ class Character(Object):
             
         return links
     
+    def mirror_motion(self, idx):
+        if self.is_smpl is not True:
+            print("This tool is only for SMPL model")
+            return
+        
+        from loader import mirror_motion
+        mirror_motion(self.joints, idx)
+    
     def skinning(self):
         if self.is_show is not True:
             return
@@ -259,7 +267,7 @@ class Character(Object):
             
             self.skinning()
             self.root.set_scale(self.scale)
-            
+        
     def add_animation(self, joints, frame, initialize_position = False):
         copied_joints = copy.deepcopy(joints)
         for idx, joint in enumerate(copied_joints):

@@ -39,3 +39,8 @@ class AnimationLayer:
         if len(self.animations) <= index:
             raise ValueError("Index out of range")
         return self.animations[index]
+    
+    def __setitem__(self, index, value):
+        if len(self.animations) <= index:
+            raise ValueError("Index out of range")
+        self.animations[index] = value

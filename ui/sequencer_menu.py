@@ -31,6 +31,8 @@ class SequencerMenu:
                 self.open_motion_library()
             if imgui.menu_item("Delete Motion")[0]:
                 self.parent_window.delete_motion()
+            if speed>0 and imgui.menu_item("Mirror Motion")[0]:
+                self.parent_window.mirror_motion()
             if speed>0 and imgui.begin_menu("Change Speed"):
                 clicked, speed_changed = imgui.input_float("Speed", speed, 0.1)
                 if clicked and speed_changed != speed and speed_changed > 0:
