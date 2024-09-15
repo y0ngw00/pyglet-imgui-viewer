@@ -112,9 +112,10 @@ class Control:
     def on_mouse_scroll(self, x, y, scroll_x, scroll_y):
         # fov = self.window.get_fov
         # self.window.set_fov = fov - scroll_y
-        dt = (self.window.get_cam_target - self.window.get_cam_eye)* (1-scroll_y * 0.1)
-        self.window.set_cam_eye = self.window.get_cam_target - dt
-        
+        if self.window.show_scene is True:
+            dt = (self.window.get_cam_target - self.window.get_cam_eye)* (1-scroll_y * 0.1)
+            self.window.set_cam_eye = self.window.get_cam_target - dt
+            
     @classmethod
     def get_instance(cls):
         # Initialize the singleton if not already done

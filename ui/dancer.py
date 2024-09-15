@@ -60,6 +60,9 @@ class Dancer:
         self.__clicked = clicked
         self.target.select(clicked)
         
+    def get_marker_pos(self):
+        return self.x, self.y
+    
     def get_character_pos(self):
         return self.target.get_position()
     

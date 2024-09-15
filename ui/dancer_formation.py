@@ -98,7 +98,7 @@ class DancerFormation(BoxItem):
                 imgui.set_cursor_pos((self.xsize_box-200, self.ysize_box))                    
                 with imgui.font(self.button_font_bold): 
                     if imgui.button('Apply', width=100):
-                        pass
+                        self.apply_created_formation()
                                         
             imgui.end()
                     
@@ -106,6 +106,22 @@ class DancerFormation(BoxItem):
     
     def reset_markers(self):
         self.marker_indices = [-1 for _ in range(UI.get_num_dancers())]
+        
+    def apply_created_formation(self):
+        # if 모든 댄서들이 배치되어있지 않으면 리턴
+        
+        dancers = UI.get_dancers()
+        for idx, point in enumerate(self.formation_markers):
+            if self.marker_indices[idx] == -1:
+                print("Please assign all dancers.")
+                return
+            
+            dancer = dancers[self.marker_indices[idx]]
+            curr_marker_pos = point
+            
+            dancer_x, dancer_y = dancer.get_marker_pos()
+            prev_marker_pos = [dancer_x + self.x_origin + self.xsize_box/2, dancer_y+ self.y_origin + self.ysize_box/2]
+            dancer.translate(curr_marker_pos[0] - prev_marker_pos[0], curr_marker_pos[1] - prev_marker_pos[1])
         
     def get_marker_indices(self):
         return self.marker_indices
@@ -164,7 +180,7 @@ class DancerFormation(BoxItem):
                     autoarr = AutoArrangement(self.boundary_points)            
                     voronoi_points = autoarr.get_arranged_positions(UI.get_num_dancers(), sampling_option="grid_sampling")
                     self.formation_markers = voronoi_points
-                    self.marker_indices = [-1 for _ in range(len(voronoi_points))]
+                    # self.marker_indices = [-1 for _ in range(len(voronoi_points))]
             
     def on_mouse_drag(self,x, y, dx, dy):
         if self.is_picked(x, y):
@@ -195,7 +211,9 @@ class DancerFormation(BoxItem):
         if self.is_picked(x, y):
             if self.mode == FormationMode.DRAW and button == pyglet.window.mouse.LEFT:
                 self.is_drawing = True
-                self.boundary_points = [(x, y)]
+                self.boundary_points = [(x, y)]     
+        else:
+            self.is_drawing = False
                     
     def update_ui(self, is_animate, frame) -> None:
         if is_animate:
