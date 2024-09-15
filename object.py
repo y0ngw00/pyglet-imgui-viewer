@@ -385,7 +385,7 @@ class Joint(Object):
     #     return
     
     def get_rotation(self, frame):
-        for anim_layer in self.anim_layer.get_all_animation():
+        for anim_layer in self.anim_layer.get_all_animations():
             rot_quat = anim_layer.get_rotation_quaternion(frame)
             if rot_quat is not None:
                 return rot_quat

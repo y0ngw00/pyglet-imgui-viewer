@@ -72,17 +72,17 @@ class KeyFrameAnimation:
             return self.keyframes[idx].frame, self.keyframes[idx+1].frame
 
     def animate(self, frame):
+        if frame < self.frame_play_region_start or frame > self.frame_play_region_end:
+            return
         position = self.interpolate_position(frame)
         if self.target is not None:
             self.target.set_position(position)
-        return position
         
     def interpolate_position(self, frame):
         if len(self.keyframes) == 0:
-            raise ValueError("No keyframes")
+            raise ValueError("No keyframes")            
 
-        frame = int((frame - self.frame_play_region_start) * self.animation_speed) + self.frame_original_region_start
-        
+        frame = (frame - self.frame_play_region_start) * self.animation_speed + self.frame_original_region_start
         
         if frame <= self.keyframes[0].frame:
             position = self.keyframes[0].position

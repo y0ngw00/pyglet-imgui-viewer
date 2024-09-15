@@ -125,7 +125,6 @@ class RenderWindow(pyglet.window.Window):
         view_proj = self.proj_mat @ self.__view_mat
         
         if self.animate is True:
-            self.frame += 1
             SCENE.animate(self.frame)
             SCENE.update()
         if self.show_scene is True:
@@ -148,10 +147,13 @@ class RenderWindow(pyglet.window.Window):
         
         if self.show_ui is True:
             UI.update_ui(self.animate)
-        
+            
         if self.update_audio is True:
             self.audio_manager.update(self.frame, self.update_audio)
             self.update_audio = False
+
+        if self.animate is True:
+            self.frame += 1     
         
     def set_update_audio_flag(self, flag):
         self.update_audio = flag
