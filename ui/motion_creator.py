@@ -307,7 +307,7 @@ class MotionCreator(BoxItem):
         
         from wham import WHAM_API
         wham_model = WHAM_API()
-        results, tracking_results, slam_results = wham_model(video = file_path, output_dir = output_dir, visualize = True, pkl_path = pkl_path)
+        results, tracking_results, slam_results = wham_model(video = file_path, output_dir = output_dir, run_global = False, visualize = True, pkl_path = pkl_path)
         
         self.clear()
         

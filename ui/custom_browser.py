@@ -196,7 +196,10 @@ class CustomBrowser:
             imgui.same_line()
             _, self.is_load_translation = imgui.checkbox("Root Translation", self.is_load_translation)
                 
-            if imgui.button("Debug generate!"):
+            if imgui.button("Edit motion!"):
+                self.edit_motion()
+                
+            if imgui.button("Open Pkl motion"):
                 file_descriptions = "Motion file (.pkl)"
                 file_ext = ["*.pkl"]
                 motion_path = UI.render_open_file_dialog(file_descriptions, file_ext)
@@ -267,7 +270,6 @@ class CustomBrowser:
         
     def generate_motion(self, nframe):
         output_path = os.path.dirname(self.output_dir)+"/"
-        traj = None
         circles = UI.get_dancers()
         for circle in circles:
             motion_cond = None if self.is_no_inpaint else loader.convert_joint_to_smpl_format(circle, nframe, add_root_trajectory=self.is_load_translation)
@@ -280,6 +282,17 @@ class CustomBrowser:
         #     condition={"rot_traj":rot_traj}
         #     synthesize(vel_traj,self.selected_audio_file, self.selected_network_file, output_path)   
         #     UI.open_file(output_path + ".bvh", FileType.Character)
+        
+    def edit_motion(self):
+        output_path = os.path.dirname(self.output_dir)+"/"
+        circles = UI.get_dancers()
+        for circle in circles:
+            if len(circle.target.root.anim_layer)==0:
+                continue
+            frame_start, frame_end = circle.target.root.anim_layer[0].get_play_region()
+            motion_cond = loader.convert_joint_to_smpl_format(circle, frame_end-frame_start, add_root_trajectory=True)
+            circle.target.clear_all_animation()
+            loader.edit_motion_from_network(circle.target, motion_cond, self.selected_audio_feat_file, self.selected_network_file, output_path,frame_end-frame_start, load_translation=self.is_load_translation)
         
     def load_smpl_motion(self,motion_path):
         if not os.path.exists(str(motion_path)):

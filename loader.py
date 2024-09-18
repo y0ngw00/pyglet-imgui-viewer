@@ -18,7 +18,7 @@ import mathutil
 from utils import smpl2fbx, export_animated_mesh, process_mesh_info
 import transforms
 import torch
-from test import synthesize
+from test import synthesize, edit_synthesize
 
 sample_character_path = "./data/SMPL_m_unityDoubleBlends_lbs_10_scale5_207_v1.0.0.fbx"
 sample_texture_path = "./data/m_01_alb.002.png"
@@ -519,7 +519,10 @@ def get_buffer_data(file_path, gltf,buffer_view, glb_data=None):
 def generate_motion_from_network(character,condition,audio_path, network_path,output_path, nframe,  load_translation = True):
     synthesize(condition, audio_path, network_path, output_path,nframe)
     load_pose_from_pkl(output_path+"output.pkl", character, 0, use_translation=load_translation)
-        
+
+def edit_motion_from_network(character,condition,audio_path, network_path,output_path, nframe,  load_translation = True):
+    edit_synthesize(condition, audio_path, network_path, output_path,nframe)
+    load_pose_from_pkl(output_path+"output_0.pkl", character, 0, use_translation=load_translation)
 
 def load_pose_from_pkl(pose_dir, character, character_idx, use_translation=True):
     load_translation = False
@@ -578,6 +581,8 @@ def load_pose_from_pkl(pose_dir, character, character_idx, use_translation=True)
     return
 
 def convert_joint_to_smpl_format(dancer, nframe, add_root_trajectory = True):
+    from scene import SCENE
+    
     character = dancer.target
     joints = character.joints[1:] if character.is_smpl is True else character.joints
     num_root_condition = 3 if add_root_trajectory is True else 1
@@ -585,8 +590,8 @@ def convert_joint_to_smpl_format(dancer, nframe, add_root_trajectory = True):
     root_positions= np.zeros((nframe, 3), dtype=np.float32)
         
     for frame in range(nframe):
-        dancer.animate(frame)
-        character.update_world_transform()
+        SCENE.animate(frame)
+        SCENE.update()
         for j_idx, joint in enumerate(joints):
             rot = torch.tensor((-joint.get_rotation(frame)).qs, dtype=torch.float32)
             aa_rot = transforms.quat2aa(rot)

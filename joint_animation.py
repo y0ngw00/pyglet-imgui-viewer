@@ -48,6 +48,9 @@ class JointAnimation:
         index = (frame - self.frame_original_region_start) % self.animation_length
         return Quaternions(self.rotations[index])
          
+    def get_play_region(self):
+        return self.frame_play_region_start, self.frame_play_region_end
+    
     def translate_position(self, pos):
         self.positions = [p + pos for p in self.positions] 
         
