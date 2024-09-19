@@ -20,9 +20,12 @@ import transforms
 import torch
 from test import synthesize, edit_synthesize
 
-sample_character_path = "./data/SMPL_m_unityDoubleBlends_lbs_10_scale5_207_v1.0.0.fbx"
-sample_texture_path = "./data/m_01_alb.002.png"
-sample_character = None
+sample_female_model_path = "./data/SMPL_f_unityDoubleBlends_lbs_10_scale5_207_v1.0.0.fbx"
+sample_male_model_path = "./data/SMPL_m_unityDoubleBlends_lbs_10_scale5_207_v1.0.0.fbx"
+sample_female_texture_path = "./data/f_01_alb.002.png"
+sample_male_texture_path = "./data/m_01_alb.002.png"
+sample_female_character = None
+sampel_male_character = None
 
 bone_name_from_index = {
     0 : 'Pelvis',
@@ -265,12 +268,12 @@ def load_smpl_fbx(filename):
     character = Character(name, meshes = [mesh],joints = joints, scale=[1,1,1]) 
     return character 
 
-def load_fbx(filename, load_anim = False):
+def load_fbx(filename,texture_path = None, load_anim = False):
     fbx_loader = pycomcon.FBXLoader()
     loadResult = fbx_loader.load_fbx(filename)
     name = filename.split('/')[-1]
 
-    meshes = load_fbx_mesh(fbx_loader)
+    meshes = load_fbx_mesh(fbx_loader, texture_path)
     # if len(meshes) > 0:
         # meshes[0].set_color((0, 4, 47, 255))
         # meshes[1].set_color((200, 200, 200, 255))
@@ -284,7 +287,7 @@ def load_fbx(filename, load_anim = False):
     print("Success to load FBX!")
     return character
 
-def load_fbx_mesh(fbx_loader):
+def load_fbx_mesh(fbx_loader,texture_path= None):
     meshes = []
     
     fbx_meshes = fbx_loader.get_meshes()
@@ -314,11 +317,11 @@ def load_fbx_mesh(fbx_loader):
             
         # diffuse_map = fbx_mesh.diffuseTexture
         # diffuse_map = "/home/imo/Downloads/SMPLitex-texture-00000.png"
-        diffuse_map = "/home/imo/Downloads/m_01_alb.002.png"
+        
+        if texture_path is not None:
+            mesh.set_texture(texture_path)
         # diffuse_map = sample_texture_path
         # diffuse_map = "/home/imo/Project/DanceTransfer/data/mixamo_library/Amy.fbm/Ch46_1001_Diffuse.png"
-        if diffuse_map != '':
-            mesh.set_texture(diffuse_map)
         
         mesh.mesh.stride = 3 # set to triangular mesh            
         meshes.append(mesh)
@@ -421,10 +424,13 @@ def load_bvh_animation(filepath):
 
     return name, joints
 
-def create_sample_character():
-    global sample_character
+def create_sample_character(is_male=False):
+    sample_character_path = sample_female_model_path if is_male is False else sample_male_model_path
+    sample_texture_path = sample_female_texture_path if is_male is False else sample_male_texture_path
+    sample_character = sample_female_character if is_male is False else sampel_male_character
+    
     if sample_character is None:
-        sample_character = load_fbx(sample_character_path)
+        sample_character = load_fbx(sample_character_path, sample_texture_path)
         return sample_character
     return sample_character.copy()
     

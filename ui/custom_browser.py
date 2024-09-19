@@ -34,6 +34,8 @@ class CustomBrowser:
         self.button_font_bold = UI.fonts["button_font_bold"]["font"]
         self.status_font = UI.fonts["dancer_label"]["font"]   
         
+        self.created_dancer_gender = False # False = Female, True Male
+        
         self.selected_audio_file = ""
         self.selected_audio_feat_file =""
         self.selected_network_file = ""
@@ -62,20 +64,33 @@ class CustomBrowser:
         
         imgui.begin("Custom Editor", flags=imgui.WINDOW_NO_MOVE)
         window_size = imgui.get_window_size()
-        child_size = (window_size[0] - 30, 80/1440 * y_scale)  # 10 pixels smaller on each side
+        child_size = (window_size[0] - 30, 110/1440 * y_scale)  # 10 pixels smaller on each side
         # Begin the child window
         imgui.begin_child("Child Window1", child_size[0], child_size[1], border=False)
     
         with imgui.font(self.button_font_bold):
             if imgui.button("Create Dancer"):
-                UI.create_dancer()
+                UI.create_dancer(self.created_dancer_gender)
 
             imgui.same_line()
 
             if imgui.button("Select audio file"):
                 self.load_audio_file()
         
+        imgui.text("Select dancer gender: ")
+        imgui.same_line()
+        female_clicked, _ = imgui.checkbox("Female", not self.created_dancer_gender)
+        imgui.same_line()
+        male_clicked, _ = imgui.checkbox("Male", self.created_dancer_gender)
+        if female_clicked:
+            self.created_dancer_gender = False
+        if male_clicked:
+            self.created_dancer_gender = True
+        
+        
         imgui.text("Number of Dancers: "+ str(UI.get_num_dancers()))
+        
+
 
         imgui.end_child()
         

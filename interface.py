@@ -131,8 +131,8 @@ class UIInterface:
             start_frame = self.window.frame
         self.Sequencer.insert_motion(file_path, start_frame)
         
-    def create_dancer(self):
-        character = loader.create_sample_character()
+    def create_dancer(self, is_male=False):
+        character = loader.create_sample_character(is_male)
         character.translate(self.pos_list[self.pos_idx2 % len(self.pos_list)])
         self.pos_idx2+=1
         self.add_dancer(character)
