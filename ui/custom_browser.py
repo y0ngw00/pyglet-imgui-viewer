@@ -51,7 +51,7 @@ class CustomBrowser:
         
         self.motion_files = []
         self.is_no_inpaint = False
-        self.load_translation_from_video = True
+        self.load_translation_from_network = True
         self.update_motion_library()
         
     def render(self):
@@ -169,12 +169,12 @@ class CustomBrowser:
         clicked, self.selected_file_idx = imgui.listbox('', self.selected_file_idx, self.motion_files, height_in_items = 25)
         imgui.pop_item_width()
 
-        _, self.root_translation_from_library = imgui.checkbox("Translation", self.root_translation_from_library)
+        _, self.load_translation_from_library = imgui.checkbox("Translation", self.load_translation_from_library)
         
         with imgui.font(self.button_font_bold):
             if imgui.button("Insert Current Motion", width = window_size[0] - 50):
                 file_path = self.motion_library_dir +current_motion + ".fbx"
-                UI.insert_motion(file_path, self.root_translation_from_library)
+                UI.insert_motion(file_path, self.load_translation_from_library)
             if imgui.button("Create New Motion", width = window_size[0] - 50):
                 UI.show_motion_creator(True)
                         
@@ -212,7 +212,7 @@ class CustomBrowser:
             imgui.same_line()
             _, self.is_no_inpaint = imgui.checkbox("Random", self.is_no_inpaint)
             imgui.same_line()
-            _, self.load_translation_from_library = imgui.checkbox("Root Translation", self.load_translation_from_library)
+            _, self.load_translation_from_network = imgui.checkbox("Root Translation", self.load_translation_from_network)
                 
             if imgui.button("Edit motion!"):
                 self.edit_motion()
@@ -255,7 +255,7 @@ class CustomBrowser:
             
             # _, self.is_no_inpaint = imgui.checkbox("Random", self.is_no_inpaint)
             # imgui.same_line()
-            # _, self.is_load_translation = imgui.checkbox("Root Translation", self.is_load_translation)
+            # _, self.load_translation_from_network = imgui.checkbox("Root Translation", self.load_translation_from_network)
              
             
                 
@@ -290,10 +290,10 @@ class CustomBrowser:
         output_path = os.path.dirname(self.output_dir)+"/"
         circles = UI.get_dancers()
         for circle in circles:
-            motion_cond = None if self.is_no_inpaint else loader.convert_joint_to_smpl_format(circle, nframe, add_root_trajectory=self.is_load_translation)
+            motion_cond = None if self.is_no_inpaint else loader.convert_joint_to_smpl_format(circle, nframe, add_root_trajectory=self.load_translation_from_network)
             circle.target.clear_all_animation()
-            loader.generate_motion_from_network(circle.target, motion_cond, self.selected_audio_feat_file, self.selected_network_file, output_path, nframe, load_translation=self.is_load_translation)
-            UI.insert_motion(output_path, self.is_load_translation, 0)
+            loader.generate_motion_from_network(circle.target, motion_cond, self.selected_audio_feat_file, self.selected_network_file, output_path, nframe, load_translation=self.load_translation_from_network)
+            UI.insert_motion(output_path, self.load_translation_from_network, 0)
         
     def edit_motion(self):
         output_path = os.path.dirname(self.output_dir)+"/"
@@ -304,7 +304,7 @@ class CustomBrowser:
             frame_start, frame_end = circle.target.root.anim_layer[0].get_play_region()
             motion_cond = loader.convert_joint_to_smpl_format(circle, frame_end-frame_start, add_root_trajectory=True)
             circle.target.clear_all_animation()
-            loader.edit_motion_from_network(circle.target, motion_cond, self.selected_audio_feat_file, self.selected_network_file, output_path,frame_end-frame_start, load_translation=self.is_load_translation)
+            loader.edit_motion_from_network(circle.target, motion_cond, self.selected_audio_feat_file, self.selected_network_file, output_path,frame_end-frame_start, load_translation=self.load_translation_from_network)
         
     def load_smpl_motion(self,motion_path):
         if not os.path.exists(str(motion_path)):
@@ -315,7 +315,7 @@ class CustomBrowser:
         circles = UI.get_dancers()
         for idx, circle in enumerate(circles):
             circle.target.clear_all_animation()
-            loader.load_pose_from_pkl(motion_path, circle.target, idx, use_translation=self.is_load_translation)
+            loader.load_pose_from_pkl(motion_path, circle.target, idx, use_translation=self.load_translation_from_network)
    
     def generate_trajectory(self, circle, nframe: int) -> Tuple[np.ndarray, np.ndarray]:
         pos_traj = np.zeros([nframe,3], dtype = np.float32)
