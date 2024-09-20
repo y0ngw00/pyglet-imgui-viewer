@@ -9,8 +9,8 @@ import numpy as np
 from pygltflib import GLTF2, Node, Skin, Accessor, BufferView, BufferFormat
 import pickle as pkl
 
-from motionutils import BVH
-from motionutils.Quaternions import Quaternions
+from utils import BVH
+from utils.Quaternions import Quaternions
 from object import Object,MeshType,Character,Joint,Link
 from joint_animation import JointAnimation
 from extern_file_parser import pycomcon
@@ -108,6 +108,9 @@ mirror_index = {
     '23':22
 }
 
+
+upper_body_index = [3,6,9,12,13,14,15,16,17,18,19,20,21,22,23]
+lower_body_index = [0,1,2,4,5,7,8,10,11]
 
 def load_gltf(filename):
     gltf = GLTF2().load(filename)
@@ -433,7 +436,6 @@ def create_sample_character(is_male=False):
         sample_character = load_fbx(sample_character_path, sample_texture_path)
         return sample_character
     return sample_character.copy()
-    
 
 def save_smpl_fbx(pkl_path, fbx_path):
     startTime = time.perf_counter()
@@ -530,7 +532,7 @@ def edit_motion_from_network(character,condition,audio_path, network_path,output
     edit_synthesize(condition, audio_path, network_path, output_path,nframe)
     load_pose_from_pkl(output_path+"output_0.pkl", character, 0, use_translation=load_translation)
 
-def load_pose_from_pkl(pose_dir, character, character_idx, use_translation=True):
+def load_pose_from_pkl(pose_dir, character, character_idx, use_translation=True, load_part= "full"):
     load_translation = False
     with open(pose_dir, "rb") as f:
         seq_data = pkl.load(f)
@@ -573,6 +575,11 @@ def load_pose_from_pkl(pose_dir, character, character_idx, use_translation=True)
         for name in bone_index_from_name:
             if name in joint.name:
                 data_index = bone_index_from_name[name]
+                
+        if load_part == "upper" and data_index not in upper_body_index:
+            continue
+        elif load_part == "lower" and data_index not in lower_body_index:
+            continue
                 
         rot_quat = -Quaternions(ret[:,data_index])
         joint_anim = JointAnimation(joint)
@@ -645,38 +652,50 @@ def mirror_motion(joints, idx):
                 new_anim.joint = j
                 j.anim_layer[idx] = new_anim
 
-def write_pkl(pred_clips, dataset_info, log_dir="", name_prefix=""):
-    translation = None
-    if dataset_info["use_contact"] is True:
-        pred_clips = pred_clips[:,:,:-4]
+def save_pkl(motion_path, character, end_frame, log_dir="", name_prefix=""):
+    joints = character.joints
     
-    if dataset_info["translation"] is True:
-        xz_vel = pred_clips[:,:,-2:]
-        xz_translation = torch.cumsum(xz_vel, dim=1)
-        # xz_translation = np.cumsum(xz_vel, axis=1)
-        pred_clips = pred_clips[:,:,:-2]
-    
-    y_height = pred_clips[:,:,-1]
-    pred_clips = pred_clips[:,:,:-1]
+    root_trans = np.zeros((end_frame, 3), dtype=np.float32)
+    poses = np.zeros((end_frame, len(joints)-1, 4), dtype=np.float32)
+    # for frame in range(end_frame):
+        # pose = np.zeros((len(joints), 3), dtype=np.float32)
+    for idx, joint in enumerate(joints):
+        data_index = None
+        for name in bone_index_from_name:
+            if name in joint.name:
+                data_index = bone_index_from_name[name]
+        if data_index is None:
+            continue
         
-    if dataset_info["translation"] is True:
-        translation = torch.cat([xz_translation[:,:,0].unsqueeze(-1), y_height.unsqueeze(-1), xz_translation[:,:,1].unsqueeze(-1)], dim=-1)
-    else:
-        y_height = y_height.unsqueeze(-1)
-        translation = torch.cat([torch.zeros_like(y_height), y_height, torch.zeros_like(y_height)], dim=-1)
+        for i in range(len(joint.anim_layer)):
+            anim = joint.anim_layer[i]
+            frame_start, frame_end = anim.get_play_region()
+            for frame in range(frame_start, frame_end+1):
+                if frame >= end_frame:
+                    break
+                rot = -anim.get_rotation_quaternion(frame)
+                poses[frame, data_index] = rot.qs
+                
+        if joint.is_root is True:
+            root = joint
     
+    from scene import SCENE       
+    for i in range(end_frame):
+        SCENE.animate(i)
+        SCENE.update()
+        root_trans[i] = character.get_root_position() * 0.01
+        
+
+    poses = transforms.quat2aa(torch.tensor(poses, dtype=torch.float32))
+    poses = poses.view(end_frame, -1)
+    poses = poses.unsqueeze(dim = 0)
+    root_trans = np.expand_dims(root_trans, axis=0)
     
-    if dataset_info["translation"] is True:        
-        data = {
-            "smpl_poses": pred_clips.detach().cpu().numpy(),
-            "root_trans": translation.detach().cpu().numpy(),
-        }
-    elif dataset_info["translation"] is False:
-        data = {
-            "smpl_poses": pred_clips.detach().cpu().numpy(),
+    data = {
+            "smpl_poses": poses.detach().cpu().numpy(),
+            "root_trans": root_trans,
         }
 
     # Save the data to a .pkl file
-    fname = f"{log_dir}/{name_prefix}.pkl"
-    with open(fname, "wb") as f:
+    with open(motion_path, "wb") as f:
         pkl.dump(data, f)

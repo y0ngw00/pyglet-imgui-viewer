@@ -259,7 +259,7 @@ class Character(Object):
     
     def animate(self, frame):    
         if self.is_animate is True and self.root is not None:
-            if frame < 0 or len(self.root.anim_layer) == 0:
+            if frame < 0:
                 return
             
             for j_idx, j in enumerate(self.joints):

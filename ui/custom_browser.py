@@ -156,7 +156,7 @@ class CustomBrowser:
         # if imgui.button("Insert Motion"):
         #     file_path = self.motion_library_dir + current_motion + ".fbx"
         #     UI.insert_motion(file_path)
-        imgui.same_line()
+
         if imgui.button("Refresh"):
             self.update_motion_library()
         imgui.same_line()
@@ -222,6 +222,13 @@ class CustomBrowser:
                 file_ext = ["*.pkl"]
                 motion_path = UI.render_open_file_dialog(file_descriptions, file_ext)
                 self.load_smpl_motion(motion_path)
+                
+            if imgui.button("Save motion as pkl"):
+                initial_dir = os.path.dirname(__file__)
+                file_descriptions = "Motion file (.pkl)"
+                file_ext = ["*.pkl"]
+                selected_file = UI.render_save_file_dialog(file_descriptions, file_ext, initial_dir = initial_dir)
+                self.save_smpl_motion(selected_file)
                 
     def render_formation_setting(self):
         x_scale, y_scale = imgui.get_io().display_size 
@@ -316,7 +323,14 @@ class CustomBrowser:
         for idx, circle in enumerate(circles):
             circle.target.clear_all_animation()
             loader.load_pose_from_pkl(motion_path, circle.target, idx, use_translation=self.load_translation_from_network)
-   
+    
+    def save_smpl_motion(self, motion_path):
+        
+        circles = UI.get_dancers()
+        for idx, circle in enumerate(circles):
+            if circle.is_selected():
+                loader.save_pkl(motion_path, circle.target, UI.get_end_frame())
+    
     def generate_trajectory(self, circle, nframe: int) -> Tuple[np.ndarray, np.ndarray]:
         pos_traj = np.zeros([nframe,3], dtype = np.float32)
         vel_traj = np.zeros([nframe,3], dtype = np.float32)
