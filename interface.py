@@ -126,10 +126,10 @@ class UIInterface:
         self.window.initialize_audio(file_path)
         self.Sequencer.insert_music_sequence(self.window.get_audio_framelength())
     
-    def insert_motion(self, file_path, start_frame = -1):
+    def insert_motion(self, file_path, load_translation, start_frame = -1):
         if start_frame == -1:
             start_frame = self.window.frame
-        self.Sequencer.insert_motion(file_path, start_frame)
+        self.Sequencer.insert_motion(file_path, load_translation, start_frame)
         
     def create_dancer(self, is_male=False):
         character = loader.create_sample_character(is_male)

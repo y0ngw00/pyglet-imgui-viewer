@@ -169,8 +169,11 @@ class Sequencer(BoxItem):
                 seq.mirror_motion()
         self.show_popup = False
     
-    def insert_motion(self, file_path, start_frame):
+    def insert_motion(self, file_path, load_translation, start_frame):
         name, joints = loader.load_fbx_animation(file_path)
+        if load_translation is not True:
+            for joint in joints:
+                joint.anim_layer[0].positions = []
         for seq in self.motion_sequences:
             if hasattr(seq, 'target') and seq.target.is_selected():
                 seq.target.add_animation(joints, start_frame, initialize_position= True)

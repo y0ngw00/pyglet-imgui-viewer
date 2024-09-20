@@ -43,6 +43,7 @@ class CustomBrowser:
         self.selected_file_idx = 0
         self.output_dir = "./results/"
         self.motion_library_dir = "./data/smpl/"
+        self.load_translation_from_library = True
         # self.default_character_path = "idle.fbx"
         self.default_character_path = "./data/SMPL_m_unityDoubleBlends_lbs_10_scale5_207_v1.0.0.fbx"
 
@@ -50,7 +51,7 @@ class CustomBrowser:
         
         self.motion_files = []
         self.is_no_inpaint = False
-        self.is_load_translation = True
+        self.load_translation_from_video = True
         self.update_motion_library()
         
     def render(self):
@@ -152,9 +153,9 @@ class CustomBrowser:
 
         # imgui.text("Current: "+ current_motion)
         # imgui.same_line()
-        if imgui.button("Insert Motion"):
-            file_path = self.motion_library_dir + current_motion + ".fbx"
-            UI.insert_motion(file_path)
+        # if imgui.button("Insert Motion"):
+        #     file_path = self.motion_library_dir + current_motion + ".fbx"
+        #     UI.insert_motion(file_path)
         imgui.same_line()
         if imgui.button("Refresh"):
             self.update_motion_library()
@@ -168,10 +169,12 @@ class CustomBrowser:
         clicked, self.selected_file_idx = imgui.listbox('', self.selected_file_idx, self.motion_files, height_in_items = 25)
         imgui.pop_item_width()
 
+        _, self.root_translation_from_library = imgui.checkbox("Translation", self.root_translation_from_library)
+        
         with imgui.font(self.button_font_bold):
             if imgui.button("Insert Current Motion", width = window_size[0] - 50):
                 file_path = self.motion_library_dir +current_motion + ".fbx"
-                UI.insert_motion(file_path)
+                UI.insert_motion(file_path, self.root_translation_from_library)
             if imgui.button("Create New Motion", width = window_size[0] - 50):
                 UI.show_motion_creator(True)
                         
@@ -209,7 +212,7 @@ class CustomBrowser:
             imgui.same_line()
             _, self.is_no_inpaint = imgui.checkbox("Random", self.is_no_inpaint)
             imgui.same_line()
-            _, self.is_load_translation = imgui.checkbox("Root Translation", self.is_load_translation)
+            _, self.load_translation_from_library = imgui.checkbox("Root Translation", self.load_translation_from_library)
                 
             if imgui.button("Edit motion!"):
                 self.edit_motion()
@@ -290,13 +293,7 @@ class CustomBrowser:
             motion_cond = None if self.is_no_inpaint else loader.convert_joint_to_smpl_format(circle, nframe, add_root_trajectory=self.is_load_translation)
             circle.target.clear_all_animation()
             loader.generate_motion_from_network(circle.target, motion_cond, self.selected_audio_feat_file, self.selected_network_file, output_path, nframe, load_translation=self.is_load_translation)
-            # UI.insert_motion(output_path, 0)
-                 
-        # else:
-        #     rot_traj = self.extract_rotations(nframe)
-        #     condition={"rot_traj":rot_traj}
-        #     synthesize(vel_traj,self.selected_audio_file, self.selected_network_file, output_path)   
-        #     UI.open_file(output_path + ".bvh", FileType.Character)
+            UI.insert_motion(output_path, self.is_load_translation, 0)
         
     def edit_motion(self):
         output_path = os.path.dirname(self.output_dir)+"/"
