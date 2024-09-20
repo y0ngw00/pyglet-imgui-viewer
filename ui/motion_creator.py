@@ -138,6 +138,10 @@ class MotionCreator(BoxItem):
 
                 if self.player.playing is True:
                     self.control_frame = self.player.time / (self.time_length_scale + 1e-6)
+                    
+                    if self.control_frame > self.video_sequence.children[0].frame_end:
+                        self.player.pause()
+                        self.control_frame = self.video_sequence.children[0].frame_end
                 
                 draw_list = imgui.get_window_draw_list()
 
@@ -331,7 +335,7 @@ class MotionCreator(BoxItem):
             if self.checkbox_applied_dancers[idx]:
                 dancer.target.select(True)
                 
-        UI.insert_motion(file_path, start_frame)
+        UI.insert_motion(file_path, True, start_frame)
             
     def draw_time_line(self, draw_list, x,y):
         time_length_scale = self.time_length_scale if self.time_length_scale > 0 else 0.1
