@@ -69,7 +69,6 @@ class RenderWindow(pyglet.window.Window):
         
         # Video recording
         self.is_record = False
-        self.writer = None
 
         self.setup()
         
@@ -106,7 +105,7 @@ class RenderWindow(pyglet.window.Window):
         if self.show_ui is True:
             UI.render()
             
-        if self.is_record is True and self.writer is not None:
+        if self.is_record is True:
             self.record()
 
     def update(self,dt) -> None:
@@ -189,22 +188,30 @@ class RenderWindow(pyglet.window.Window):
         for shape in self.shapes:
             shape.indexed_vertices_list.vertices = shape.object.mesh.vertices
             
-    def capture_screen(self):
+    def capture_screen(self, filename = "screenshot.png") -> None:
         """
         Captures the current screen and saves it as a PNG image.
 
         Returns:
             None
         """
+        # glBindFramebuffer(GL_FRAMEBUFFER, 0)
+        # glReadBuffer(GL_FRONT)
+        data = (GLubyte * (3 * self.width * self.height))()
+        glReadPixels(0, 0, self.width, self.height, GL_RGB, GL_UNSIGNED_BYTE, data)
+
+        # Save the texture to an image file
+
         save_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'save/')
         if os.path.exists(save_dir) is not True:
             os.makedirs(save_dir, exist_ok=True)
-        save_path = save_dir + "screenshot.png"
-
+        save_path = save_dir + filename
+        
         while os.path.exists(save_path):
             save_path = save_path[:-4] + "_.png"
-        pyglet.image.get_buffer_manager().get_color_buffer().save(save_path)
-            
+        image = pyglet.image.ImageData(self.width, self.height, 'RGB', data)
+        image.save(save_path)
+
     def record(self):
         """
         Records the current frame and appends it to the video writer.
@@ -213,14 +220,10 @@ class RenderWindow(pyglet.window.Window):
         and then converts the image data to a numpy array. The array is then flipped vertically to make the
         image correctly oriented. Finally, the frame is appended to the video writer.
         """
-        color_buffer = pyglet.image.get_buffer_manager().get_color_buffer()
-        image_data = color_buffer.get_image_data()
-        buffer = image_data.get_data("RGBA", image_data.pitch)
-
-        # convert buffer to RGBA numpy array
-        frame = np.asarray(buffer).reshape((image_data.height, image_data.width, 4))
-        frame = np.flipud(frame)  # Make image correctly oriented
-        self.writer.append_data(frame)
+        self.capture_screen(str(self.frame) + ".png")
+        
+        if self.frame >= self.max_frame:
+            self.stop_recording()
 
     def on_resize(self, width, height):
         width,height = self.get_framebuffer_size()
@@ -242,23 +245,34 @@ class RenderWindow(pyglet.window.Window):
     def is_ui_active(self):
         return UI.is_ui_active()
     
-    def start_recording(self):
+    def start_recording(self):        
+        self.is_record = True
+        self.reset()
+        self.play()
+        
+    def stop_recording(self):
+        self.is_record = False
+        
         save_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'save/')
         if os.path.exists(save_dir) is not True:
             os.makedirs(save_dir, exist_ok=True)
             
         save_path = save_dir + "record.mp4"
-        while os.path.exists(save_path):
-            save_path = save_path[:-4] + "_.mp4"
         
-        self.writer = imageio.get_writer(save_path, fps=self.framerate)
-        self.is_record = True
+        import cv2
+        fourcc = cv2.VideoWriter_fourcc(*'mp4v') 
+        video = cv2.VideoWriter(save_path, fourcc, 30, (self.width, self.height))
+
+        for frame in range(self.max_frame+1):
+            image_path = save_dir + str(frame) + ".png"
+            image = cv2.imread(image_path)
+            video.write(image)
+            os.remove(image_path)
+            
+        video.release()
+        self.reset()
+        self.play()
         
-    def stop_recording(self):
-        if self.writer is not None:
-            self.writer.close()
-        self.writer = None
-        self.is_record = False
         
     def get_audio_framelength(self):
         return self.audio_manager.duration * self.framerate

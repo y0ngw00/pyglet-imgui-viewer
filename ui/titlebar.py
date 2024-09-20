@@ -13,7 +13,6 @@ class TitleBar:
         self.is_open_file = False
         self.file_ext = ""
         self.file_descriptions = ""
-        self.is_record = False
         self.is_capture_screen = False
 
 
@@ -99,18 +98,12 @@ class TitleBar:
     def render_tool_tab(self):
         # Screen Capture
         if self.is_capture_screen is True:
-            self.renderer.capture_screen()
             self.is_capture_screen = False
         if imgui.menu_item("Screen Capture")[0]:
+            self.renderer.capture_screen()
             self.is_capture_screen = True
         
         # Record
-        record_text = "Record" if not self.is_record else "Stop"
+        record_text = "Record"
         if imgui.menu_item(record_text)[0]:
-            self.is_record = not self.is_record
-            if self.is_record is True:
-                print("Start recording")
-                self.renderer.start_recording()
-            else:
-                print("Finish recording")
-                self.renderer.stop_recording()
+            self.renderer.start_recording()
