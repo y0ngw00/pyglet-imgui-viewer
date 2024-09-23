@@ -270,7 +270,7 @@ class UIInterface:
             "group_idx_font": {
                 "font": None,
                 "path": "pyglet_render/data/PublicSans-SemiBold.ttf",
-                "size": 30
+                "size": 20
             },
             "dancer_label":{
                 "font": None,
