@@ -671,7 +671,7 @@ def post_process_pkl(input_path,output_path,person_id=1):
         root_pose = Quaternions.from_angle_axis(np.linalg.norm(root_pose), root_pose / np.linalg.norm(root_pose))
         angle, axis = (rot + root_pose).angle_axis()
         poses[frame, :3] = angle*axis
-    
+        
     
     trans = torch.cumsum(vel_world, dim=1)[person_id].to('cpu').numpy()
     offset = trans[0]
@@ -739,3 +739,53 @@ def save_pkl(motion_path, character, end_frame, log_dir="", name_prefix=""):
     # Save the data to a .pkl file
     with open(motion_path, "wb") as f:
         pkl.dump(data, f)
+        
+        
+def convert_npy_to_pkl(npy_path, cam_path, pkl_path):
+    data = np.load(npy_path, allow_pickle=True).tolist()
+    poses = data['pred_pose']
+    root_trans = data['pred_trans']
+    
+    cam_data = np.load(cam_path, allow_pickle=True).tolist()
+    cam_R = torch.tensor(cam_data['pred_cam_R'], dtype=torch.float32)
+    cam_T = torch.tensor(cam_data['pred_cam_T'], dtype=torch.float32)
+    
+    # poses[:, 0] = cam_R @ poses[:, 0]
+    root_pose = data['pred_rotmat'][:, 0]
+    root_pose = torch.bmm(cam_R, root_pose)
+    root_pose = transforms.quat2repr6d(transforms.mat2quat(root_pose))
+    root_trans = torch.bmm(cam_R , root_trans.permute(0, 2, 1)) + cam_T[..., None]
+    
+    flip_axis = torch.tensor([[1, 0, 0], [0, -1, 0], [0, 0, -1]], dtype=torch.float32)
+    root_trans = (flip_axis @ root_trans).squeeze()
+    
+    poses = poses.view(poses.shape[0], -1, 6).unsqueeze(0)
+    poses[:,:,0] = root_pose
+    poses_aa = transforms.quat2aa(transforms.repr6d2quat(poses))
+    
+    poses = poses_aa.view(poses_aa.shape[0], poses_aa.shape[1], -1).detach().cpu().numpy()
+    
+    rot = Quaternions.from_angle_axis(np.pi, np.array([1.0, 0.0, 0.0]))
+    for frame in range(poses.shape[1]):
+        root_pose = poses[0,frame, 0:3]
+        root_pose = Quaternions.from_angle_axis(np.linalg.norm(root_pose), root_pose / np.linalg.norm(root_pose))
+        angle, axis = (rot + root_pose).angle_axis()
+        poses[0,frame, :3] = angle*axis
+    poses[:,:,3:] *= -1
+
+    root_trans = root_trans.squeeze().unsqueeze(0).detach().cpu().numpy()
+    # offset = root_trans[0, 0,1]
+    # offset[1] = 0
+    # root_trans -= offset
+    root_trans = np.zeros_like(root_trans)
+          
+    data = {
+            "smpl_poses": poses,
+            "root_trans": root_trans,
+        }
+
+    # Save the data to a .pkl file
+    with open(pkl_path, "wb") as f:
+        pkl.dump(data, f)
+        
+    return
