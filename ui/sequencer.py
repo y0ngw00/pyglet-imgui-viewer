@@ -11,7 +11,7 @@ from sequencer_menu import SequencerMenu
 from sequence import Sequence
 from frame_bar import FrameBar
 from box_item import BoxItem
-from enum_list import Boundary
+from enum_list import Boundary, MotionPart
 
 import loader
 from ops import CollisionHandler, SocialForceModel
@@ -169,15 +169,13 @@ class Sequencer(BoxItem):
                 seq.mirror_motion()
         self.show_popup = False
     
-    def insert_motion(self, file_path, load_translation, start_frame):
-        name, joints = loader.load_fbx_animation(file_path)
-        if load_translation is not True:
-            for joint in joints:
-                joint.anim_layer[0].positions = []
-        for seq in self.motion_sequences:
+    def insert_motion(self, file_path, load_translation, start_frame, motion_part = MotionPart.FULL):
+        for idx, seq in enumerate(self.motion_sequences):
             if hasattr(seq, 'target') and seq.target.is_selected():
-                seq.target.add_animation(joints, start_frame, initialize_position= True)
-                seq.insert_track(name, start_frame, start_frame + len(joints[0].anim_layer[-1].rotations) -1)
+                loader.load_pose_from_pkl(file_path, seq.target, idx, use_translation=load_translation, load_part = motion_part)
+                name = file_path.split('/')[-1]
+                sequence_length = seq.target.root.anim_layer[-1].animation_length
+                seq.insert_track(name, start_frame, start_frame + sequence_length -1)
         self.show_popup = False
         
     def clear_all_track(self):

@@ -187,7 +187,7 @@ class CustomBrowser:
         
         with imgui.font(self.button_font_bold):
             if imgui.button("Insert Current Motion", width = window_size[0] - 50):
-                file_path = self.motion_library_dir +current_motion + ".fbx"
+                file_path = self.motion_library_dir +current_motion + ".pkl"
                 UI.insert_motion(file_path, self.load_translation_from_library)
             if imgui.button("Create New Motion", width = window_size[0] - 50):
                 UI.show_motion_creator(True)
@@ -228,7 +228,7 @@ class CustomBrowser:
             imgui.same_line()
             _, self.load_translation_from_network = imgui.checkbox("Root Translation", self.load_translation_from_network)
                 
-            if imgui.button("Edit motion!"):
+            if imgui.button("Edit motion"):
                 self.edit_motion()
                 
             if imgui.button("Open Pkl motion"):
