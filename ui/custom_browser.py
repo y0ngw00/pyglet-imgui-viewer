@@ -19,7 +19,7 @@ from enum_list import *
 import loader
 
 from test import synthesize
-from enum_list import FileType
+from enum_list import FileType, MotionPart
 from group_status import GroupingStatus
 
 from interface import UI
@@ -44,6 +44,7 @@ class CustomBrowser:
         self.output_dir = "./results/"
         self.motion_library_dir = "./data/smpl/"
         self.load_translation_from_library = True
+        self.load_motion_part = MotionPart.FULL
         # self.default_character_path = "idle.fbx"
         self.default_character_path = "./data/SMPL_m_unityDoubleBlends_lbs_10_scale5_207_v1.0.0.fbx"
 
@@ -162,7 +163,20 @@ class CustomBrowser:
         imgui.same_line()
         if imgui.button("Load Folder"):
             subprocess.run(['xdg-open', self.motion_library_dir])
-
+            
+        imgui.text("Motion part: ")
+        imgui.same_line()
+        full_clicked, _ = imgui.checkbox("Full", self.load_motion_part == MotionPart.FULL)
+        imgui.same_line()
+        upper_clicked, _ = imgui.checkbox("Upper", self.load_motion_part == MotionPart.UPPER)
+        imgui.same_line()
+        lower_clicked, _ = imgui.checkbox("Lower", self.load_motion_part == MotionPart.LOWER)
+        if full_clicked:
+            self.load_motion_part = MotionPart.FULL
+        elif upper_clicked:
+            self.load_motion_part = MotionPart.UPPER
+        elif lower_clicked:
+            self.load_motion_part = MotionPart.LOWER
 
         window_size = imgui.get_window_size()
         imgui.push_item_width(window_size[0] * 0.8)
@@ -290,8 +304,11 @@ class CustomBrowser:
         self.selected_audio_feat_file = str(selected_audio_feat_file)
         
     def update_motion_library(self):
-        files = glob.glob(self.motion_library_dir + '*.fbx')
-        self.motion_files = [os.path.splitext(os.path.basename(file))[0] for file in files]
+        # files = glob.glob(self.motion_library_dir + '*.fbx')
+        # self.motion_files = [os.path.splitext(os.path.basename(file))[0] for file in files]
+        
+        files = glob.glob(self.motion_library_dir + '*.pkl')
+        self.motion_files += [os.path.splitext(os.path.basename(file))[0] for file in files]
         
     def generate_motion(self, nframe):
         output_path = os.path.dirname(self.output_dir)+"/"
@@ -299,7 +316,14 @@ class CustomBrowser:
         for circle in circles:
             motion_cond = None if self.is_no_inpaint else loader.convert_joint_to_smpl_format(circle, nframe, add_root_trajectory=self.load_translation_from_network)
             circle.target.clear_all_animation()
-            loader.generate_motion_from_network(circle.target, motion_cond, self.selected_audio_feat_file, self.selected_network_file, output_path, nframe, load_translation=self.load_translation_from_network)
+            loader.generate_motion_from_network(circle.target, 
+                                                motion_cond, 
+                                                self.selected_audio_feat_file, 
+                                                self.selected_network_file, 
+                                                output_path, 
+                                                nframe, 
+                                                load_translation=self.load_translation_from_network, 
+                                                part = "full")
             UI.insert_motion(output_path, self.load_translation_from_network, 0)
         
     def edit_motion(self):

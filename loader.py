@@ -8,7 +8,9 @@ from copy import deepcopy
 import numpy as np
 from pygltflib import GLTF2, Node, Skin, Accessor, BufferView, BufferFormat
 import pickle as pkl
+import joblib
 
+from enum_list import MotionPart
 from utils import BVH
 from utils.Quaternions import Quaternions
 from object import Object,MeshType,Character,Joint,Link
@@ -532,7 +534,7 @@ def edit_motion_from_network(character,condition,audio_path, network_path,output
     edit_synthesize(condition, audio_path, network_path, output_path,nframe)
     load_pose_from_pkl(output_path+"output_0.pkl", character, 0, use_translation=load_translation)
 
-def load_pose_from_pkl(pose_dir, character, character_idx, use_translation=True, load_part= "full"):
+def load_pose_from_pkl(pose_dir, character, character_idx, use_translation=True, load_part= MotionPart.FULL):
     load_translation = False
     with open(pose_dir, "rb") as f:
         seq_data = pkl.load(f)
@@ -576,9 +578,9 @@ def load_pose_from_pkl(pose_dir, character, character_idx, use_translation=True,
             if name in joint.name:
                 data_index = bone_index_from_name[name]
                 
-        if load_part == "upper" and data_index not in upper_body_index:
+        if load_part == MotionPart.UPPER and data_index not in upper_body_index:
             continue
-        elif load_part == "lower" and data_index not in lower_body_index:
+        elif load_part == MotionPart.LOWER and data_index not in lower_body_index:
             continue
                 
         rot_quat = -Quaternions(ret[:,data_index])

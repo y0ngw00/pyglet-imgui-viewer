@@ -20,7 +20,11 @@ class Boundary(Enum):
     Up = 2
     Down = 3
     
-
+class MotionPart(Enum):
+    FULL = 0
+    UPPER = 1
+    LOWER = 2
+    
 class FormationMode(Enum):
     NORMAL = 0
     DRAW = 1
