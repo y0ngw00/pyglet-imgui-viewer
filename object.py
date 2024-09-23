@@ -1,3 +1,9 @@
+
+import sys
+import os
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+import uuid
 import numpy as np
 from pyglet.math import Mat4, Vec3, Vec4
 import pyglet
@@ -9,10 +15,6 @@ import torch
 import mathutil
 from primitives import CustomMesh,Cube,Sphere, GridPlane, Cylinder
 from animation_layer import AnimationLayer
-
-import sys
-import os
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from motionutils.Quaternions import Quaternions
 
 from enum_list import MeshType
@@ -38,6 +40,7 @@ class Object:
         self.selected = False
         
         self.is_show = True
+        self.uuid = uuid.uuid4()
 
     def show(self, is_show):
         self.is_show = is_show
@@ -91,6 +94,9 @@ class Object:
         self.transform_gbl = self.transform @ self.parent.transform_gbl if self.parent is not None else self.transform
         for child in self.children:
             child.update_world_transform()
+            
+    def __eq__(self, other):
+        return self.uuid == other.uuid
 
 class Character(Object):
     def __init__(self, name, meshes = None, joints = None, scale = [1.0,1.0,1.0], scale_link = 1.0):
