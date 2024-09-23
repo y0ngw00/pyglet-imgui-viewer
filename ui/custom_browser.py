@@ -180,7 +180,7 @@ class CustomBrowser:
 
         window_size = imgui.get_window_size()
         imgui.push_item_width(window_size[0] * 0.8)
-        clicked, self.selected_file_idx = imgui.listbox('', self.selected_file_idx, self.motion_files, height_in_items = 25)
+        clicked, self.selected_file_idx = imgui.listbox('', self.selected_file_idx, self.motion_files, height_in_items = 20)
         imgui.pop_item_width()
 
         _, self.load_translation_from_library = imgui.checkbox("Translation", self.load_translation_from_library)
