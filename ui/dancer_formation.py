@@ -34,6 +34,12 @@ class DancerFormation(BoxItem):
         self.marker_label = UI.fonts["dancer_label"]["font"]
         self.button_font_bold = UI.fonts["button_font_bold"]["font"]
         self.marker_radius = 20
+        
+    def update_layout(self, x_pos, y_pos, xsize, ysize):
+        self.x_pos = x_pos
+        self.y_pos = y_pos
+        self.x_size = xsize
+        self.y_size = ysize
                     
     def render(self, x, y):
         x_scale, y_scale = imgui.get_io().display_size 
@@ -51,18 +57,13 @@ class DancerFormation(BoxItem):
             layout_padding = [10,30]
             self.update_position(x = canvas_pos.x+layout_padding[0],
                                  y = canvas_pos.y+layout_padding[1],
-                                 xsize_box = window_size.x - 2*layout_padding[0],
-                                 ysize_box = window_size.y - 2*layout_padding[1])
+                                 xsize_box = x_size - 2*layout_padding[0],
+                                 ysize_box = y_size - 2*layout_padding[1])
             self.draw_box(draw_list, color=imgui.get_color_u32_rgba(1,1,1,1), rounding=5, thickness=3)
             
             # Draw a dot
             frame = UI.get_frame()
-            bound_x, bound_z = SCENE.get_scene_bound()
-            scroll_scale = UI.get_cam_eye()[2] / 400
             for dancer in UI.get_dancers():
-                dancer.position_scale = [self.xsize_box / (scroll_scale * bound_x + 1e-6), self.ysize_box / (scroll_scale * bound_z + 1e-6)]
-                dancer.radius = 30 / (scroll_scale + 1e-6)
-                dancer.update_circle_pos()
                 dancer.render(draw_list, self.x_origin + self.xsize_box/2, self.y_origin + self.ysize_box/2, frame)
         
             if self.mode == FormationMode.DRAW:

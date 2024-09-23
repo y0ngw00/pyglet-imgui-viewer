@@ -7,6 +7,7 @@ CURR_PATH = os.path.dirname(os.path.abspath(__file__))
 PARENT_PATH = os.path.dirname(CURR_PATH)+"/"
 sys.path.insert(0, PARENT_PATH)
 
+import glob 
 import pyglet
 import imgui
 import imgui.core
@@ -89,6 +90,13 @@ class UIInterface:
     def get_sequencer(self):
         return self.Sequencer
     
+    def adjust_formation_layout(self, layout_mode = LayoutMode.FULL):
+        x_pos = 660/2560 if layout_mode == LayoutMode.FULL else 660/2560
+        y_pos = 30/1440
+        xsize = 1900/2560 if layout_mode == LayoutMode.FULL else 950/2560
+        ysize = 960/1440
+        self.DancerFormation.update_layout(x_pos, y_pos, xsize, ysize)
+    
     def add_dancer(self, character)->None:
         bound_x, bound_z = SCENE.get_scene_bound()
         position_scale = [self.DancerFormation.xsize_box / bound_x, (self.DancerFormation.ysize_box) / bound_z ]
@@ -133,7 +141,10 @@ class UIInterface:
         
     def create_dancer(self, is_male=False):
         character = loader.create_sample_character(is_male)
-        character.translate(self.pos_list[self.pos_idx2 % len(self.pos_list)])
+        
+        position = self.pos_list[self.pos_idx2 % len(self.pos_list)] if self.pos_idx2 < len(self.pos_list) else np.random.randint(-500,500,3)
+        position[1] = 0
+        character.translate(position)
         self.pos_idx2+=1
         self.add_dancer(character)
 

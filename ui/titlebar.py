@@ -5,6 +5,7 @@ import imgui
 import imgui.core
 from imgui.integrations.pyglet import create_renderer
 
+from enum_list import LayoutMode
 from interface import UI
 class TitleBar:
     def __init__(self):
@@ -26,6 +27,10 @@ class TitleBar:
                 
             if imgui.begin_menu("Tool"):
                 self.render_tool_tab()
+                imgui.end_menu()
+                
+            if imgui.begin_menu("Layout"):
+                self.render_layout_tab()
                 imgui.end_menu()
             
             imgui.end_main_menu_bar()
@@ -107,3 +112,16 @@ class TitleBar:
         record_text = "Record"
         if imgui.menu_item(record_text)[0]:
             self.renderer.start_recording()
+            
+    def render_layout_tab(self):
+        if imgui.begin_menu("Formation View"):
+        #     pass
+            if imgui.menu_item("Full", None)[0]:
+                UI.window.adjust_scene_layout(LayoutMode.FULL)
+                UI.adjust_formation_layout(LayoutMode.FULL)
+
+            if imgui.menu_item("1 by 1", None)[0]:
+                UI.window.adjust_scene_layout(LayoutMode.HALF)
+                UI.adjust_formation_layout(LayoutMode.HALF)
+            imgui.end_menu()
+

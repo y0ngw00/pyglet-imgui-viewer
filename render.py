@@ -10,6 +10,7 @@ from pyglet.math import *
 from pyglet.gl import *
 import imageio # For video recording
 
+from enum_list import LayoutMode
 from primitives import CustomGroup, CustomMesh
 from scene import SCENE
 from control import CONTROLLER
@@ -41,7 +42,14 @@ class RenderWindow(pyglet.window.Window):
         self.z_near = 0.1
         self.z_far = 10000
         self.__fov = 60
-        self.proj_mat = None
+        # 2. Create a projection matrix 
+        self.proj_mat = Mat4.perspective_projection(
+            aspect = self.width/self.height, 
+            z_near=self.z_near, 
+            z_far=self.z_far, 
+            fov = self.__fov)
+        self.layout_mode = LayoutMode.FULL
+        
         self.shapes=[]
 
         # Set up the fog parameters
@@ -114,13 +122,6 @@ class RenderWindow(pyglet.window.Window):
         self.__view_mat = Mat4.look_at(
             self.__cam_eye, target=self.__cam_target, up=self.__cam_vup)
         
-        # 2. Create a projection matrix 
-        self.proj_mat = Mat4.perspective_projection(
-            aspect = self.width/self.height, 
-            z_near=self.z_near, 
-            z_far=self.z_far, 
-            fov = self.__fov)
-
         view_proj = self.proj_mat @ self.__view_mat
         
         if self.animate is True:
@@ -222,19 +223,34 @@ class RenderWindow(pyglet.window.Window):
         """
         self.capture_screen(str(self.frame) + ".png")
         
-        if self.frame >= self.max_frame:
+        if self.frame >= UI.get_end_frame():
             self.stop_recording()
 
     def on_resize(self, width, height):
         width,height = self.get_framebuffer_size()
-        x_0, y_0 = int(width *660/2560), int(height * (1 - 960/1440))
-        x_1, y_1 = int(width *1900/2560), int(height * (1 - 30/1440))
+        
+        if self.layout_mode == LayoutMode.FULL:
+            x_0, y_0 = int(width *660/2560), int(height * (1 - 960/1440))
+            x_1, y_1 = int(width *1900/2560), int(height * (1 - 30/1440))
+            self.proj_mat = Mat4.perspective_projection(
+            aspect = width/height, z_near=self.z_near, z_far=self.z_far, fov = self.__fov)
+        elif self.layout_mode == LayoutMode.HALF:
+            x_0, y_0 = int(width *1610/2560), int(height * (1 - 960/1440))
+            x_1, y_1 = int(width *950/2560), int(height * (1 - 30/1440))
+            self.proj_mat = Mat4.perspective_projection(
+            aspect = 0.5 * width/height, z_near=self.z_near, z_far=self.z_far, fov = self.__fov)
         glViewport(x_0, y_0, x_1, y_1)
         # glViewport(0, 0, *self.get_framebuffer_size())
-        self.proj_mat = Mat4.perspective_projection(
-            aspect = width/height, z_near=self.z_near, z_far=self.z_far, fov = self.__fov)
+        
         return pyglet.event.EVENT_HANDLED
-         
+    
+    def adjust_scene_layout(self, layout_mode = LayoutMode.FULL):
+        if layout_mode == LayoutMode.FULL:
+            self.layout_mode = LayoutMode.FULL
+        elif layout_mode == LayoutMode.HALF:
+            self.layout_mode = LayoutMode.HALF
+        self.on_resize(self.width, self.height)
+        
     def run(self):                
         pyglet.clock.schedule_interval(self.update, 1/self.framerate)
         pyglet.app.run()
@@ -257,17 +273,20 @@ class RenderWindow(pyglet.window.Window):
         if os.path.exists(save_dir) is not True:
             os.makedirs(save_dir, exist_ok=True)
             
-        save_path = save_dir + "record.mp4"
+        import time
+        current_time = time.strftime("%m%d-%H%M%S")
+        save_path = save_dir + str(current_time) + ".mp4"
         
         import cv2
         fourcc = cv2.VideoWriter_fourcc(*'mp4v') 
         video = cv2.VideoWriter(save_path, fourcc, 30, (self.width, self.height))
 
-        for frame in range(self.max_frame+1):
+        for frame in range(UI.get_end_frame()+1):
             image_path = save_dir + str(frame) + ".png"
             image = cv2.imread(image_path)
             video.write(image)
-            os.remove(image_path)
+            if os.path.exists(image_path):
+                os.remove(image_path)
             
         video.release()
         self.reset()

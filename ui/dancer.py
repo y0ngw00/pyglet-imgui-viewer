@@ -112,6 +112,13 @@ class Dancer:
             self.set_group_index = group_idx
                     
     def render(self,draw_list, x, y, frame):
+        
+        # bound_x, bound_z = SCENE.get_scene_bound()
+        scroll_scale = UI.get_cam_eye()[2] / 400
+        # dancer.position_scale = [self.xsize_box / (scroll_scale * bound_x + 1e-6), self.ysize_box / (scroll_scale * bound_z + 1e-6)]
+        self.radius = 30 / (scroll_scale + 1e-6)
+        # self.update_circle_pos()
+                
         color = imgui.get_color_u32_rgba(1,1,0,1) if self.target.is_selected() else imgui.get_color_u32_rgba(1,1,1,1)                 
         draw_list.add_circle_filled(x+self.x, y+self.y, radius = self.radius ,col = color)
 

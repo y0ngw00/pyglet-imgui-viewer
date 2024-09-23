@@ -17,8 +17,8 @@ class Scene:
         self.characters = []
         self.window = None
         
-        self.__x_bound = 3000
-        self.__z_bound = 3000
+        self.__x_bound = 600
+        self.__z_bound = 300
                 
     def connect_renderer(self, window):
         self.window=window
@@ -41,17 +41,17 @@ class Scene:
         wall = Object(MeshType.Cube, {"scale":[6000.0, 6000.0, 1.0]})
         # wall.set_transform(mat4_identity)
         self.add_object(wall)
-        wall.set_position([0,50,-self.z_bound])
+        wall.set_position([0,50,-3000])
         wall.update_world_transform()
         
         wall_r = Object(MeshType.Cube, {"scale":[1.0, 6000.0, 6000.0]})
         self.add_object(wall_r)
-        wall_r.set_position([self.x_bound,50,0])
+        wall_r.set_position([3000,50,0])
         wall_r.update_world_transform()
         
         wall_l = Object(MeshType.Cube, {"scale":[1.0, 6000.0, 6000.0]})
         self.add_object(wall_l)
-        wall_l.set_position([-self.x_bound,50,0])
+        wall_l.set_position([-3000,50,0])
         wall_l.update_world_transform()
         
       
