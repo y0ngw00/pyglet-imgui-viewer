@@ -319,8 +319,12 @@ class MotionCreator(BoxItem):
         filename = os.path.basename(name)
         if not os.path.exists(save_dir):
             os.makedirs(save_dir, exist_ok=True)
-        self.fbx_path = str(save_dir) + f"/{filename}.fbx"
-        loader.save_smpl_fbx(pkl_path, self.fbx_path)
+   
+        # self.fbx_path = str(save_dir) + f"/{filename}.fbx"
+        # loader.save_smpl_fbx(pkl_path, self.fbx_path)
+             
+        loader.post_process_pkl(pkl_path, pkl_path, person_id = 0)
+
 
         self.load_video(output_dir + "/output.mp4")
         UI.update_motion_library()

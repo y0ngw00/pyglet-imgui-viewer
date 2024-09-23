@@ -528,7 +528,7 @@ def get_buffer_data(file_path, gltf,buffer_view, glb_data=None):
 
 def generate_motion_from_network(character,condition,audio_path, network_path,output_path, nframe,  load_translation = True):
     synthesize(condition, audio_path, network_path, output_path,nframe)
-    load_pose_from_pkl(output_path+"output.pkl", character, 0, use_translation=load_translation)
+    load_pose_from_pkl(output_path+"output.pkl", character, 0, use_translation=load_translation, load_part=MotionPart.FULL)
 
 def edit_motion_from_network(character,condition,audio_path, network_path,output_path, nframe,  load_translation = True):
     edit_synthesize(condition, audio_path, network_path, output_path,nframe)
@@ -653,6 +653,44 @@ def mirror_motion(joints, idx):
                 new_anim = new_anim_list[new_joint]
                 new_anim.joint = j
                 j.anim_layer[idx] = new_anim
+                
+def post_process_pkl(input_path,output_path,person_id=1):
+    data = joblib.load(input_path)
+    poses = data[person_id]['pose']
+
+    vel_root = data[person_id]['vel_root']
+    pose_root = data[person_id]['pose_root']
+    
+    b, f = vel_root.shape[:2]
+    root = transforms.repr6d2mat(pose_root[:])
+    vel_world = (root[:, :-1] @ vel_root.unsqueeze(-1)).squeeze(-1)
+    
+    rot = Quaternions.from_angle_axis(np.pi, np.array([1.0, 0.0, 0.0]))
+    for frame in range(poses.shape[0]):
+        root_pose = poses[frame, 0:3]
+        root_pose = Quaternions.from_angle_axis(np.linalg.norm(root_pose), root_pose / np.linalg.norm(root_pose))
+        angle, axis = (rot + root_pose).angle_axis()
+        poses[frame, :3] = angle*axis
+    
+    
+    trans = torch.cumsum(vel_world, dim=1)[person_id].to('cpu').numpy()
+    offset = trans[0]
+    offset[1] = 0
+    trans -= offset
+    trans[:,1:] *= -1
+    
+    poses = np.expand_dims(poses, axis=0)
+    trans = np.expand_dims(trans, axis=0)
+
+    data = {
+            "smpl_poses": poses,
+            "root_trans": trans,
+        }
+
+    # Save the data to a .pkl file
+    with open(output_path, "wb") as f:
+        pkl.dump(data, f)
+    
 
 def save_pkl(motion_path, character, end_frame, log_dir="", name_prefix=""):
     joints = character.joints
