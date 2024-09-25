@@ -47,8 +47,8 @@ class UIInterface:
         self.root.withdraw()
         # Window variables
         self.pos_idx2=0
-        self.pos_list = [[0,0,0], [100,0,-50], [-100,0,-50], [200,0,0],[-200,0,0],[0,0,-100],
-                         [-200,0,-100], [200,0,-100], [300,0,-50], [-300,0,50],[400,0,0],[-400,0,0]]
+        self.pos_list = [[0,0,0], [50,0,-50], [-50,0,-50], [100,0,0],[-100,0,0],[0,0,-100],
+                         [-100,0,-100], [100,0,-100], [150,0,-50], [-150,0,50],[200,0,0],[-200,0,0]]
 
         self.dancers = []    
         
@@ -83,6 +83,26 @@ class UIInterface:
         self.custom_browser.render()
         self.Sequencer.render(x,self.window.height - y)
         self.motion_creator.render()
+        
+    def load_project(self):
+        self.file_descriptions = "ChoreoStudio Project File"
+        self.file_ext = "*.csp"
+        selected_file = UI.render_open_file_dialog(self.file_descriptions, self.file_ext)
+        
+        if not selected_file or not os.path.exists(selected_file):
+            print(f"File not found: {selected_file}")
+            return
+        pass
+        
+    def save_project(self):
+        self.file_descriptions = "ChoreoStudio Project File"
+        self.file_ext = "*.csp"
+        selected_file = UI.render_save_file_dialog(self.file_descriptions, self.file_ext)
+        if not selected_file:
+            return
+        
+        
+        pass
 
     def is_ui_active(self):
         return imgui.is_any_item_active()
@@ -102,7 +122,7 @@ class UIInterface:
         position_scale = [self.DancerFormation.xsize_box / bound_x, (self.DancerFormation.ysize_box) / bound_z ]
 
         from ui import Dancer
-        self.dancers.append(Dancer(character, position_scale=position_scale, radius = 30))
+        self.dancers.append(Dancer(character, position_scale=position_scale, radius = 20))
         self.Sequencer.add_sequence(character)
         SCENE.add_character(character)
         
@@ -225,6 +245,8 @@ class UIInterface:
         pass
                     
     def on_key_release(self, symbol, modifiers) -> None:
+        if symbol == pyglet.window.key.SLASH and modifiers ==pyglet.window.key.MOD_ALT:
+            self.debug_action()
         self.DancerFormation.on_key_release(symbol, modifiers,self.window.frame)
         self.Sequencer.on_key_release(symbol, modifiers,self.window.frame)
 
@@ -296,6 +318,25 @@ class UIInterface:
         for font in self.fonts:
             self.fonts[font]["font"] = imgui.get_io().fonts.add_font_from_file_ttf(self.fonts[font]["path"], self.fonts[font]["size"])
 
-                    
-
+    def debug_action(self):
+        # circle = self.dancers[0]
+        # files = glob.glob("data/smpl/*.fbx")
+        # for file in files:
+        #     UI.insert_motion(file, True)
+            
+        #     motion_path = file[:-4] + ".pkl" 
+        #     loader.save_pkl(motion_path, circle.target, circle.target.root.anim_layer[0].animation_length)
+        #     circle.target.clear_all_animation()
+        
+        # files = glob.glob("data/smpl/hps_track_1.npy")
+        # for file in files:
+        #     UI.insert_motion(file, True)
+        
+        # file = "data/smpl/hps_track_1.npy"
+        # motion_path = file[:-4] + ".pkl" 
+        # loader.convert_npy_to_pkl(file,"data/smpl/camera.npy", motion_path)
+        
+        #     loader.save_pkl(motion_path, circle.target, circle.target.root.anim_layer[0].animation_length)
+        #     circle.target.clear_all_animation()
+        pass
 UI = UIInterface.get_instance()

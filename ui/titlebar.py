@@ -57,7 +57,13 @@ class TitleBar:
         if imgui.menu_item("New")[0]:
             pass
         
-        if imgui.begin_menu("Open"):
+        if imgui.menu_item("Load")[0]:
+            UI.load_project()
+        
+        if imgui.menu_item("Save")[0]:
+            UI.save_project()
+        
+        if imgui.begin_menu("Import"):
         #     pass
             if imgui.menu_item("BVH", None)[0]:
                 self.file_descriptions = "BVH Files"
