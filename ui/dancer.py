@@ -23,7 +23,6 @@ class Dancer:
         self.group_idx_font = UI.fonts["group_idx_font"]["font"]
         self.dancer_label = UI.fonts["dancer_label"]["font"]
         
-        self.root_keyframe = AnimationLayer()
         self.group_keyframe = KeyFrameAnimation(target = None, interpolation_type=InterpolationType.STEP)
         self.add_group_keyframe(0)
         
@@ -63,6 +62,10 @@ class Dancer:
     def get_marker_pos(self):
         return self.x, self.y
     
+    def set_character_pos(self, pos) -> None:
+        self.target.set_position(pos)
+        return
+    
     def get_character_pos(self):
         return self.target.get_position()
     
@@ -73,49 +76,21 @@ class Dancer:
         position = self.get_character_pos()
         self.x = self.position_scale[0] * position[0]
         self.y = self.position_scale[1] * position[2]
-        
-    def interpolate_root_position(self, frame):
-        prev_pos = self.get_character_pos()
-        for i in range(len(self.root_keyframe)):
-            animation = self.root_keyframe[i]
-            if frame < animation.frame_play_region_start:
-                continue
-            prev_pos = animation.interpolate_position(frame)
-        return prev_pos
-    
-    def insert_formation_keyframe(self, prev_frame, curr_frame, positions, ui_sequence_track) -> None:
-        keyframe_anim = KeyFrameAnimation(self.target, InterpolationType.LINEAR)
-        for frame in range(prev_frame, curr_frame+1):
-            keyframe = KeyFrame(frame, positions[frame-prev_frame])
-            keyframe_anim.add_keyframe(keyframe)
-        keyframe_anim.initialize_region(prev_frame, curr_frame)
-        self.root_keyframe.add_animation(keyframe_anim)
-        
-        ui_sequence_track.add_target_anim(keyframe_anim)
-        
+
     def add_group_keyframe(self, frame) -> None:
         keyframe = KeyFrame(frame, self.get_group_index)
         self.group_keyframe.add_keyframe(keyframe)
-        
-    def clear_root_keyframe(self) -> None:
-        self.root_keyframe.clear()
         
     def clear_group_keyframe(self) -> None:
         self.group_keyframe.clear_keyframe()
         
     def animate(self, frame):
-        if len(self.root_keyframe) > 0 and self.target is not None:
-            self.root_keyframe.animate(frame)
-            
         if len(self.group_keyframe.keyframes) > 0 and self.target is not None:
             group_idx = self.group_keyframe.interpolate_position(frame)
             self.set_group_index = group_idx
                     
     def render(self,draw_list, x, y, frame):
-        
-        # bound_x, bound_z = SCENE.get_scene_bound()
-        # dancer.position_scale = [self.xsize_box / (scroll_scale * bound_x + 1e-6), self.ysize_box / (scroll_scale * bound_z + 1e-6)]
-        # self.update_circle_pos()
+        self.update_circle_pos()
                 
         color = imgui.get_color_u32_rgba(1,1,0,1) if self.target.is_selected() else imgui.get_color_u32_rgba(1,1,1,1)                 
         draw_list.add_circle_filled(x+self.x, y+self.y, radius = self.radius ,col = color)

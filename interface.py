@@ -53,13 +53,15 @@ class UIInterface:
         self.dancers = []    
         
         from ui import Dancer, Sequencer, DancerFormation, TitleBar,CustomBrowser,MotionCreator
+        from ui import FormationController
+
         self.titlebar = TitleBar()
 
         self.DancerFormation = DancerFormation(660/2560, 30/1440, 1900/2560, 960/1440)
         self.Sequencer = Sequencer(660/2560, 960/1440, 1900/2560, 480/1440)
         self.custom_browser = CustomBrowser(0/2560,30/1440,660/2560,1440/1440)
         self.motion_creator = MotionCreator(660/2560, 30/1440, 1500/2560, 1440/1440)
-        
+        self.formation_controller = FormationController()
         self.impl.refresh_font_texture()
 
         
@@ -100,7 +102,6 @@ class UIInterface:
         selected_file = UI.render_save_file_dialog(self.file_descriptions, self.file_ext)
         if not selected_file:
             return
-        
         
         pass
 
@@ -158,6 +159,18 @@ class UIInterface:
         if start_frame == -1:
             start_frame = self.window.frame
         self.Sequencer.insert_motion(file_path, load_translation, start_frame)
+        
+    def insert_formation(self):
+        curr_frame = UI.get_frame()
+        prev_frame = max(0, curr_frame-30)
+        if curr_frame < 0 :
+            return
+        
+        dancers = UI.get_dancers()
+        self.formation_controller.insert_formation_keyframe(dancers, prev_frame, curr_frame)
+        curr_formation = self.formation_controller.get_closest_formation(curr_frame)
+        formation_shift = self.formation_controller.get_formation_shift_animation(curr_formation)
+        self.Sequencer.insert_formation_track(formation_shift, prev_frame, curr_frame)
         
     def create_dancer(self, is_male=False):
         character = loader.create_sample_character(is_male)
@@ -278,6 +291,10 @@ class UIInterface:
     def update_ui(self, is_animate) -> None:
         if self.window is None:
             return
+        
+        if is_animate:
+            self.formation_controller.animate(self.window.frame)
+
         self.DancerFormation.update_ui(is_animate, self.window.frame)
         
     @classmethod

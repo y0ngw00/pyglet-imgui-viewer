@@ -29,6 +29,11 @@ class FormationMode(Enum):
     NORMAL = 0
     DRAW = 1
     
+class SamplingType(Enum):
+    BOUNDARY = 0,
+    UNIFORM = 1,
+    GRID = 2,
+    
 class LayoutMode(Enum):
     FULL = 0
     HALF = 1

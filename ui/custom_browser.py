@@ -140,7 +140,7 @@ class CustomBrowser:
         imgui.end()
         
     def save_current_formation(self):
-        UI.get_sequencer().insert_formation_keyframe()
+        UI.insert_formation()
         return
         
     def save_current_grouping(self):
@@ -354,19 +354,6 @@ class CustomBrowser:
         for idx, circle in enumerate(circles):
             if circle.is_selected():
                 loader.save_pkl(motion_path, circle.target, UI.get_end_frame())
-    
-    def generate_trajectory(self, circle, nframe: int) -> Tuple[np.ndarray, np.ndarray]:
-        pos_traj = np.zeros([nframe,3], dtype = np.float32)
-        vel_traj = np.zeros([nframe,3], dtype = np.float32)
-        for i in range(nframe):
-            circle.animate(i)
-            pos_traj[i] = circle.get_character_pos()
-            
-            vel_traj[i,0] = pos_traj[i,0] - pos_traj[i-1,0] if i>0 else 0
-            vel_traj[i,1] = pos_traj[i,2] - pos_traj[i-1,2] if i>0 else 0
-            vel_traj[i,2] = 0
-            
-        return pos_traj,vel_traj
     
     def extract_root_positions(self, circle, nframe: int) -> Tuple[np.ndarray, np.ndarray]:
         pos_traj = np.zeros([nframe,3], dtype = np.float32)

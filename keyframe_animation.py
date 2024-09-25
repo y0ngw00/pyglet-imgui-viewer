@@ -16,7 +16,7 @@ class KeyFrameAnimation:
         self.frame_original_region_start = 0
         self.frame_original_region_end = 0
         self.frame_play_region_start = 0
-        self.frame_play_region_end = 0
+        self.__frame_play_region_end = 0
         
         self.animation_speed = 1.0
         
@@ -70,17 +70,10 @@ class KeyFrameAnimation:
                     idx = i
                     break
             return self.keyframes[idx].frame, self.keyframes[idx+1].frame
-
-    def animate(self, frame):
-        if frame < self.frame_play_region_start or frame > self.frame_play_region_end:
-            return
-        position = self.interpolate_position(frame)
-        if self.target is not None:
-            self.target.set_position(position)
         
     def interpolate_position(self, frame):
         if len(self.keyframes) == 0:
-            raise ValueError("No keyframes")            
+            raise ValueError("No keyframes") 
 
         frame = (frame - self.frame_play_region_start) * self.animation_speed + self.frame_original_region_start
         
@@ -125,4 +118,14 @@ class KeyFrameAnimation:
     
     def translate_region(self, dx):
         self.frame_play_region_start += dx
-        self.frame_play_region_end += dx
+        self.frame_play_region_end = self.frame_play_region_end + dx
+        
+    @property
+    def frame_play_region_end(self):
+        return self.__frame_play_region_end    
+    
+    @frame_play_region_end.setter
+    def frame_play_region_end(self, __frame_play_region_end):
+        self.__frame_play_region_end = __frame_play_region_end
+        if hasattr(self.target, 'frame'):
+            self.target.frame = self.frame_play_region_end

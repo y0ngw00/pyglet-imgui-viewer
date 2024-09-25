@@ -14,6 +14,7 @@ from box_item import BoxItem
 from enum_list import Boundary, MotionPart
 
 import loader
+
 from ops import CollisionHandler, SocialForceModel
 
 from interface import UI
@@ -172,7 +173,7 @@ class Sequencer(BoxItem):
     def insert_motion(self, file_path, load_translation, start_frame, motion_part = MotionPart.FULL):
         for idx, seq in enumerate(self.motion_sequences):
             if hasattr(seq, 'target') and seq.target.is_selected():
-                loader.load_pose_from_pkl(file_path, seq.target, idx, use_translation=load_translation, load_part = motion_part)
+                loader.load_pose_from_pkl(file_path, seq.target, 0, use_translation=load_translation, load_part = motion_part)
                 name = file_path.split('/')[-1]
                 sequence_length = seq.target.root.anim_layer[-1].animation_length
                 seq.insert_track(name, start_frame, start_frame + sequence_length -1)
@@ -183,36 +184,9 @@ class Sequencer(BoxItem):
             if hasattr(seq, 'target') and seq.target.is_selected():
                 seq.clear_all_track()
         self.show_popup = False
-        
-    def insert_formation_keyframe(self):
-        curr_frame = UI.get_frame()
-        prev_frame = max(0, curr_frame-30)
-        if curr_frame < 0 :
-            return            
-        self.formation_sequence.insert_track("Form " + str(len(self.formation_sequence.children)), prev_frame, curr_frame)
-        
-        # 1. 모든 댄서의 시작지점과 끝지점 포지션 정보를 가져온다.
-        # 2. 시뮬레이션에 주는 정보 : 시작지점, 끝지점, 제한시간 -> 나중에 시간 늘이거나 줄이면 다시 시뮬레이션 통해서 재계산한다.
-        # 3. 시뮬레이션을 통해 매프레임 이동 위치를 정한다.
-        # 4. 각 댄서에게 애니메이션 레이어를 생성한다. 
-
-        positions = np.zeros((len(UI.get_dancers()), curr_frame - prev_frame +1, 3), dtype = np.float32)
-        for idx, dancer in enumerate(UI.get_dancers()):
-            curr_pos = dancer.get_character_pos()
-            prev_pos = dancer.interpolate_root_position(prev_frame)
-            for frame in range(prev_frame, curr_frame+1):
-                t = (frame - prev_frame) / (curr_frame - prev_frame) if curr_frame != prev_frame else 1
-                positions[idx,frame-prev_frame] = prev_pos * (1 - t) + curr_pos * t
-
-        sim_model = SocialForceModel()
-        positions = sim_model.correct_trajectory(positions)
-        
-        inserted_track = self.formation_sequence.get_last_track()
-        
-        for idx, dancer in enumerate(UI.get_dancers()):
-            dancer.insert_formation_keyframe(prev_frame, curr_frame, positions[idx], inserted_track)
-                            
-        # self.keyframe_post_processing(curr_frame)
+          
+    def insert_formation_track(self,formation, prev_frame, curr_frame):
+        self.formation_sequence.insert_track("Form " + str(len(self.formation_sequence.children)), prev_frame, curr_frame, formation)
     
     def insert_group_keyframe(self):
         self.group_sequence.insert_key_frame(UI.get_frame())
@@ -232,30 +206,30 @@ class Sequencer(BoxItem):
             if hasattr(seq, 'target') and seq.target.is_selected():
                 return seq.set_track_speed(speed)
             
-    def keyframe_post_processing(self, curr_frame):
-        num_dancers = len(UI.get_dancers())
-        if num_dancers == 0:
-            return
-        keyframes = np.zeros((num_dancers, 2), dtype = np.int32)
-        for i, dancer in enumerate(UI.get_dancers()):
-            f_1, f_2 = dancer.root_keyframe.get_nearest_keyframe(curr_frame)
-            keyframes[i] = [f_1, f_2]
+    # def keyframe_post_processing(self, curr_frame):
+    #     num_dancers = len(UI.get_dancers())
+    #     if num_dancers == 0:
+    #         return
+    #     keyframes = np.zeros((num_dancers, 2), dtype = np.int32)
+    #     for i, dancer in enumerate(UI.get_dancers()):
+    #         f_1, f_2 = dancer.root_keyframe.get_nearest_keyframe(curr_frame)
+    #         keyframes[i] = [f_1, f_2]
             
-        min_frame = np.min(keyframes[:,0])
-        max_frame = np.max(keyframes[:,1])
+    #     min_frame = np.min(keyframes[:,0])
+    #     max_frame = np.max(keyframes[:,1])
         
-        if min_frame == max_frame:
-            return
+    #     if min_frame == max_frame:
+    #         return
         
-        col_handler = CollisionHandler(radius = 10, n_knot = 1)
-        col_handler.handle_collision(UI.get_dancers(), min_frame, max_frame)
+    #     col_handler = CollisionHandler(radius = 10, n_knot = 1)
+    #     col_handler.handle_collision(UI.get_dancers(), min_frame, max_frame)
         
     def on_key_release(self, symbol, modifiers, frame):
         if symbol==pyglet.window.key.P and modifiers==pyglet.window.key.MOD_CTRL:
             self.formation_sequence.clear_all_track()
             self.group_sequence.clear_all_track()
+            UI.formation_controller.clear()     
             for dancer in UI.get_dancers():
-                dancer.clear_root_keyframe()
                 dancer.clear_group_keyframe()
                 
     def on_mouse_release(self, x, y, button, modifier):

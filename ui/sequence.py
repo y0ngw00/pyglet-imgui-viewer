@@ -68,11 +68,12 @@ class Sequence(BoxItem):
         for track in self.children:
             track.render(self.x_origin, self.y_origin)
         
-    def insert_track(self,name, start_frame, end_frame):
+    def insert_track(self,name, start_frame, end_frame, target_anim = None):
         self.children.append(SequenceTrack(parent = self, 
                                            name = name, 
                                            frame_start = start_frame,
                                            frame_end = end_frame,
+                                           target_anim = target_anim,
                                            )) 
         
     def get_last_track(self):
@@ -156,7 +157,7 @@ class Sequence(BoxItem):
     
 
 class SequenceTrack(BoxItem):
-    def __init__(self, parent, name="", frame_start=0, frame_end=0, frame_speed = 1.0):
+    def __init__(self, parent, name="", frame_start=0, frame_end=0, frame_speed = 1.0, target_anim = None):
         super().__init__()
         self.parent = parent
         self.name = name
@@ -171,7 +172,8 @@ class SequenceTrack(BoxItem):
         self.track_color = imgui.get_color_u32_rgba(1,1,0.7,1)
         self.text_color = imgui.get_color_u32_rgba(0,0,0,1)
                 
-        self.target_anim = []
+        if target_anim is not None:
+            self.target_anim = target_anim
         self.selected = False
         self.boundary_picked= None
         self.translated = 0
@@ -196,8 +198,8 @@ class SequenceTrack(BoxItem):
     def lock_translate(self, lock):
         self.__lock_translate = lock
         
-    def add_target_anim(self, anim):
-        self.target_anim.append(anim)
+    def set_target_anim(self, anim):
+        self.target_anim = anim
                 
     def on_mouse_press(self, x, y, button, modifier):
         if self.is_picked(x,y):
@@ -215,16 +217,14 @@ class SequenceTrack(BoxItem):
             
         if self.boundary_picked is not None:
             self.parent.update_animation_layer(self, self.frame_start, self.frame_end)
-            if len(self.target_anim) > 0:
-                for anim in self.target_anim:
-                    anim.update_play_region(self.frame_start, self.frame_end, bTrim = False)
+            if self.target_anim is not None:
+                self.target_anim.update_play_region(self.frame_start, self.frame_end, bTrim = False)
             self.boundary_picked = None
             
         if self.translated != 0:
             self.parent.translate_animation_layer(self, self.translated)
-            if len(self.target_anim) > 0:
-                for anim in self.target_anim:
-                    anim.translate_region(self.translated)
+            if self.target_anim is not None:
+                self.target_anim.translate_region(self.translated)
             self.translated = 0
             
     def on_mouse_drag(self, x, y, dx, dy):

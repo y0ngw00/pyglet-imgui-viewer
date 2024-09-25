@@ -27,7 +27,7 @@ sample_male_model_path = "./data/SMPL_m_unityDoubleBlends_lbs_10_scale5_207_v1.0
 sample_female_texture_path = "./data/f_01_alb.002.png"
 sample_male_texture_path = "./data/m_01_alb.002.png"
 sample_female_character = None
-sampel_male_character = None
+sample_male_character = None
 
 bone_name_from_index = {
     0 : 'Pelvis',
@@ -430,12 +430,17 @@ def load_bvh_animation(filepath):
     return name, joints
 
 def create_sample_character(is_male=False):
+    global sample_female_character, sample_male_character
     sample_character_path = sample_female_model_path if is_male is False else sample_male_model_path
     sample_texture_path = sample_female_texture_path if is_male is False else sample_male_texture_path
-    sample_character = sample_female_character if is_male is False else sampel_male_character
+    sample_character = sample_female_character if is_male is False else sample_male_character
     
     if sample_character is None:
         sample_character = load_fbx(sample_character_path, sample_texture_path)
+        if is_male:
+            sample_male_character = sample_character
+        else:
+            sample_female_character = sample_character
         return sample_character
     return sample_character.copy()
 

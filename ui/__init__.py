@@ -11,3 +11,4 @@ from titlebar import TitleBar
 from custom_browser import CustomBrowser
 from motion_creator import MotionCreator
 from formation_creator import FormationCreator
+from formation_controller import FormationController

@@ -22,6 +22,13 @@ class AnimationLayer:
         for animation in self.animations:
             animation.animate(frame)
             
+    def interpolate_position(self, frame):
+        for animation in self.animations:
+            if frame < animation.frame_play_region_start or frame > animation.frame_play_region_end:
+                continue           
+
+            return animation.interpolate_position(frame)
+            
     def update_play_region(self, idx, frame_start, frame_end):
         self.animations[idx].update_play_region(frame_start, frame_end)
         
