@@ -45,8 +45,15 @@ class JointAnimation:
         if frame < self.frame_play_region_start or frame > self.frame_play_region_end:
             return None
         
-        index = (frame - self.frame_original_region_start) % self.animation_length
+        index = int((frame - self.frame_original_region_start) * self.animation_speed) % self.animation_length
         return Quaternions(self.rotations[index])
+    
+    def get_position(self, frame):
+        if frame < self.frame_play_region_start or frame > self.frame_play_region_end:
+            return None
+        
+        index = int((frame - self.frame_original_region_start) * self.animation_speed) % self.animation_length
+        return self.positions[index]
          
     def get_play_region(self):
         return self.frame_play_region_start, self.frame_play_region_end
