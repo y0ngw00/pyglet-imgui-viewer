@@ -40,7 +40,7 @@ class Object:
         self.selected = False
         
         self.is_show = True
-        self.uuid = uuid.uuid4()
+        self.id = uuid.uuid4()
 
     def show(self, is_show):
         self.is_show = is_show
@@ -96,11 +96,11 @@ class Object:
             child.update_world_transform()
             
     def __eq__(self, other):
-        return self.uuid == other.uuid
+        return self.id == other.id
 
 class Character(Object):
     def __init__(self, name, meshes = None, joints = None, scale = [1.0,1.0,1.0], scale_link = 1.0):
-        super().__init__(mesh_type=MeshType.Sphere,mesh_info={"stack":30, "slice":30, "scale":0.1})
+        super().__init__(mesh_type=MeshType.Sphere,mesh_info={"stack":5, "slice":5, "scale":0.1})
         self.__name = name
         self.joints = joints
         self.scale = np.array([1.0,1.0,1.0])
@@ -312,14 +312,9 @@ class Joint(Object):
         self.name = name
         # Ordered list of channels: each
         # list entry is one of [XYZ]position, [XYZ]rotation
-        self.channels = []
-        self.rotations = []
-        self.positions = []
         self.anim_layer = AnimationLayer()
-        self.offset = np.array([0.,0.,0.]) # static translation vector
         self.init_transform_inv = np.eye(4, dtype = np.float32)
 
-        self.order = None
         self.is_root = False
         self.parent_index = -1
         
