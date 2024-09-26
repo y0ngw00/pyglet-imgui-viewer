@@ -44,6 +44,10 @@ class UIInterface:
         imgui.end_frame()
 
         self.window = window
+        self.reset()
+        self.impl.refresh_font_texture()
+        
+    def reset(self):
         self.root = tk.Tk()
         self.root.withdraw()
         # Window variables
@@ -63,7 +67,6 @@ class UIInterface:
         self.custom_browser = CustomBrowser(0/2560,30/1440,660/2560,1440/1440)
         self.motion_creator = MotionCreator(660/2560, 30/1440, 1500/2560, 1440/1440)
         self.formation_controller = FormationController()
-        self.impl.refresh_font_texture()
 
         
     def render(self):
@@ -88,6 +91,7 @@ class UIInterface:
         self.motion_creator.render()
         
     def new_project(self):
+        self.reset()
         SCENE.clear_scene()
         
     def load_project(self):
@@ -99,7 +103,7 @@ class UIInterface:
             print(f"File not found: {selected_file}")
             return
         
-        SCENE.clear_scene()
+        self.new_project()
         with open(selected_file, 'rb') as f:
             # self.__dict__.update(pkl.load(f))
             data = pkl.load(f)

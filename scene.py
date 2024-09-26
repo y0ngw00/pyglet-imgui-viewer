@@ -22,7 +22,7 @@ class Scene:
         self.__z_bound = 300
         
     def clear_scene(self):
-        self.window.clear_scene()
+        self.window.clear_scene() # store temporarily and connect it back after initializing the scene
 
         temp_window = self.window # store temporarily and connect it back after initializing the scene
         self.__init__()        
