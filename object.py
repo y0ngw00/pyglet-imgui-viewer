@@ -332,16 +332,6 @@ class Joint(Object):
 
     def animate(self, frame):
         self.anim_layer.animate(frame)
-        # if frame > len(self.rotations)-1:
-        #     return        
-        # m = np.eye(4, dtype=np.float32)
-        # m[0:3, 0:3] = Quaternions(self.rotations[frame]).transforms()[0]
-        # if self.is_root is True:
-        #     m[3, 0:3] = self.positions[frame]
-        # else:
-        #     m[3, 0:3] = self.transform[3, 0:3]
-
-        # self.set_transform(m)
         
     def add_animation(self, joint, frame):
         
@@ -373,18 +363,7 @@ class Joint(Object):
             # self.positions.extend(rest_pos)
         # if rest_rot is not None:
             # self.rotations.extend(rest_rot)
-    
-    # def fill_animation(self, frame):
-    #     if len(self.rotations) == 0:
-    #         self.rotations.append(np.array([1,0,0,0]))
-    #         self.positions.append(np.array([0,0,0]))
-    #     else:
-    #         for i in range(frame - len(self.rotations)):
-    #             if self.is_root is True:
-    #                 self.positions.append(self.positions[-1])
-    #             self.rotations.append(self.rotations[-1])
-    #     return
-    
+
     def get_rotation(self, frame):
         for anim_layer in self.anim_layer.get_all_animations():
             rot_quat = anim_layer.get_rotation_quaternion(frame)
