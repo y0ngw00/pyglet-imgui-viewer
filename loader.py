@@ -127,7 +127,7 @@ def load_gltf(filename):
 
     joints = load_gltf_joint(filename, gltf,glb_data)
    
-    character = Character(name, meshes = meshes, scale=[100,100,100])
+    character = Character(filename, name, meshes = meshes, scale=[100,100,100])
     print("Success to load GLTF!")
 
     return character
@@ -270,7 +270,7 @@ def load_smpl_fbx(filename):
     name = filename.split('/')[-1]
     joints = load_fbx_joint(fbx_loader, False)
     
-    character = Character(name, meshes = [mesh],joints = joints, scale=[1,1,1]) 
+    character = Character(filename, name, meshes = [mesh],joints = joints, scale=[1,1,1]) 
     return character 
 
 def load_fbx(filename,texture_path = None, load_anim = False):
@@ -284,7 +284,7 @@ def load_fbx(filename,texture_path = None, load_anim = False):
         # meshes[1].set_color((200, 200, 200, 255))
     joints = load_fbx_joint(fbx_loader, load_anim)
 
-    character = Character(name, meshes = meshes,joints = joints, scale=[1,1,1])
+    character = Character(filename, name, meshes = meshes,joints = joints, scale=[1,1,1])
     
     # Exception only for SMPL model. Set root joint to the Pelvis joint instead of root joint.
     if "SMPL" in name or "smpl" in name: 
@@ -404,7 +404,7 @@ def load_bvh(filepath, scale = [1.0,1.0,1.0]):
         
     data = BVH.load(filepath)
     joints = create_bvh_joint(data[0], data[1],scale_joint = 5.0)
-    character = Character(name, joints = joints,scale=scale, scale_link = 5.0)
+    character = Character(filepath, name, joints = joints,scale=scale, scale_link = 5.0)
     print("BVH load success.")
 
     data={}

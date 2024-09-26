@@ -55,7 +55,7 @@ class TitleBar:
     def render_menu_tab(self):
         imgui.menu_item("(demo menu)", None, False, False)
         if imgui.menu_item("New")[0]:
-            pass
+            UI.new_project()
         
         if imgui.menu_item("Load")[0]:
             UI.load_project()

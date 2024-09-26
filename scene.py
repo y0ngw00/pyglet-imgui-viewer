@@ -1,9 +1,10 @@
 import os
 
 import numpy as np
+import pickle as pkl
 import pyglet
 from pyglet.math import Mat4, Vec3
-from object import Object,MeshType
+from object import Object,MeshType,Character
 
 class Scene:
     _instance = None
@@ -19,6 +20,41 @@ class Scene:
         
         self.__x_bound = 600
         self.__z_bound = 300
+        
+    def clear_scene(self):
+        self.window.clear_scene()
+
+        temp_window = self.window # store temporarily and connect it back after initializing the scene
+        self.__init__()        
+        self.connect_renderer(temp_window)
+        
+    def load_project(self, data):
+        self.clear_scene()
+        
+        self.__dict__.update(data["scene"])
+        from interface import UI
+        character_data = data["scene"]["characters"]
+        self.characters=[]
+        for chr_data in character_data:
+            if "original_file_path" in chr_data:
+                file_path = chr_data["original_file_path"]
+                UI.open_file(file_path)
+            else:
+                character = Character.load(chr_data)
+                self.add_character(character)
+        
+    def save_project(self, data):
+        state = self.__dict__.copy()
+        
+        if 'window' in state:
+            del state['window']
+        if 'objects' in state:
+            del state['objects']
+        if 'characters' in state:
+            state['characters'] = [character.save() for character in self.characters]
+            
+        data["scene"] = state 
+        
                 
     def connect_renderer(self, window):
         self.window=window

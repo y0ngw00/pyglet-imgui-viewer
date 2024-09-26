@@ -3,6 +3,7 @@ import sys
 import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
+import pickle as pkl
 import uuid
 import numpy as np
 from pyglet.math import Mat4, Vec3, Vec4
@@ -99,10 +100,11 @@ class Object:
         return self.id == other.id
 
 class Character(Object):
-    def __init__(self, name, meshes = None, joints = None, scale = [1.0,1.0,1.0], scale_link = 1.0):
+    def __init__(self, file_path="", name="", meshes = None, joints = None, scale = [1.0,1.0,1.0], scale_link = 1.0):
         super().__init__(mesh_type=MeshType.Sphere,mesh_info={"stack":5, "slice":5, "scale":0.1})
+        self.original_file_path = file_path
         self.__name = name
-        self.joints = joints
+        self.joints = []
         self.scale = np.array([1.0,1.0,1.0])
         self.meshes = []
         self.is_animate = True
@@ -117,7 +119,8 @@ class Character(Object):
             for m in meshes:
                 m.set_parent(self)
 
-        if joints is not None:
+        if joints is not None and len(joints) > 0:
+            self.joints = joints
             for j in joints:   
                 if j.is_root is True:         
                     self.root = j
@@ -132,7 +135,29 @@ class Character(Object):
         self.update_world_transform()
         if joints is not None and meshes is not None:
             self.skinning()
+    
+    @classmethod
+    def load(cls, data):
+        name = data["name"] if "name" in data else ""
+        meshes = data["meshes"] if "meshes" in data else ""
+        joints = data["joints"] if "joints" in data else []
+        scale = data["scale"] if "scale" in data else [1.0,1.0,1.0]
+        scale_link = data["scale_link"] if "scale_link" in data else 1.0
+    
+        return cls(name, meshes, joints, scale, scale_link)
             
+    def save(self):
+        state = self.__dict__.copy()
+        
+        for attr, value in list(state.items()):
+            try:
+                pkl.dumps(value)  # Try to pickle the value
+            except (TypeError, ValueError, pkl.PicklingError):
+                # If it's not pickleable, exclude it
+                del state[attr]
+        
+        return state
+        
     def copy(self):
         meshes = []
         joints = []

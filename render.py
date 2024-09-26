@@ -83,6 +83,12 @@ class RenderWindow(pyglet.window.Window):
         # User interface
         self.audio_manager = AudioManager(self, framerate = self.framerate)
         self.update_audio = False
+        
+    def clear_scene(self):
+        self.batch = pyglet.graphics.Batch()
+        self.shapes = []
+        self.animate = False
+        self.frame = 0
 
     def reset(self) -> None:
         self.frame = 0

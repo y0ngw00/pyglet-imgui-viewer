@@ -8,6 +8,7 @@ PARENT_PATH = os.path.dirname(CURR_PATH)+"/"
 sys.path.insert(0, PARENT_PATH)
 
 import glob 
+import pickle as pkl
 import pyglet
 import imgui
 import imgui.core
@@ -86,6 +87,9 @@ class UIInterface:
         self.Sequencer.render(x,self.window.height - y)
         self.motion_creator.render()
         
+    def new_project(self):
+        SCENE.clear_scene()
+        
     def load_project(self):
         self.file_descriptions = "ChoreoStudio Project File"
         self.file_ext = "*.csp"
@@ -94,7 +98,12 @@ class UIInterface:
         if not selected_file or not os.path.exists(selected_file):
             print(f"File not found: {selected_file}")
             return
-        pass
+        
+        SCENE.clear_scene()
+        with open(selected_file, 'rb') as f:
+            # self.__dict__.update(pkl.load(f))
+            data = pkl.load(f)
+            SCENE.load_project(data)        
         
     def save_project(self):
         self.file_descriptions = "ChoreoStudio Project File"
@@ -103,8 +112,13 @@ class UIInterface:
         if not selected_file:
             return
         
-        pass
-
+        with open(selected_file, 'wb') as f:
+            # pkl.dump(self.__dict__, f)
+            data = {}
+            SCENE.save_project(data)
+            
+            f.write(pkl.dumps(data))
+            
     def is_ui_active(self):
         return imgui.is_any_item_active()
     
@@ -181,7 +195,7 @@ class UIInterface:
         self.pos_idx2+=1
         self.add_dancer(character)
 
-    def open_file(self, file_path, file_type = FileType.Character,load_anim = True):
+    def open_file(self, file_path, file_type = FileType.Character,load_anim = True, texture_path = ""):
         ext = file_path.split('.')[-1]
         name = file_path.split('/')[-1]
         
@@ -201,7 +215,7 @@ class UIInterface:
                 character.translate(self.pos_list[self.pos_idx2])
                 
                 self.pos_idx2+=1
-                    
+            
             if character is not None:
                 self.add_dancer(character)
         return
