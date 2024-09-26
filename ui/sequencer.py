@@ -188,11 +188,9 @@ class Sequencer(BoxItem):
     def insert_formation_track(self,formation, prev_frame, curr_frame):
         self.formation_sequence.insert_track("Form " + str(len(self.formation_sequence.children)), prev_frame, curr_frame, formation)
     
-    def insert_group_keyframe(self):
-        self.group_sequence.insert_key_frame(UI.get_frame())
-        for dancer in UI.get_dancers():
-            dancer.add_group_keyframe(UI.get_frame())
-            
+    def insert_grouping_track(self, frame):
+        self.group_sequence.insert_key_frame(frame)
+    
     def insert_music_sequence(self, duration):
         self.music_sequence.fill_sequence(0, duration)
     
@@ -229,8 +227,7 @@ class Sequencer(BoxItem):
             self.formation_sequence.clear_all_track()
             self.group_sequence.clear_all_track()
             UI.formation_controller.clear()     
-            for dancer in UI.get_dancers():
-                dancer.clear_group_keyframe()
+            UI.grouping_controller.clear()
                 
     def on_mouse_release(self, x, y, button, modifier):
         if self.is_picked(x,y):

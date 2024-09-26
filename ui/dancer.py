@@ -22,10 +22,7 @@ class Dancer:
         self.__group_idx = 0      
         self.group_idx_font = UI.fonts["group_idx_font"]["font"]
         self.dancer_label = UI.fonts["dancer_label"]["font"]
-        
-        self.group_keyframe = KeyFrameAnimation(target = None, interpolation_type=InterpolationType.STEP)
-        self.add_group_keyframe(0)
-        
+                
     @property
     def name(self):
         return self.target.get_name
@@ -35,11 +32,11 @@ class Dancer:
         self.target.set_name = name
     
     @property
-    def get_group_index(self):
+    def group_index(self):
         return self.__group_idx
     
-    @get_group_index.setter
-    def set_group_index(self, idx):
+    @group_index.setter
+    def group_index(self, idx):
         self.__group_idx = idx
     
     def is_picked(self,x,y)->bool:
@@ -77,18 +74,6 @@ class Dancer:
         self.x = self.position_scale[0] * position[0]
         self.y = self.position_scale[1] * position[2]
 
-    def add_group_keyframe(self, frame) -> None:
-        keyframe = KeyFrame(frame, self.get_group_index)
-        self.group_keyframe.add_keyframe(keyframe)
-        
-    def clear_group_keyframe(self) -> None:
-        self.group_keyframe.clear_keyframe()
-        
-    def animate(self, frame):
-        if len(self.group_keyframe.keyframes) > 0 and self.target is not None:
-            group_idx = self.group_keyframe.interpolate_position(frame)
-            self.set_group_index = group_idx
-                    
     def render(self,draw_list, x, y, frame):
         self.update_circle_pos()
                 

@@ -58,7 +58,7 @@ class UIInterface:
         self.dancers = []    
         
         from ui import Dancer, Sequencer, DancerFormation, TitleBar,CustomBrowser,MotionCreator
-        from ui import FormationController
+        from ui import FormationController, GroupingController
 
         self.titlebar = TitleBar()
 
@@ -67,6 +67,7 @@ class UIInterface:
         self.custom_browser = CustomBrowser(0/2560,30/1440,660/2560,1440/1440)
         self.motion_creator = MotionCreator(660/2560, 30/1440, 1500/2560, 1440/1440)
         self.formation_controller = FormationController()
+        self.grouping_controller = GroupingController()
 
         
     def render(self):
@@ -189,7 +190,17 @@ class UIInterface:
         curr_formation = self.formation_controller.get_closest_formation(curr_frame)
         formation_shift = self.formation_controller.get_formation_shift_animation(curr_formation)
         self.Sequencer.insert_formation_track(formation_shift, prev_frame, curr_frame)
+    
+    def insert_grouping(self):
+        curr_frame = self.get_frame()
+        dancers = self.get_dancers()
+        group_indices = np.array([dancer.group_index for dancer in dancers], dtype = np.int8)
         
+        self.grouping_controller.insert_grouping_keyframe(dancers, group_indices, curr_frame)
+        
+        curr_group = self.grouping_controller.get_closest_grouping(curr_frame)
+        self.Sequencer.insert_grouping_track(curr_frame)
+            
     def create_dancer(self, is_male=False):
         character = loader.create_sample_character(is_male)
         
@@ -312,6 +323,7 @@ class UIInterface:
         
         if is_animate:
             self.formation_controller.animate(self.window.frame)
+            self.grouping_controller.animate(self.window.frame)
 
         self.DancerFormation.update_ui(is_animate, self.window.frame)
         

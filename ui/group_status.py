@@ -33,12 +33,12 @@ class GroupingStatus:
                 imgui.push_item_width(200) 
                 changed, dancer.name = imgui.input_text("##{}".format(idx), dancer.name, buffer_length = 200)
                 imgui.table_next_column()
-                group_idx = dancer.get_group_index
+                group_idx = dancer.group_index
                 with imgui.begin_combo("##Dancer {}'s group".format(idx), f'{group_idx} ({COLORS[group_idx]})', flags = imgui.COMBO_HEIGHT_REGULAR) as combo:
                     if combo.opened:
                         for i, item in enumerate(COLORS):
                             if imgui.selectable(f'{i} ({item})')[0]:
-                                dancer.set_group_index = i
+                                dancer.group_index = i
                                
             imgui.end_table()
             

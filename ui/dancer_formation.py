@@ -217,10 +217,7 @@ class DancerFormation(BoxItem):
             self.is_drawing = False
                     
     def update_ui(self, is_animate, frame) -> None:
-        if is_animate:
-            dancers = UI.get_dancers()
-            for dancer in dancers:
-                dancer.animate(frame)
+        pass
     
     def is_ui_active(self):
         return imgui.is_any_item_active()

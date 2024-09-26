@@ -144,7 +144,7 @@ class CustomBrowser:
         return
         
     def save_current_grouping(self):
-        UI.get_sequencer().insert_group_keyframe()
+        UI.insert_grouping()
         return
 
     def render_motion_library(self):
