@@ -4,7 +4,7 @@ from keyframe import KeyFrame
 from enum_list import SamplingType
 
 class Formation:
-    def __init__(self, dancers, dancer_positions, frame, boundary_points, formation_sampling = SamplingType.BOUNDARY) -> None:
+    def __init__(self, dancers, dancer_positions,boundary_points,  frame, formation_sampling = SamplingType.BOUNDARY) -> None:
         self.dancers = dancers
         self.dancer_positions = dancer_positions
         self.boundary_points = boundary_points

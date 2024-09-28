@@ -58,7 +58,7 @@ class DancerFormation(BoxItem):
             self.update_position(x = canvas_pos.x+layout_padding[0],
                                  y = canvas_pos.y+layout_padding[1],
                                  xsize_box = x_size - 2*layout_padding[0],
-                                 ysize_box = y_size - 2*layout_padding[1])
+                                 ysize_box = y_size - 2*layout_padding[1] - 30)
             self.draw_box(draw_list, color=imgui.get_color_u32_rgba(1,1,1,1), rounding=5, thickness=3)
             
             # Draw a dot
@@ -99,7 +99,7 @@ class DancerFormation(BoxItem):
                                     dancer_index = int.from_bytes(payload, 'big')
                                     self.marker_indices[idx] = dancer_index
                 
-                imgui.set_cursor_pos((self.xsize_box-200, self.ysize_box))                    
+                imgui.set_cursor_pos((self.xsize_box-200, self.ysize_box+30))                    
                 with imgui.font(self.button_font_bold): 
                     if imgui.button('Apply', width=100):
                         self.apply_created_formation()
@@ -126,7 +126,10 @@ class DancerFormation(BoxItem):
             dancer_x, dancer_y = dancer.get_marker_pos()
             prev_marker_pos = [dancer_x + self.x_origin + self.xsize_box/2, dancer_y+ self.y_origin + self.ysize_box/2]
             dancer.translate(curr_marker_pos[0] - prev_marker_pos[0], curr_marker_pos[1] - prev_marker_pos[1])
-        
+    
+    def get_boundary_points(self):
+        return self.boundary_points
+    
     def get_marker_indices(self):
         return self.marker_indices
     

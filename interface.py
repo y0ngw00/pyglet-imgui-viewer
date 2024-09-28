@@ -169,7 +169,7 @@ class UIInterface:
     
     def get_sequencer(self):
         return self.Sequencer
-    
+
     def adjust_formation_layout(self, layout_mode = LayoutMode.FULL):
         x_pos = 660/2560 if layout_mode == LayoutMode.FULL else 660/2560
         y_pos = 30/1440
@@ -227,11 +227,14 @@ class UIInterface:
         
         dancers = UI.get_dancers()
         dancer_positions = [dancer.get_character_pos().copy() for dancer in dancers]
+        formation_boundaries = self.DancerFormation.get_boundary_points()
         
-        self.formation_controller.insert_formation_keyframe(dancers, dancer_positions, prev_frame, curr_frame)
+        self.formation_controller.insert_formation_keyframe(dancers, dancer_positions, formation_boundaries, prev_frame, curr_frame)
         curr_formation = self.formation_controller.get_closest_formation(curr_frame)
         formation_shift = self.formation_controller.get_formation_shift_animation(curr_formation)
         self.Sequencer.insert_formation_track(formation_shift, prev_frame, curr_frame)
+        
+        
     
     def insert_grouping(self):
         curr_frame = self.get_frame()
