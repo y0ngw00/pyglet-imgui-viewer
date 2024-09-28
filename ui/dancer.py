@@ -93,7 +93,10 @@ class Dancer:
         with imgui.font(self.dancer_label):
             text_size = imgui.calc_text_size(self.name)
             draw_list.add_text(x+self.x-text_size.x/2, y+self.y+self.radius+text_size.y/2, col = color, text = self.name)
-        
+    
+    def update_position_scale(self, position_scale):
+        self.position_scale = position_scale
+    
     def translate(self, dx, dy):
         self.x +=dx
         self.y +=dy

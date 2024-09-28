@@ -33,7 +33,7 @@ class DancerFormation(BoxItem):
         self.marker_indices = [-1 for _ in range(UI.get_num_dancers())]
         self.marker_label = UI.fonts["dancer_label"]["font"]
         self.button_font_bold = UI.fonts["button_font_bold"]["font"]
-        self.marker_radius = 20
+        self.marker_radius = 20    
         
     def update_layout(self, x_pos, y_pos, xsize, ysize):
         self.x_pos = x_pos
@@ -62,8 +62,11 @@ class DancerFormation(BoxItem):
             self.draw_box(draw_list, color=imgui.get_color_u32_rgba(1,1,1,1), rounding=5, thickness=3)
             
             # Draw a dot
+            bound_x, bound_z = SCENE.get_scene_bound()
+            position_scale = [self.xsize_box / bound_x, (self.ysize_box) / bound_z ]
             frame = UI.get_frame()
             for dancer in UI.get_dancers():
+                dancer.update_position_scale(position_scale)
                 dancer.render(draw_list, self.x_origin + self.xsize_box/2, self.y_origin + self.ysize_box/2, frame)
         
             if self.mode == FormationMode.DRAW:
