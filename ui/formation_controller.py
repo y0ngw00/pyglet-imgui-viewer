@@ -22,7 +22,38 @@ class FormationController:
         dancers = UI.get_dancers()
         for i, pos in enumerate(positions):
             dancers[i].set_character_pos(pos)
+            
+    def load(self, data):
+        dancers = UI.get_dancers()
+        for frame, form_data in data.items():
+            curr_frame = int(frame)
+            prev_frame = int(form_data["prev_frame"])
+            dancer_positions = form_data["dancer_positions"]     
+            self.insert_formation_keyframe(dancers, dancer_positions, prev_frame, curr_frame)
+    
+    def save(self, name, data):
+        assert len(self.formations) == len(self.anim_layer.get_all_animations())
         
+        state = {}
+        for anim in self.anim_layer.get_all_animations():
+            formation = anim.target
+            assert isinstance(formation, Formation)
+            
+            formation_data = formation.__dict__.copy()
+            
+            if "dancers" in formation_data:
+                formation_data.pop("dancers")
+                
+            formation_data["prev_frame"] = anim.frame_play_region_start
+            
+            state[str(formation.frame)] = formation_data
+        
+        data[name] = state   
+    
+    
+    def get_all_formation(self):
+        return self.formations
+     
     def compute_intermediate_positions(self,num_dancers, prev_formation, curr_formation, start_frame, end_frame) -> None:
         curr_pos = np.array(curr_formation.dancer_positions)
         prev_pos = np.array(prev_formation.dancer_positions)
@@ -39,11 +70,11 @@ class FormationController:
         keyframe_anim.initialize_region(start_frame, end_frame)
         self.anim_layer.add_animation(keyframe_anim)
     
-    def insert_formation_keyframe(self, dancers, prev_frame, curr_frame) -> None:
-        curr_formation = Formation(dancers, curr_frame, None)
+    def insert_formation_keyframe(self, dancers, dancer_positions, prev_frame, curr_frame) -> None:
+        curr_formation = Formation(dancers, dancer_positions, curr_frame, None)
         prev_formation = self.get_closest_formation(prev_frame)
         if prev_formation is None:
-            prev_formation = Formation(dancers, curr_frame, None)
+            prev_formation = Formation(dancers, dancer_positions, curr_frame, None)
         
         self.compute_intermediate_positions(len(dancers),prev_formation,curr_formation, prev_frame, curr_frame)
         

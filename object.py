@@ -179,7 +179,7 @@ class Character(Object):
             else:
                 new_mesh = copy.deepcopy(mesh_object)
                 meshes.append(new_mesh)
-        return Character(self.__name + "_copy", meshes = meshes,joints = joints, scale=scale)
+        return Character(self.original_file_path, self.__name + "_copy", meshes = meshes,joints = joints, scale=scale)
     
     def translate(self, pos):
         # if self.root is not None:

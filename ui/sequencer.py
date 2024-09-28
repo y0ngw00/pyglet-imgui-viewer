@@ -44,7 +44,10 @@ class Sequencer(BoxItem):
         self.music_sequence = Sequence("Music", None, self.sequence_pos_start, self.sequence_height)
         self.formation_sequence = Sequence("Formation", None, self.sequence_pos_start, self.sequence_height)
         self.group_sequence =  Sequence("Grouping", None, self.sequence_pos_start, self.sequence_height)
-        
+    
+    def load(self):
+        pass
+            
     def render(self, x, y):
         x_scale, y_scale = imgui.get_io().display_size 
         x_pos = self.x_pos * x_scale

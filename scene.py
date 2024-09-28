@@ -55,7 +55,6 @@ class Scene:
             
         data["scene"] = state 
         
-                
     def connect_renderer(self, window):
         self.window=window
         self.draw_default_scene()

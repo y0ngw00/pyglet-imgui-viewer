@@ -37,9 +37,24 @@ class GroupingController:
         dancers = UI.get_dancers()
         for i, pos in enumerate(positions):
             dancers[i].group_index = pos
-        
+            
+    def load(self, data):
+        dancers = UI.get_dancers()
+        for frame, group_indices in data.items():
+            frame_int = int(frame)
+            self.insert_grouping_keyframe(dancers,frame_int, group_indices)
     
-    def insert_grouping_keyframe(self, dancers, group_indices, curr_frame) -> None:
+    def save(self, name, data):
+        state = {}
+        for grouping in self.grouping:
+            state[str(grouping.frame)] = grouping.group_indices
+        
+        data[name] = state
+        
+    def get_all_grouping(self):
+        return self.grouping  
+    
+    def insert_grouping_keyframe(self, dancers,curr_frame, group_indices) -> None:
         curr_group = Grouping(dancers, group_indices, curr_frame)
                 
         self.anim_layer.add_keyframe(KeyFrame(curr_frame, group_indices))

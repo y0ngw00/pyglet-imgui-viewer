@@ -96,9 +96,9 @@ class UIInterface:
         SCENE.clear_scene()
         
     def load_project(self):
-        self.file_descriptions = "ChoreoStudio Project File"
-        self.file_ext = "*.csp"
-        selected_file = UI.render_open_file_dialog(self.file_descriptions, self.file_ext)
+        file_descriptions = "ChoreoStudio Project File"
+        file_ext = "*.csp"
+        selected_file = UI.render_open_file_dialog(file_descriptions, file_ext)
         
         if not selected_file or not os.path.exists(selected_file):
             print(f"File not found: {selected_file}")
@@ -106,14 +106,27 @@ class UIInterface:
         
         self.new_project()
         with open(selected_file, 'rb') as f:
-            # self.__dict__.update(pkl.load(f))
             data = pkl.load(f)
+            
             SCENE.load_project(data)        
+
+            ui_data = data["interface"]
+            if "grouping_controller" in ui_data:
+                self.grouping_controller.load(ui_data["grouping_controller"])
+            if "formation_controller" in ui_data:
+                self.formation_controller.load(ui_data["formation_controller"])
+            # for item in ui_data.items():
+            #     component = item[1]
+            #     if hasattr(component, "save"):
+            #         component.save(item[0], data)
+            # self.__dict__.update(data["interface"])
+            
+        self.synchronize_scene()
         
     def save_project(self):
-        self.file_descriptions = "ChoreoStudio Project File"
-        self.file_ext = "*.csp"
-        selected_file = UI.render_save_file_dialog(self.file_descriptions, self.file_ext)
+        file_descriptions = "ChoreoStudio Project File"
+        file_ext = "*.csp"
+        selected_file = UI.render_save_file_dialog(file_descriptions, file_ext)
         if not selected_file:
             return
         
@@ -122,7 +135,32 @@ class UIInterface:
             data = {}
             SCENE.save_project(data)
             
+            ui_data = {}
+            state = self.__dict__.copy()
+            exclude_list = ["impl", "root", "window", "fonts", "dancers","pos_list","pos_idx2"]
+            for key in exclude_list:
+                if key in state:
+                    del state[key]
+                    
+            for item in state.items():
+                component = item[1]
+                if hasattr(component, "save"):
+                    component.save(item[0], ui_data)
+
+            data["interface"] = ui_data
+            
             f.write(pkl.dumps(data))
+            
+    def synchronize_scene(self):
+        
+        for form in self.formation_controller.get_all_formation():
+            formation_shift = self.formation_controller.get_formation_shift_animation(form)
+            start_frame = formation_shift.frame_play_region_start
+            end_frame = formation_shift.frame_play_region_end
+            self.Sequencer.insert_formation_track(formation_shift, start_frame, end_frame)
+
+        for group in self.grouping_controller.get_all_grouping():
+            self.Sequencer.insert_grouping_track(group.frame)
             
     def is_ui_active(self):
         return imgui.is_any_item_active()
@@ -186,7 +224,9 @@ class UIInterface:
             return
         
         dancers = UI.get_dancers()
-        self.formation_controller.insert_formation_keyframe(dancers, prev_frame, curr_frame)
+        dancer_positions = [dancer.get_character_pos().copy() for dancer in dancers]
+        
+        self.formation_controller.insert_formation_keyframe(dancers, dancer_positions, prev_frame, curr_frame)
         curr_formation = self.formation_controller.get_closest_formation(curr_frame)
         formation_shift = self.formation_controller.get_formation_shift_animation(curr_formation)
         self.Sequencer.insert_formation_track(formation_shift, prev_frame, curr_frame)
@@ -196,7 +236,7 @@ class UIInterface:
         dancers = self.get_dancers()
         group_indices = np.array([dancer.group_index for dancer in dancers], dtype = np.int8)
         
-        self.grouping_controller.insert_grouping_keyframe(dancers, group_indices, curr_frame)
+        self.grouping_controller.insert_grouping_keyframe(dancers, curr_frame, group_indices)
         
         curr_group = self.grouping_controller.get_closest_grouping(curr_frame)
         self.Sequencer.insert_grouping_track(curr_frame)

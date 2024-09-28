@@ -4,15 +4,13 @@ from keyframe import KeyFrame
 from enum_list import SamplingType
 
 class Formation:
-    def __init__(self, dancers, frame, boundary_points, formation_sampling = SamplingType.BOUNDARY) -> None:
+    def __init__(self, dancers, dancer_positions, frame, boundary_points, formation_sampling = SamplingType.BOUNDARY) -> None:
         self.dancers = dancers
-        self.dancer_positions = []
+        self.dancer_positions = dancer_positions
         self.boundary_points = boundary_points
         self.formation_sampling = formation_sampling
         self.__frame = frame
         
-        for dancer in dancers:
-            self.dancer_positions.append(dancer.get_character_pos().copy()) 
             
     @property        
     def frame(self):
