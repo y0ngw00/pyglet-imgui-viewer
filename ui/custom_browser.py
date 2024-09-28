@@ -105,7 +105,15 @@ class CustomBrowser:
         # clicked, value = imgui.input_text("Text Input", "")
         if imgui.begin_tab_bar("Tab Browser", imgui.TAB_BAR_FITTING_POLICY_DEFAULT):
             imgui.set_next_item_width(100)
-            if imgui.begin_tab_item("Grouping Status").selected:
+            if imgui.begin_tab_item("Formation").selected:
+                self.render_formation_setting()
+                imgui.end_tab_item()
+                
+            if imgui.begin_tab_item("Pose Editor").selected:
+                self.render_pose_editor()
+                imgui.end_tab_item()
+            
+            if imgui.begin_tab_item("Grouping").selected:
                 imgui.begin_child("Grouping widget", window_size[0] - 50, 720/1440*y_scale, border=False)
                 self.grouping_status.render()
                 imgui.end_child()
@@ -114,10 +122,7 @@ class CustomBrowser:
                     if imgui.button("Save Current Grouping", width = window_size[0] - 50):
                         self.save_current_grouping()
                 imgui.end_tab_item()
-            if imgui.begin_tab_item("Formation Settings").selected:
-                self.render_formation_setting()
-                imgui.end_tab_item()
-                
+            
             if imgui.begin_tab_item("Motion Library").selected:
                 self.render_motion_library()
                 imgui.end_tab_item()
@@ -146,7 +151,44 @@ class CustomBrowser:
     def save_current_grouping(self):
         UI.insert_grouping()
         return
+                
+    def render_formation_setting(self):
+        x_scale, y_scale = imgui.get_io().display_size 
+        window_size = imgui.get_window_size()
+        with imgui.font(self.button_font_bold):
+            if imgui.begin_child("Formation widget", window_size[0] - 50, 660/1440*y_scale, border=False):
+                
+                if UI.formation_mode == FormationMode.DRAW:
+                    marker_indices = UI.DancerFormation.get_marker_indices()
+                    for dancer_idx,dancer in enumerate(UI.get_dancers()):
+                        if dancer_idx in marker_indices:
+                            continue
+                        imgui.button(dancer.name, 100)
+                        if imgui.begin_drag_drop_source():
+                            imgui.set_drag_drop_payload('Dancer index', (dancer_idx).to_bytes(2, 'big'))
+                            imgui.button(dancer.name)
+                            imgui.end_drag_drop_source()
+                            
+                imgui.end_child()
+                
+            if imgui.button("Reset Assigned Markers", width = window_size[0] - 50):
+                UI.DancerFormation.reset_markers()
 
+            if imgui.button("Save Current Formation", width = window_size[0] - 50):
+                self.save_current_formation() 
+            
+            formation_guide = "Draw Formation" if UI.formation_mode == FormationMode.NORMAL else "Close Drawing Mode"
+            toggle = FormationMode.DRAW if UI.formation_mode == FormationMode.NORMAL else FormationMode.NORMAL
+            if imgui.button(formation_guide, width = window_size[0]-50):
+                UI.set_formation_mode(toggle)
+            
+            # _, self.is_no_inpaint = imgui.checkbox("Random", self.is_no_inpaint)
+            # imgui.same_line()
+            # _, self.load_translation_from_network = imgui.checkbox("Root Translation", self.load_translation_from_network)
+             
+    def render_pose_editor(self):
+        pass
+    
     def render_motion_library(self):
         current_motion = ""    
         if len(self.motion_files) > 0:
@@ -243,42 +285,6 @@ class CustomBrowser:
                 file_ext = ["*.pkl"]
                 selected_file = UI.render_save_file_dialog(file_descriptions, file_ext, initial_dir = initial_dir)
                 self.save_smpl_motion(selected_file)
-                
-    def render_formation_setting(self):
-        x_scale, y_scale = imgui.get_io().display_size 
-        window_size = imgui.get_window_size()
-        with imgui.font(self.button_font_bold):
-            if imgui.begin_child("Formation widget", window_size[0] - 50, 660/1440*y_scale, border=False):
-                
-                if UI.formation_mode == FormationMode.DRAW:
-                    marker_indices = UI.DancerFormation.get_marker_indices()
-                    for dancer_idx,dancer in enumerate(UI.get_dancers()):
-                        if dancer_idx in marker_indices:
-                            continue
-                        imgui.button(dancer.name, 100)
-                        if imgui.begin_drag_drop_source():
-                            imgui.set_drag_drop_payload('Dancer index', (dancer_idx).to_bytes(2, 'big'))
-                            imgui.button(dancer.name)
-                            imgui.end_drag_drop_source()
-                            
-                imgui.end_child()
-                
-            if imgui.button("Reset Assigned Markers", width = window_size[0] - 50):
-                UI.DancerFormation.reset_markers()
-
-            if imgui.button("Save Current Formation", width = window_size[0] - 50):
-                self.save_current_formation() 
-            
-            formation_guide = "Draw Formation" if UI.formation_mode == FormationMode.NORMAL else "Close Drawing Mode"
-            toggle = FormationMode.DRAW if UI.formation_mode == FormationMode.NORMAL else FormationMode.NORMAL
-            if imgui.button(formation_guide, width = window_size[0]-50):
-                UI.set_formation_mode(toggle)
-            
-            # _, self.is_no_inpaint = imgui.checkbox("Random", self.is_no_inpaint)
-            # imgui.same_line()
-            # _, self.load_translation_from_network = imgui.checkbox("Root Translation", self.load_translation_from_network)
-             
-            
                 
     def load_audio_file(self):
         file_descriptions = "Audio files (.wav)"
