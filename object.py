@@ -156,6 +156,14 @@ class Character(Object):
             name = joint.name
             if name in animation_data:
                 joint.load_animation(animation_data[name])
+                
+    def load_texture(self, data):
+        texture_data = data["texture"]
+        
+        assert len(texture_data) == len(self.meshes), "Wrong save file, texture data should be match with meshes"
+        
+        for mesh, texture_path in zip(self.meshes, texture_data):
+            mesh.set_texture(texture_path)
             
     def save(self):
         state = self.__dict__.copy()
@@ -171,6 +179,13 @@ class Character(Object):
                     for joint in value:
                         anim_data[joint.name] = joint.save_animation()
                     state["animation"] = anim_data
+                if attr == "meshes":
+                    texture_data = []
+                    for mesh in value:
+                        texture_data.append(mesh.texture_path)
+                        
+                    if len(texture_data) == len(self.meshes):
+                        state["texture"] = texture_data
         
         return state
         

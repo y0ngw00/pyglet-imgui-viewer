@@ -40,9 +40,12 @@ class Scene:
                 file_path = chr_data["original_file_path"]
                 UI.open_file(file_path)
                 
+                character = self.characters[-1]
                 if "animation" in chr_data:
-                    character = self.characters[-1]
                     character.load_animation(chr_data)
+                    
+                if "texture" in chr_data:
+                    character.load_texture(chr_data)
             # else:
             #     character = Character.load(chr_data)
             #     self.add_character(character)
