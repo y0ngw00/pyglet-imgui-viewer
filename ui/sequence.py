@@ -171,9 +171,8 @@ class SequenceTrack(BoxItem):
         
         self.track_color = imgui.get_color_u32_rgba(1,1,0.7,1)
         self.text_color = imgui.get_color_u32_rgba(0,0,0,1)
-                
-        if target_anim is not None:
-            self.target_anim = target_anim
+        
+        self.target_anim = target_anim
         self.selected = False
         self.boundary_picked= None
         self.translated = 0

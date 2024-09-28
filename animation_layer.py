@@ -30,10 +30,12 @@ class AnimationLayer:
             return animation.interpolate_position(frame)
             
     def update_play_region(self, idx, frame_start, frame_end):
-        self.animations[idx].update_play_region(frame_start, frame_end)
+        if idx < len(self.animations):
+            self.animations[idx].update_play_region(frame_start, frame_end)
         
     def translate_region(self, idx, dx):
-        self.animations[idx].translate_region(dx)
+        if idx < len(self.animations):
+            self.animations[idx].translate_region(dx)
             
     def translate(self, pos):
         for anim in self.animations:

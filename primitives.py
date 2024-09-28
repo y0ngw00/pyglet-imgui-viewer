@@ -106,9 +106,10 @@ class CustomMesh(Mesh):
             self.skin_joints = torch.zeros((len(skin_data), 4), dtype=torch.int32, device = self.device)
             self.skin_weights = torch.zeros((len(skin_data), 4), dtype=torch.float32, device= self.device)
             for idx,data in enumerate(skin_data):
-                num_joint = len(data.skin_joints)
-                self.skin_joints[idx, 0:num_joint] = torch.tensor(data.skin_joints, dtype=torch.int32,device = self.device)
-                self.skin_weights[idx, 0:num_joint] = torch.tensor(data.skin_weights, dtype=torch.float32, device = self.device)
+                # num_joint = len(data.skin_joints)
+                num_joint = min(len(data.skin_joints),4)
+                self.skin_joints[idx, 0:num_joint] = torch.tensor(data.skin_joints[0:num_joint], dtype=torch.int32,device = self.device)
+                self.skin_weights[idx, 0:num_joint] = torch.tensor(data.skin_weights[0:num_joint], dtype=torch.float32, device = self.device)
         
         if self.indices is not None:
             self.update_rendering_data()

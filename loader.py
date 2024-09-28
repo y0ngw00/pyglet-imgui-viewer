@@ -590,9 +590,9 @@ def load_pose_from_pkl(pose_dir, character, character_idx, frame = 0, use_transl
                 
         rot_quat = -Quaternions(ret[:,data_index])
         joint_anim = JointAnimation(joint)
-        joint_anim.rotations = list(rot_quat)
+        joint_anim.rotations = rot_quat.qs
         if load_translation and ("Pelvis" in joint.name or "pelvis" in joint.name):
-            joint_anim.positions= list(positions)
+            joint_anim.positions= positions
 
         joint_anim.initialize_region(0, len(rot_quat) - 1)
         joint_anim.translate_region(frame)

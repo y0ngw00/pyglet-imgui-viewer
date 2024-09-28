@@ -90,7 +90,9 @@ class JointAnimation:
         new_anim.rotations = deepcopy(joint_anim.rotations)
         new_anim.positions = deepcopy(joint_anim.positions)
         new_anim.initialize_region(joint_anim.frame_original_region_start, joint_anim.frame_original_region_end)
-        new_anim.rotations[:,2:] = new_anim.rotations[:,2:] * -1
-        new_anim.positions[:,0] = -new_anim.positions[:,0]
+        if len(new_anim.rotations) > 0:
+            new_anim.rotations[:,2:] = new_anim.rotations[:,2:] * -1
+        if len(new_anim.positions) > 0:
+            new_anim.positions[:,0] = -new_anim.positions[:,0]
             
         return new_anim
