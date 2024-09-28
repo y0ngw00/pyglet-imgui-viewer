@@ -43,6 +43,7 @@ class Sequencer(BoxItem):
         
         self.music_sequence = Sequence("Music", None, self.sequence_pos_start, self.sequence_height)
         self.formation_sequence = Sequence("Formation", None, self.sequence_pos_start, self.sequence_height)
+        self.pose_sequence = Sequence("Pose", None, self.sequence_pos_start, self.sequence_height)
         self.group_sequence =  Sequence("Grouping", None, self.sequence_pos_start, self.sequence_height)
     
     def load(self):
@@ -84,7 +85,8 @@ class Sequencer(BoxItem):
                 if imgui.begin_tab_item("Grouping&Formation").selected:
                     self.music_sequence.render(0, frame)
                     self.formation_sequence.render(1,frame)
-                    self.group_sequence.render(2,frame)
+                    self.pose_sequence.render(2,frame)
+                    self.group_sequence.render(3,frame)
                     imgui.end_tab_item()
 
                 if imgui.begin_tab_item("Motion Sequence").selected:
@@ -236,6 +238,7 @@ class Sequencer(BoxItem):
     def on_key_release(self, symbol, modifiers, frame):
         if symbol==pyglet.window.key.P and modifiers==pyglet.window.key.MOD_CTRL:
             self.formation_sequence.clear_all_track()
+            self.pose_sequence.clear_all_track
             self.group_sequence.clear_all_track()
             UI.formation_controller.clear()     
             UI.grouping_controller.clear()
