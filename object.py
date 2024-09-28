@@ -16,6 +16,7 @@ import torch
 import mathutil
 from primitives import CustomMesh,Cube,Sphere, GridPlane, Cylinder
 from animation_layer import AnimationLayer
+from joint_animation import JointAnimation
 from motionutils.Quaternions import Quaternions
 
 from enum_list import MeshType
@@ -137,7 +138,10 @@ class Character(Object):
             self.skinning()
     
     @classmethod
-    def load(cls, data):
+    def load(cls, data): 
+    ###
+    #Incomplete function
+    ###
         name = data["name"] if "name" in data else ""
         meshes = data["meshes"] if "meshes" in data else ""
         joints = data["joints"] if "joints" in data else []
@@ -145,16 +149,28 @@ class Character(Object):
         scale_link = data["scale_link"] if "scale_link" in data else 1.0
     
         return cls(name, meshes, joints, scale, scale_link)
+    
+    def load_animation(self, data):
+        animation_data = data["animation"]
+        for joint in self.joints:
+            name = joint.name
+            if name in animation_data:
+                joint.load_animation(animation_data[name])
             
     def save(self):
         state = self.__dict__.copy()
-        
         for attr, value in list(state.items()):
             try:
                 pkl.dumps(value)  # Try to pickle the value
             except (TypeError, ValueError, pkl.PicklingError):
                 # If it's not pickleable, exclude it
                 del state[attr]
+                
+                if attr == "joints":
+                    anim_data = {}
+                    for joint in value:
+                        anim_data[joint.name] = joint.save_animation()
+                    state["animation"] = anim_data
         
         return state
         
@@ -342,6 +358,24 @@ class Joint(Object):
 
         self.is_root = False
         self.parent_index = -1
+        
+    def load_animation(self,data):
+        for anim_data in data:
+            anim = JointAnimation(self)
+            anim.__dict__.update(anim_data)
+            self.anim_layer.add_animation(anim)
+        
+        
+    def save_animation(self):
+        anim_data = []
+        for anim in self.anim_layer.get_all_animations():
+            data = anim.__dict__.copy()
+            if "joint" in data: # non-picklable
+                del data["joint"]
+            
+            anim_data.append(data)
+            
+        return anim_data 
         
     def copy(self):
         name = self.name

@@ -39,9 +39,13 @@ class Scene:
             if "original_file_path" in chr_data:
                 file_path = chr_data["original_file_path"]
                 UI.open_file(file_path)
-            else:
-                character = Character.load(chr_data)
-                self.add_character(character)
+                
+                if "animation" in chr_data:
+                    character = self.characters[-1]
+                    character.load_animation(chr_data)
+            # else:
+            #     character = Character.load(chr_data)
+            #     self.add_character(character)
         
     def save_project(self, data):
         state = self.__dict__.copy()
