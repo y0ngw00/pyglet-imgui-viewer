@@ -539,7 +539,7 @@ def edit_motion_from_network(character,condition,audio_path, network_path,output
     edit_synthesize(condition, audio_path, network_path, output_path,nframe)
     load_pose_from_pkl(output_path+"output_0.pkl", character, 0, use_translation=load_translation)
 
-def load_pose_from_pkl(pose_dir, character, character_idx, use_translation=True, load_part= MotionPart.FULL):
+def load_pose_from_pkl(pose_dir, character, character_idx, frame = 0, use_translation=True, load_part= MotionPart.FULL):
     load_translation = False
     with open(pose_dir, "rb") as f:
         seq_data = pkl.load(f)
@@ -595,6 +595,7 @@ def load_pose_from_pkl(pose_dir, character, character_idx, use_translation=True,
             joint_anim.positions= list(positions)
 
         joint_anim.initialize_region(0, len(rot_quat) - 1)
+        joint_anim.translate_region(frame)
         joint.anim_layer.add_animation(joint_anim)  
     
     print("Success to generate. data representation: ", ret.shape)
