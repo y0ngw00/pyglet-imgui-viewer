@@ -44,6 +44,9 @@ class AnimationLayer:
     def __len__(self):
         return len(self.animations)
     
+    def __iter__(self):
+        return iter(self.animations)
+    
     def __getitem__(self, index):
         if len(self.animations) <= index:
             raise ValueError("Index out of range")

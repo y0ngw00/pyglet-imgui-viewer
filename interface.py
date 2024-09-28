@@ -153,6 +153,8 @@ class UIInterface:
             
     def synchronize_scene(self):
         
+        self.Sequencer.update_motion_sequence()
+        
         for form in self.formation_controller.get_all_formation():
             formation_shift = self.formation_controller.get_formation_shift_animation(form)
             start_frame = formation_shift.frame_play_region_start

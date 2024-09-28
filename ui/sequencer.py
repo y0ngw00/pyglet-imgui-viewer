@@ -172,6 +172,14 @@ class Sequencer(BoxItem):
             if hasattr(seq, 'target') and seq.target.is_selected():
                 seq.mirror_motion()
         self.show_popup = False
+        
+    def update_motion_sequence(self):
+        # Used only when load a .csp file. Create motion sequences from the loaded characters' animation
+        # Problem: Cannot load the name of each motion track.
+        for seq in self.motion_sequences:
+            if hasattr(seq, 'target'):
+                for i, anim in enumerate(seq.target.root.anim_layer):
+                    seq.insert_track(str(i), anim.frame_play_region_start, anim.frame_play_region_end)
     
     def insert_motion(self, file_path, load_translation, start_frame, motion_part = MotionPart.FULL):
         for idx, seq in enumerate(self.motion_sequences):
