@@ -1,4 +1,5 @@
 import pyglet
+import numpy as np
 
 import imgui
 import imgui.core
@@ -188,6 +189,12 @@ class DancerFormation(BoxItem):
                     voronoi_points = autoarr.get_arranged_positions(UI.get_num_dancers(), sampling_option="grid_sampling")
                     self.formation_markers = voronoi_points
                     # self.marker_indices = [-1 for _ in range(len(voronoi_points))]
+                    
+            elif self.mode == FormationMode.POSE:
+                for dancer in UI.get_dancers():
+                    if dancer.is_selected():
+                        dancer.set_is_clicked = False
+                        dancer.rotation = 0
             
     def on_mouse_drag(self,x, y, dx, dy):
         if self.is_picked(x, y):
@@ -213,12 +220,33 @@ class DancerFormation(BoxItem):
             elif self.mode == FormationMode.DRAW:
                 if self.is_drawing:
                     self.boundary_points.append((x, y))
+            elif self.mode == FormationMode.POSE:
+                new_picked = None
+                prev_picked = []
+                dancers  =UI.get_dancers()
+                stage_x = x - (self.x_origin + self.xsize_box/2)
+                stage_y = y - (self.y_origin + self.ysize_box/2)
+                for dancer in dancers:
+                    if dancer.is_selected():
+                        prev_picked.append(dancer)
+                    if dancer.is_picked(stage_x, stage_y):
+                        new_picked = dancer
+                        
+                [dancer.rotate(stage_x,stage_y,dx,-dy) for dancer in prev_picked]
                                 
     def on_mouse_press(self, x, y, button, modifier) -> None:
         if self.is_picked(x, y):
             if self.mode == FormationMode.DRAW and button == pyglet.window.mouse.LEFT:
                 self.is_drawing = True
-                self.boundary_points = [(x, y)]     
+                self.boundary_points = [(x, y)]
+            if self.mode == FormationMode.POSE and button == pyglet.window.mouse.LEFT:
+                dancers = UI.get_dancers()
+                for dancer in dancers:
+                    stage_x = x - (self.x_origin + self.xsize_box/2)
+                    stage_y = y - (self.y_origin + self.ysize_box/2)
+                    if dancer.is_picked(stage_x, stage_y,3.0) and dancer.is_selected() is False:
+                        self.select(dancer, modifier)
+                        break   
         else:
             self.is_drawing = False
                     

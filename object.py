@@ -212,6 +212,17 @@ class Character(Object):
                 meshes.append(new_mesh)
         return Character(self.original_file_path, self.__name + "_copy", meshes = meshes,joints = joints, scale=scale)
     
+    def rotate(self, angle):
+        rotation_matrix = np.array([[np.cos(angle), 0, np.sin(angle), 0],
+                                    [0, 1, 0, 0],
+                                    [-np.sin(angle), 0, np.cos(angle), 0],
+                                    [0, 0, 0, 1]], dtype=np.float32)
+        self.transform = np.dot(rotation_matrix, self.transform)
+        
+        self.update_world_transform()
+        if self.joints is not None and self.meshes is not None:
+            self.skinning()
+    
     def translate(self, pos):
         # if self.root is not None:
         #     self.root.translate(pos)

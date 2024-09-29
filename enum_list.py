@@ -28,6 +28,7 @@ class MotionPart(Enum):
 class FormationMode(Enum):
     NORMAL = 0
     DRAW = 1
+    POSE = 2
     
 class SamplingType(Enum):
     BOUNDARY = 0,

@@ -187,7 +187,12 @@ class CustomBrowser:
             # _, self.load_translation_from_network = imgui.checkbox("Root Translation", self.load_translation_from_network)
              
     def render_pose_editor(self):
-        pass
+        window_size = imgui.get_window_size()
+        
+        if imgui.button("Open Pose Guide", width = window_size[0]-50):
+            UI.set_formation_mode(FormationMode.POSE)
+        if imgui.button("Close Pose Guide", width = window_size[0]-50):
+            UI.set_formation_mode(FormationMode.NORMAL)
     
     def render_motion_library(self):
         current_motion = ""    
