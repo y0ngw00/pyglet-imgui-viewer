@@ -10,7 +10,7 @@ First, clone this repository:
 
 And then you should install packges:
 
-    pip intsall -r requirements.txt
+    pip install -r requirements.txt
 
 You can implement the code easily by:
 
